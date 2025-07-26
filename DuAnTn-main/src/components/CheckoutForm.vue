@@ -1,75 +1,95 @@
 <template>
   <div class="employee-manager">
-    
-    <main class="main-content">
-      <header class="main-header">
-        <div class="title-block">
-          <h2>Quản Lý nhân viên</h2>
-          <span class="subtitle">Quản lý nhân viên</span>
+    <header>
+      <h2>Quản lý nhân viên</h2>
+      
+    </header>
+    <section class="filter-section">
+      <div class="filter-row">
+        <input v-model="search" placeholder="Tìm kiếm mã / tên nhân viên..." />
+        <select v-model="status">
+          <option value="">Chọn trạng thái</option>
+          <option value="active">Đang làm việc</option>
+          <option value="inactive">Nghỉ việc</option>
+        </select>
+        <button @click="resetFilter">Đặt lại bộ lọc</button>
+      </div>
+    </section>
+    <section class="employee-list-section">
+      <div class="list-header">
+        <span>Danh sách nhân viên</span>
+        <button class="add-btn" @click="openAddModal">Thêm mới nhân viên</button>
+      </div>
+      <table class="employee-table">
+        <thead>
+          <tr>
+            <th>STT</th>
+            <th>Mã Nhân Viên</th>
+            <th>Tên Nhân viên</th>
+            <th>Email</th>
+            <th>Số điện thoại</th>
+            <th>Ngày tham gia</th>
+            <th>Trạng thái</th>
+            <th>Hành động</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(emp, idx) in pagedEmployees" :key="emp.id">
+            <td>{{ (currentPage-1)*pageSize + idx + 1 }}</td>
+            <td>{{ emp.code }}</td>
+            <td>{{ emp.name }}</td>
+            <td>{{ emp.email }}</td>
+            <td>{{ emp.phone }}</td>
+            <td>{{ emp.joinDate }}</td>
+            <td>
+              <span :class="['status-badge', emp.status === 'active' ? 'active' : 'inactive']">
+                {{ emp.status === 'active' ? 'Đang làm việc' : 'Nghỉ việc' }}
+              </span>
+            </td>
+            <td>
+              <button @click="openEditModal(emp)">✏️</button>
+              <button @click="deleteEmployee(emp)">🗑</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="pagination-center">
+        <div class="pagination">
+          <button :disabled="currentPage === 1" @click="changePage(currentPage-1)">‹</button>
+          <button
+            v-for="page in visiblePages"
+            :key="page"
+            :class="{active: currentPage === page}"
+            @click="changePage(page)"
+          >{{ page }}</button>
+          <button :disabled="currentPage === totalPages" @click="changePage(currentPage+1)">›</button>
+          <select v-model.number="pageSize">
+            <option v-for="size in [5,10,20]" :key="size" :value="size">{{size}} / page</option>
+          </select>
         </div>
-        <div class="user-info">
-          <span>Dường Phúc Hình</span>
-          <img class="avatar" src="https://i.pravatar.cc/40" alt="avatar" />
-        </div>
-      </header>
-      <section class="filter-section">
-        <div class="filter-row">
-          <input v-model="search" placeholder="Tìm kiếm nhân viên" />
-          <select v-model="status">
-            <option value="">Chọn trạng thái</option>
+      </div>
+    </section>
+    <!-- Modal Thêm/Sửa -->
+    <div v-if="showModal" class="modal-overlay">
+      <div class="modal-content">
+        <h3>{{ editEmployee ? 'Sửa nhân viên' : 'Thêm nhân viên' }}</h3>
+        <form @submit.prevent="saveEmployee">
+          <input v-model="modalData.code" placeholder="Mã nhân viên" required />
+          <input v-model="modalData.name" placeholder="Tên nhân viên" required />
+          <input v-model="modalData.email" placeholder="Email" required />
+          <input v-model="modalData.phone" placeholder="Số điện thoại" required />
+          <input v-model="modalData.joinDate" placeholder="Ngày tham gia" required />
+          <select v-model="modalData.status">
             <option value="active">Đang làm việc</option>
             <option value="inactive">Nghỉ việc</option>
           </select>
-          <button @click="resetFilter">Đặt lại bộ lọc</button>
-        </div>
-      </section>
-      <section class="employee-list-section">
-        <div class="list-header">
-          <span>Danh sách nhân viên</span>
-          <button class="add-btn" @click="showAddModal = true">Thêm mới nhân viên</button>
-        </div>
-        <table class="employee-table">
-          <thead>
-            <tr>
-              <th>STT</th>
-              <th>Mã Nhân Viên</th>
-              <th>Tên Nhân viên</th>
-              <th>Email</th>
-              <th>Số điện thoại</th>
-              <th>Ngày tham gia</th>
-              <th>Trạng thái</th>
-              <th>Hành động</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(emp, idx) in filteredEmployees" :key="emp.id">
-              <td>{{ idx + 1 }}</td>
-              <td>{{ emp.code }}</td>
-              <td>{{ emp.name }}</td>
-              <td>{{ emp.email }}</td>
-              <td>{{ emp.phone }}</td>
-              <td>{{ emp.joinDate }}</td>
-              <td>
-                <span :class="['status-badge', emp.status === 'active' ? 'active' : 'inactive']">
-                  {{ emp.status === 'active' ? 'Đang làm việc' : 'Nghỉ việc' }}
-                </span>
-              </td>
-              <td>
-                <button @click="editEmployee(emp)">✏️</button>
-                <button @click="deleteEmployee(emp)">🗑</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-      <!-- Modal thêm/sửa nhân viên (demo, chưa làm form chi tiết) -->
-      <div v-if="showAddModal" class="modal-overlay">
-        <div class="modal-content">
-          <h3>Thêm/Sửa nhân viên</h3>
-          <button @click="showAddModal = false">Đóng</button>
-        </div>
+          <div class="modal-actions">
+            <button type="submit">Lưu</button>
+            <button type="button" @click="closeModal">Hủy</button>
+          </div>
+        </form>
       </div>
-    </main>
+    </div>
   </div>
 </template>
 
@@ -80,8 +100,18 @@ export default {
     return {
       search: '',
       status: '',
-      showAddModal: false,
-      showProductMenu: false,
+      showModal: false,
+      editEmployee: null,
+      modalData: {
+        code: '',
+        name: '',
+        email: '',
+        phone: '',
+        joinDate: '',
+        status: 'active'
+      },
+      currentPage: 1,
+      pageSize: 5,
       employees: [
         { id: 1, code: 'NV005', name: 'Hoàng Văn Em', email: 'em.hv@gmail.com', phone: '0956789012', joinDate: '21/09/2023', status: 'active' },
         { id: 2, code: 'NV004', name: 'Phạm Thị Dung', email: 'dung.pt@gmail.com', phone: '0945678901', joinDate: '21/09/2022', status: 'active' },
@@ -96,9 +126,32 @@ export default {
     filteredEmployees() {
       return this.employees.filter(emp => {
         const matchSearch = this.search === '' || emp.name.toLowerCase().includes(this.search.toLowerCase()) || emp.code.toLowerCase().includes(this.search.toLowerCase());
-        const matchStatus = this.status === '' || (this.status === 'active' ? emp.status === 'active' : emp.status === 'inactive');
+        const matchStatus = this.status === '' || emp.status === this.status;
         return matchSearch && matchStatus;
       });
+    },
+    totalPages() {
+      return Math.ceil(this.filteredEmployees.length / this.pageSize) || 1;
+    },
+    pagedEmployees() {
+      const start = (this.currentPage - 1) * this.pageSize;
+      return this.filteredEmployees.slice(start, start + this.pageSize);
+    },
+    visiblePages() {
+      let pages = [];
+      let start = Math.max(1, this.currentPage - 1);
+      let end = Math.min(this.totalPages, start + 1);
+      if (end - start < 1) start = Math.max(1, end - 1);
+      for (let i = start; i <= end; i++) pages.push(i);
+      return pages;
+    }
+  },
+  watch: {
+    filteredEmployees() {
+      if (this.currentPage > this.totalPages) this.currentPage = this.totalPages;
+    },
+    pageSize() {
+      this.currentPage = 1;
     }
   },
   methods: {
@@ -106,95 +159,71 @@ export default {
       this.search = '';
       this.status = '';
     },
-    editEmployee(emp) {
-      this.showAddModal = true;
+    openAddModal() {
+      this.editEmployee = null;
+      this.modalData = {
+        code: '',
+        name: '',
+        email: '',
+        phone: '',
+        joinDate: '',
+        status: 'active'
+      };
+      this.showModal = true;
+    },
+    openEditModal(emp) {
+      this.editEmployee = emp;
+      this.modalData = { ...emp };
+      this.showModal = true;
+    },
+    closeModal() {
+      this.showModal = false;
+    },
+    saveEmployee() {
+      if (this.editEmployee) {
+        Object.assign(this.editEmployee, this.modalData);
+      } else {
+        const newId = this.employees.length ? Math.max(...this.employees.map(e => e.id)) + 1 : 1;
+        this.employees.push({ ...this.modalData, id: newId });
+      }
+      this.closeModal();
     },
     deleteEmployee(emp) {
-      this.employees = this.employees.filter(e => e.id !== emp.id);
+      if (confirm('Bạn có chắc chắn muốn xóa nhân viên này?')) {
+        this.employees = this.employees.filter(e => e.id !== emp.id);
+      }
     },
-    toggleProductMenu() {
-      this.showProductMenu = !this.showProductMenu;
+    changePage(page) {
+      if (page >= 1 && page <= this.totalPages) {
+        this.currentPage = page;
+      }
     }
+    
   }
 }
 </script>
 
 <style scoped>
 .employee-manager {
-  display: flex;
-  min-height: 100vh;
   background: #f7f8fa;
+  padding: 32px;
 }
-.sidebar {
-  width: 240px;
+header {
   background: #fff;
-  border-right: 1px solid #eee;
-  padding: 24px 0 0 0;
+  border-radius: 8px;
+  padding: 24px 32px 10px 32px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
 }
-.logo {
-  font-weight: bold;
-  font-size: 1.5rem;
-  text-align: center;
-  margin-bottom: 32px;
-}
-.sidebar nav ul {
-  list-style: none;
-  padding: 0;
-}
-.sidebar nav ul > li {
-  padding: 12px 32px;
-  cursor: pointer;
-  color: #222;
-  font-weight: 500;
-  border-left: 4px solid transparent;
-  transition: background 0.2s, border 0.2s;
-}
-.sidebar nav ul > li.active, .sidebar nav ul > li:hover {
-  background: #f0f4ff;
-  border-left: 4px solid #2563eb;
-  color: #2563eb;
-}
-.sidebar nav ul > li.open > span {
-  color: #2563eb;
-}
-.submenu {
-  margin-top: 6px;
-  margin-left: 12px;
-  font-size: 0.97rem;
-  color: #555;
-}
-.submenu li {
-  padding: 4px 0 4px 16px;
-}
-.main-content {
-  flex: 1;
-  padding: 0 32px 32px 32px;
-}
-.main-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 32px 0 16px 0;
-}
-.title-block h2 {
+header h2 {
   margin: 0;
   font-size: 2rem;
-  font-weight: bold;
+  font-weight: 700;
 }
 .subtitle {
   color: #888;
   font-size: 1.1rem;
-}
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-weight: 500;
-}
-.avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+  margin-left: 2px;
 }
 .filter-section {
   background: #fff;
@@ -273,6 +302,47 @@ export default {
   background: #fbeaea;
   color: #e53935;
 }
+.pagination-center {
+  display: flex;
+  justify-content: center;
+  margin-top: 18px;
+}
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pagination button {
+  border: 1.5px solid #2563eb;
+  background: #fff;
+  color: #2563eb;
+  border-radius: 8px;
+  padding: 6px 16px;
+  font-weight: 500;
+  cursor: pointer;
+  margin: 0 2px;
+  min-width: 36px;
+  font-size: 1rem;
+  transition: background 0.2s, color 0.2s;
+}
+.pagination button.active,
+.pagination button:hover:not(:disabled) {
+  background: #2563eb;
+  color: #fff;
+}
+.pagination button:disabled {
+  background: #eee;
+  color: #aaa;
+  border-color: #eee;
+  cursor: not-allowed;
+}
+.pagination select {
+  margin-left: 12px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 1rem;
+}
 .modal-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -280,15 +350,34 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2000;
+  z-index: 1000;
 }
 .modal-content {
   background: #fff;
-  border-radius: 12px;
-  padding: 2rem 2.5rem;
-  min-width: 350px;
-  max-width: 95vw;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-  text-align: center;
+  border-radius: 10px;
+  padding: 28px 32px;
+  min-width: 320px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.15);
 }
-</style> 
+.modal-content input, .modal-content select {
+  display: block;
+  width: 100%;
+  margin-bottom: 14px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  font-size: 1rem;
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.modal-actions button {
+  padding: 7px 18px;
+  border-radius: 6px;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+}
+</style>
