@@ -53,26 +53,29 @@
     </aside>
 
     <!-- Main content -->
-    <main style="flex:1;">
-      <!-- Form rỗng cho các tab chưa làm -->
-      <div v-if="['statistic', 'sale', 'invoice', 'voucher'].includes(currentTab)" class="blank-form"></div>
+  <main style="flex:1;">
+  <!-- Các component theo tab -->
+  <ThongKe v-if="currentTab === 'statistic'" />
+  <div v-if="currentTab === 'sale'" class="blank-form">Bán hàng chưa làm</div>
+  <PhieuGiamGia v-if="currentTab === 'voucher'" />
 
-      <!-- Các component theo tab -->
-      <CustomerManager v-if="currentTab === 'customer'" />
-      <CheckoutForm v-if="currentTab === 'employee'" :cart="cart" />
-      <DiscountList v-if="currentTab === 'discount'" />
+  <HoaDon v-if="currentTab === 'invoice'" />
+  <CustomerManager v-if="currentTab === 'customer'" />
+  <CheckoutForm v-if="currentTab === 'employee'" :cart="cart" />
+  <DiscountList v-if="currentTab === 'discount'" />
+  
+  <!-- Product submenu hiển thị từng form -->
+  <div v-if="currentTab === 'product'">
+    <SanPham v-if="productSubTab === 'sanpham'" />
+    <ColorManagement v-else-if="productSubTab === 'mausac'" />
+     <ChatLieu v-else-if="productSubTab === 'chatlieu'" />
+        <LoaiDe v-else-if="productSubTab === 'loaide'" />
+    <CategoryManager v-else-if="productSubTab === 'danhmuc'" />
+     <KichThuoc v-else-if="productSubTab === 'kichthuoc'" />
+     <ThuongHieu v-else-if="productSubTab === 'thuonghieu'" />
+  </div>
+</main>
 
-      <!-- Product submenu hiển thị từng form -->
-      <div v-if="currentTab === 'product'">
-        <div v-if="productSubTab === 'sanpham'">Hiển thị Sản phẩm</div>
-        <ColorManagement v-else-if="productSubTab === 'mausac'" />
-        <div v-else-if="productSubTab === 'chatlieu'">Hiển thị Chất liệu</div>
-        <div v-else-if="productSubTab === 'loaide'">Hiển thị Loại đế</div>
-        <CategoryManager v-else-if="productSubTab === 'danhmuc'" />
-        <div v-else-if="productSubTab === 'kichthuoc'">Hiển thị Kích thước</div>
-        <div v-else-if="productSubTab === 'thuonghieu'">Hiển thị Thương hiệu</div>
-      </div>
-    </main>
   </div>
 </template>
 
@@ -82,6 +85,14 @@ import CustomerManager from './components/CustomerManager.vue'
 import DiscountList from './components/DiscountList.vue'
 import CategoryManager from './components/CategoryManager.vue'
 import ColorManagement from './components/ColorManagement.vue'
+import HoaDon from './components/HoaDon.vue'
+import PhieuGiamGia from './components/PhieuGiamGia.vue'
+import ThongKe from './components/ThongKe.vue'
+import SanPham from './components/SanPham.vue'
+import ThuongHieu from './components/ThuongHieu.vue'
+import KichThuoc from './components/KichThuoc.vue'
+import ChatLieu from './components/ChatLieu.vue'
+import LoaiDe from './components/LoaiDe.vue'
 
 export default {
   name: 'App',
@@ -90,7 +101,15 @@ export default {
     CustomerManager,
     DiscountList,
     CategoryManager,
-    ColorManagement
+    ColorManagement,
+    HoaDon,
+    PhieuGiamGia,
+    ThongKe,
+    SanPham,
+    ThuongHieu,
+    KichThuoc,
+    ChatLieu,
+    LoaiDe
   },
   data() {
     return {
