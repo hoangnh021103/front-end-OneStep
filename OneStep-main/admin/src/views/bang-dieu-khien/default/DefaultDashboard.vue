@@ -8,6 +8,7 @@ import PopularStocks from './components/PopularStocks.vue';
 </script>
 
 <template>
+  <h2 class="text-h4 mb-4">Thống kê</h2>
   <v-row>
     <!-- -------------------------------------------------------------------- -->
     <!-- Total Earning -->

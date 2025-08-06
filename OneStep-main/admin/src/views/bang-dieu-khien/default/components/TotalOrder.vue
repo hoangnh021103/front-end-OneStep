@@ -41,7 +41,7 @@ const chartOptions1 = computed(() => {
       },
       y: {
         title: {
-          formatter: () => 'Total Order'
+          formatter: () => 'Đơn Hàng Giày Thể Thao'
         }
       },
       marker: {
@@ -99,7 +99,7 @@ const chartOptions2 = computed(() => {
       },
       y: {
         title: {
-          formatter: () => 'Total Order'
+          formatter: () => 'Đơn Hàng Giày Thể Thao'
         }
       },
       marker: {
@@ -129,8 +129,8 @@ const lineChart2 = {
         </v-btn>
         <div class="ml-auto z-1">
           <v-tabs v-model="tab" class="theme-tab" density="compact" align-tabs="end">
-            <v-tab value="1" hide-slider color="transparent">Month</v-tab>
-            <v-tab value="2" hide-slider color="transparent">Year</v-tab>
+            <v-tab value="1" hide-slider color="transparent">Tháng</v-tab>
+            <v-tab value="2" hide-slider color="transparent">Năm</v-tab>
           </v-tabs>
         </div>
       </div>
@@ -139,12 +139,12 @@ const lineChart2 = {
           <v-row>
             <v-col cols="6">
               <h2 class="text-h1 font-weight-medium">
-                $108
+                156
                 <a href="#">
                   <CircleArrowDownLeftIcon stroke-width="1.5" width="28" class="text-white" />
                 </a>
               </h2>
-              <span class="text-subtitle-1 text-medium-emphasis text-white">Total Order</span>
+              <span class="text-subtitle-1 text-medium-emphasis text-white">Đơn Hàng Giày Thể Thao</span>
             </v-col>
             <v-col cols="6">
               <apexchart type="line" height="90" :options="chartOptions1" :series="lineChart1.series"> </apexchart>
@@ -155,12 +155,12 @@ const lineChart2 = {
           <v-row>
             <v-col cols="6">
               <h2 class="text-h1 font-weight-medium">
-                $961
+                1,847
                 <a href="#">
                   <ArrowDownLeftCircleIcon stroke-width="1.5" width="28" class="text-white" />
                 </a>
               </h2>
-              <span class="text-subtitle-1 text-medium-emphasis text-white">Total Order</span>
+              <span class="text-subtitle-1 text-medium-emphasis text-white">Đơn Hàng Giày Thể Thao</span>
             </v-col>
             <v-col cols="6">
               <apexchart type="line" height="90" :options="chartOptions2" :series="lineChart2.series"> </apexchart>

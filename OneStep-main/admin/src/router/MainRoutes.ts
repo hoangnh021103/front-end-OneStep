@@ -9,12 +9,12 @@ const MainRoutes = {
     {
       name: 'LandingPage',
       path: '/',
-      component: () => import('@/views/dashboards/default/DefaultDashboard.vue')
+      component: () => import('@/views/bang-dieu-khien/default/DefaultDashboard.vue')
     },
     {
       name: 'Default',
       path: '/dashboard/default',
-      component: () => import('@/views/dashboards/default/DefaultDashboard.vue')
+      component: () => import('@/views/bang-dieu-khien/default/DefaultDashboard.vue')
     },
     {
       name: 'Starter',
@@ -24,27 +24,27 @@ const MainRoutes = {
     {
       name: 'Tabler Icons',
       path: '/icons/tabler',
-      component: () => import('@/views/utilities/icons/TablerIcons.vue')
+      component: () => import('@/views/tien-ich/icons/TablerIcons.vue')
     },
     {
       name: 'Material Icons',
       path: '/icons/material',
-      component: () => import('@/views/utilities/icons/MaterialIcons.vue')
+      component: () => import('@/views/tien-ich/icons/MaterialIcons.vue')
     },
     {
       name: 'Typography',
       path: '/utils/typography',
-      component: () => import('@/views/utilities/typography/TypographyPage.vue')
+      component: () => import('@/views/tien-ich/typography/TypographyPage.vue')
     },
     {
       name: 'Shadows',
       path: '/utils/shadows',
-      component: () => import('@/views/utilities/shadows/ShadowPage.vue')
+      component: () => import('@/views/tien-ich/shadows/ShadowPage.vue')
     },
     {
       name: 'Colors',
       path: '/utils/colors',
-      component: () => import('@/views/utilities/colors/ColorPage.vue')
+      component: () => import('@/views/tien-ich/colors/ColorPage.vue')
     }
   ]
 };

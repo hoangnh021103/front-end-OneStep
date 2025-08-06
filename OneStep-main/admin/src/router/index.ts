@@ -6,34 +6,19 @@ import { useAuthStore } from '@/stores/auth';
 export const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
+    MainRoutes,
+    PublicRoutes,
     {
       path: '/:pathMatch(.*)*',
-      component: () => import('@/views/pages/maintenance/error/Error404Page.vue')
-    },
-    MainRoutes,
-    PublicRoutes
+      redirect: '/'
+    }
   ]
 });
 
-interface User {
-  // Define the properties and their types for the user data here
-  // For example:
-  id: number;
-  name: string;
-}
-
-// Assuming you have a type/interface for your authentication store
-interface AuthStore {
-  user: User | null;
-  returnUrl: string | null;
-  login(username: string, password: string): Promise<void>;
-  logout(): void;
-}
-
 router.beforeEach(async (to, from, next) => {
   // redirect to login page if not logged in and trying to access a restricted page
-  const publicPages = ['/'];
-  const auth: AuthStore = useAuthStore();
+  const publicPages = ['/login', '/login1', '/register', '/error'];
+  const auth = useAuthStore();
 
   const isPublicPage = publicPages.includes(to.path);
   const authRequired = !isPublicPage && to.matched.some((record) => record.meta.requiresAuth);
@@ -44,12 +29,10 @@ router.beforeEach(async (to, from, next) => {
     next('/login');
   } else if (auth.user && to.path === '/login') {
     // User logged in and trying to access the login page
-    next({
-      query: {
-        ...to.query,
-        redirect: auth.returnUrl !== '/' ? to.fullPath : undefined
-      }
-    });
+    next('/dashboard/default');
+  } else if (auth.user && to.path === '/') {
+    // User logged in and accessing root path
+    next('/dashboard/default');
   } else {
     // All other scenarios, either public page or authorized access
     next();

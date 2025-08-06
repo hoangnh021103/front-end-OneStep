@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 
-const select = ref({ state: 'Today', abbr: 'FL' });
+const select = ref({ state: 'Hôm Nay', abbr: 'FL' });
 const items = [
-  { state: 'Today', abbr: 'FL' },
-  { state: 'This Month', abbr: 'GA' },
-  { state: 'This Year', abbr: 'NE' }
+  { state: 'Hôm Nay', abbr: 'FL' },
+  { state: 'Tháng Này', abbr: 'GA' },
+  { state: 'Năm Này', abbr: 'NE' }
 ];
 
 // chart 1
@@ -39,7 +39,7 @@ const chartOptions1 = computed(() => {
     },
     xaxis: {
       type: 'category',
-      categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+      categories: ['Th1', 'Th2', 'Th3', 'Th4', 'Th5', 'Th6', 'Th7', 'Th8', 'Th9', 'Th10', 'Th11', 'Th12']
     },
     legend: {
       show: true,
@@ -78,19 +78,19 @@ const chartOptions1 = computed(() => {
 const lineChart1 = {
   series: [
     {
-      name: 'Investment',
+      name: 'Nike',
       data: [35, 125, 35, 35, 35, 80, 35, 20, 35, 45, 15, 75]
     },
     {
-      name: 'Loss',
+      name: 'Adidas',
       data: [35, 15, 15, 35, 65, 40, 80, 25, 15, 85, 25, 75]
     },
     {
-      name: 'Profit',
+      name: 'Puma',
       data: [35, 145, 35, 35, 20, 105, 100, 10, 65, 45, 30, 10]
     },
     {
-      name: 'Maintenance',
+      name: 'Under Armour',
       data: [0, 0, 75, 0, 0, 115, 0, 0, 0, 0, 150, 0]
     }
   ]
@@ -103,8 +103,8 @@ const lineChart1 = {
       <v-card-text>
         <v-row>
           <v-col cols="12" sm="9">
-            <span class="text-subtitle-2 text-disabled font-weight-bold">Total Growth</span>
-            <h3 class="text-h3 mt-1">$2,324.00</h3>
+            <span class="text-subtitle-2 text-disabled font-weight-bold">Thống Kê Bán Giày Thể Thao</span>
+            <h3 class="text-h3 mt-1">$45,250.00</h3>
           </v-col>
           <v-col cols="12" sm="3">
             <v-select
@@ -115,7 +115,7 @@ const lineChart1 = {
               :items="items"
               item-title="state"
               item-value="abbr"
-              label="Select"
+              label="Chọn"
               persistent-hint
               return-object
               single-line

@@ -44,7 +44,6 @@ const authStore = useAuthStore();
       <v-list class="mt-3">
         <v-list-item color="secondary" rounded="md">
           <template v-slot:prepend>
-            <SettingsIcon size="20" class="mr-2" />
           </template>
 
           <v-list-item-title class="text-subtitle-2"> Account Settings</v-list-item-title>

@@ -1,3 +1,4 @@
+// @ts-ignore
 import {
   CircleIcon,
   WindmillIcon,
@@ -28,66 +29,66 @@ export interface menu {
 }
 
 const sidebarItem: menu[] = [
-  { header: 'Dashboard' },
+  { header: 'Bảng Điều Khiển' },
   {
-    title: 'Default',
+    title: 'Mặc Định',
     icon: DashboardIcon,
     to: '/dashboard/default'
   },
   { divider: true },
-  { header: 'Pages' },
+  { header: 'Trang' },
   {
-    title: 'Authentication',
+    title: 'Xác Thực',
     icon: KeyIcon,
     to: '/auth',
     children: [
       {
-        title: 'Login',
+        title: 'Đăng Nhập',
         icon: CircleIcon,
         to: '/login1'
       },
       {
-        title: 'Register',
+        title: 'Đăng Ký',
         icon: CircleIcon,
         to: '/register'
       }
     ]
   },
   {
-    title: 'Error 404',
+    title: 'Lỗi 404',
     icon: BugIcon,
     to: '/error'
   },
   { divider: true },
-  { header: 'Utilities' },
+  { header: 'Tiện Ích' },
   {
-    title: 'Typography',
+    title: 'Kiểu Chữ',
     icon: TypographyIcon,
     to: '/utils/typography'
   },
   {
-    title: 'Shadows',
+    title: 'Bóng Đổ',
     icon: ShadowIcon,
     to: '/utils/shadows'
   },
   {
-    title: 'Colors',
+    title: 'Màu Sắc',
     icon: PaletteIcon,
     to: '/utils/colors'
   },
 
   {
-    title: 'Icons',
+    title: 'Biểu Tượng',
     icon: WindmillIcon,
     to: '/forms/radio',
     children: [
       {
-        title: 'Tabler Icons',
+        title: 'Biểu Tượng Tabler',
         icon: CircleIcon,
         to: '/icons/tabler'
       },
       {
-        title: 'Material Icons',
+        title: 'Biểu Tượng Material',
         icon: CircleIcon,
         to: '/icons/material'
       }
@@ -95,12 +96,12 @@ const sidebarItem: menu[] = [
   },
   { divider: true },
   {
-    title: 'Sample Page',
+    title: 'Trang Mẫu',
     icon: BrandChromeIcon,
     to: '/starter'
   },
   {
-    title: 'Documentation',
+    title: 'Tài Liệu',
     icon: HelpIcon,
     to: 'https://codedthemes.gitbook.io/berry-vuetify/',
     type: 'external'

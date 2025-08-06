@@ -3,10 +3,10 @@ import { shallowRef } from 'vue';
 import { ArchiveIcon, CopyIcon, DownloadIcon, FileExportIcon } from 'vue-tabler-icons';
 import iconCard from '@/assets/images/icons/icon-card.svg';
 const items = shallowRef([
-  { title: 'Import Card', icon: DownloadIcon },
-  { title: 'Copy Data', icon: CopyIcon },
-  { title: 'Export', icon: FileExportIcon },
-  { title: 'Archive File', icon: ArchiveIcon }
+  { title: 'Xuất Báo Cáo', icon: DownloadIcon },
+  { title: 'Sao Chép Dữ Liệu', icon: CopyIcon },
+  { title: 'Xuất Excel', icon: FileExportIcon },
+  { title: 'Lưu Trữ', icon: ArchiveIcon }
 ]);
 </script>
 
@@ -38,9 +38,9 @@ const items = shallowRef([
         </div>
       </div>
       <h2 class="text-h1 font-weight-medium">
-        $500.00 <a href="#"><CircleArrowUpRightIcon stroke-width="1.5" width="28" class="text-white" /> </a>
+        $15,250.00 <a href="#"><CircleArrowUpRightIcon stroke-width="1.5" width="28" class="text-white" /> </a>
       </h2>
-      <span class="text-subtitle-1 text-medium-emphasis text-white">Total Earning</span>
+      <span class="text-subtitle-1 text-medium-emphasis text-white">Doanh Thu Giày Thể Thao</span>
     </v-card-text>
   </v-card>
 </template>
