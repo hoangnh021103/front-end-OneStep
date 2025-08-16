@@ -1,0 +1,81 @@
+.container {
+  max-width: 800px;
+  margin: auto;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.button {
+  padding: 8px 16px;
+  background-color: #00bcd4;
+  border: none;
+  color: white;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.filter-box, .table-container {
+  margin-bottom: 20px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  
+  th, td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: center;
+  }
+}
+
+.status {
+  background: #d4edda;
+  color: #155724;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.circle {
+  width: 20px;
+  height: 20px;
+  margin: auto;
+  border-radius: 50%;
+}
+
+.actions {
+  button {
+    margin: 0 3px;
+  }
+}
+
+.overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.modal {
+  background: white;
+  padding: 20px;
+  width: 300px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+  
+  .color-preview {
+    width: 50px;
+    height: 50px;
+    border: 1px solid #ccc;
+    margin-bottom: 10px;
+  }
+  
+  .modal-actions {
+    text-align: right;
+  }
+}
