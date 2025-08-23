@@ -2511,6 +2511,9 @@ input[type="button"].btn-block {
 
 .dropdown-toggle:empty::after {
   margin-left: 0; }
+.sale{
+  background: aqua;
+}
 
 .dropdown-menu {
   position: absolute;

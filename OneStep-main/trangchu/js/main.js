@@ -35,7 +35,7 @@
     			$('.js-colorlib-nav-toggle').removeClass('active');
 				
 	    	}
-	    
+	    	
 	    	
 	    }
 		});
@@ -149,16 +149,14 @@
 			var $this = $(this);
 			$this
 				.find('.dropdown')
-				.css('display', 'block')
-				.addClass('animated-fast fadeInUpMenu');
+				.addClass('fadeInUpMenu');
 
 		}).mouseleave(function(){
 			var $this = $(this);
 
 			$this
 				.find('.dropdown')
-				.css('display', 'none')
-				.removeClass('animated-fast fadeInUpMenu');
+				.removeClass('fadeInUpMenu');
 		});
 
 	};
