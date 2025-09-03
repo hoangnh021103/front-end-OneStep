@@ -5,34 +5,47 @@
     <!-- Tìm kiếm -->
     <div class="filter-box">
       <label>Tìm kiếm màu sắc:</label>
-      <input v-model="searchQuery" type="text" placeholder="Nhập mã / tên để tìm...">
+      <input v-model="searchQuery" type="text" placeholder="Nhập mã / tên để tìm..." />
       <button class="button" @click="resetFilter">Đặt lại bộ lọc</button>
     </div>
 
     <!-- Bảng danh sách -->
     <div class="table-container">
       <button class="button" @click="openModal">➕ Thêm mới màu sắc</button>
-      <br><br>
+      <br /><br />
       <table class="table">
         <thead>
           <tr>
             <th>STT</th>
             <th>Mã</th>
             <th>Tên</th>
-            <th>Mã màu</th>
-            <th>Màu</th>
             <th>Trạng thái</th>
+            <th>Ngày cập nhật</th>
+            <th>Người tạo</th>
+            <th>Người cập nhật</th>
             <th>Hành động</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(color, index) in filteredColors" :key="index">
+          <tr v-for="(color, index) in filteredColors" :key="color.id">
             <td>{{ index + 1 }}</td>
-            <td>{{ color.code }}</td>
-            <td>{{ color.name }}</td>
-            <td>{{ color.hex }}</td>
-            <td><div :style="{background: color.hex}" class="circle"></div></td>
-            <td><span class="status">Hoạt động</span></td>
+            <td>{{ color.ma }}</td>
+            <td>
+              <span>{{ color.ten }}</span>
+              <br />
+              <span v-if="color.ma" style="font-size:12px;color:#888;">Mã màu: {{ color.ma }}</span>
+              <span v-if="color.hex" style="margin-left:8px;">
+                <div :style="{background: color.hex, width:'18px', height:'18px', borderRadius:'50%', display:'inline-block', border:'1px solid #ccc'}"></div>
+              </span>
+            </td>
+            <td>
+              <span :class="['status', color.trangThai === 1 ? 'active' : 'inactive']">
+                {{ color.trangThai === 1 ? 'Hoạt động' : 'Ngừng hoạt động' }}
+              </span>
+            </td>
+            <td>{{ color.ngayCapNhat }}</td>
+            <td>{{ color.nguoiTao }}</td>
+            <td>{{ color.nguoiCapNhat }}</td>
             <td class="actions">
               <button @click="editColor(index)">✏️</button>
               <button @click="deleteColor(index)">♻️</button>
@@ -47,11 +60,20 @@
       <div class="modal">
         <h3>{{ editIndex !== null ? 'Sửa màu sắc' : 'Thêm màu sắc' }}</h3>
         <label>Tên màu sắc *</label>
-        <input v-model="newColor.name" type="text" placeholder="Nhập tên màu sắc">
+        <input v-model="newColor.ten" type="text" placeholder="Nhập tên màu sắc" />
 
-        <label>Mã màu</label>
-        <input v-model="newColor.hex" type="text" @input="updatePreview">
+        <label>Mã màu *</label>
+        <input v-model="newColor.ma" type="text" placeholder="Nhập mã màu" />
+
+        <label>Mã hex *</label>
+        <input v-model="newColor.hex" type="text" placeholder="#000000" @input="updatePreview" />
         <div class="color-preview" :style="{ backgroundColor: newColor.hex }"></div>
+
+        <label>Trạng thái</label>
+        <select v-model="newColor.trangThai">
+          <option :value="1">Hoạt động</option>
+          <option :value="0">Ngừng hoạt động</option>
+        </select>
 
         <div class="modal-actions">
           <button class="button" @click="saveColor">Xác nhận</button>
@@ -61,75 +83,4 @@
     </div>
   </div>
 </template>
-
-<script>
-export default {
-  data() {
-    return {
-      colors: [
-        { code: 'MS5521', name: 'Nâu', hex: '#723c3c' },
-        { code: 'MS005', name: 'Xanh lá', hex: '#00FF00' },
-        { code: 'MS2503', name: 'Vàng', hex: '#d5ff05' },
-        { code: 'MS004', name: 'Đỏ', hex: '#FF0000' },
-        { code: 'MS006', name: 'Tím', hex: '#800080' },
-        { code: 'MS007', name: 'Cam', hex: '#FFA500' },
-      ],
-      searchQuery: '',
-      showModal: false,
-      newColor: { name: '', hex: '#000000' },
-      editIndex: null
-    };
-  },
-  computed: {
-    filteredColors() {
-      return this.colors.filter(c =>
-        c.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-        c.code.toLowerCase().includes(this.searchQuery.toLowerCase())
-      );
-    }
-  },
-  methods: {
-    resetFilter() {
-      this.searchQuery = '';
-},
-    openModal() {
-      this.showModal = true;
-      this.editIndex = null;
-      this.newColor = { name: '', hex: '#000000' };
-    },
-    closeModal() {
-      this.showModal = false;
-    },
-    saveColor() {
-      if (!this.newColor.name || !/^#[0-9A-Fa-f]{6}$/.test(this.newColor.hex)) {
-        alert('Vui lòng nhập thông tin hợp lệ.');
-        return;
-      }
-      if (this.editIndex !== null) {
-        this.colors[this.editIndex] = { ...this.colors[this.editIndex], ...this.newColor };
-      } else {
-        const newCode = `MS00${this.colors.length + 1}`;
-        this.colors.push({ code: newCode, name: this.newColor.name, hex: this.newColor.hex });
-      }
-      this.closeModal();
-    },
-    editColor(index) {
-      this.editIndex = index;
-      this.newColor = { ...this.colors[index] };
-      this.showModal = true;
-    },
-    deleteColor(index) {
-      if (confirm('Xác nhận xoá màu này?')) {
-        this.colors.splice(index, 1);
-      }
-    },
-    updatePreview() {
-      // Optional: live preview handled by :style binding
-    }
-  }
-};
-</script>
-
-<style>
-/* CSS đã được di chuyển đến src/scss/pages/mau-sac.scss */
-</style>
+<script src="./MauSac.js"></script>
