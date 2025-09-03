@@ -8,10 +8,6 @@ const footerLink = shallowRef([
     url: '/'
   },
   {
-    title: 'Documentation',
-    url: '#!'
-  },
-  {
     title: 'Support',
     url: '#!'
   }
