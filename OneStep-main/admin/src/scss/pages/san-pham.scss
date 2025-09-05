@@ -103,9 +103,35 @@
       td {
         font-size: 14px;
       }
-      .status.active {
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 14px;
+        border-radius: 14px;
+        font-weight: 500;
+        font-size: 14px;
+        background: #eafaf1;
         color: #27ae60;
-        font-weight: bold;
+        &.active {
+          background: #eafaf1;
+          color: #27ae60;
+        }
+        &.inactive {
+          background: #fdeaea;
+          color: #e74c3c;
+        }
+        &::before {
+          content: '';
+          display: inline-block;
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background: #27ae60;
+        }
+        &.inactive::before {
+          background: #e74c3c;
+        }
       }
       .action-cell {
         display: flex;

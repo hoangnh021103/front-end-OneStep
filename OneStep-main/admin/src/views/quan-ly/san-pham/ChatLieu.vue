@@ -10,51 +10,55 @@
     <div class="filter-section">
       <h3 class="section-title">🔍 Bộ lọc tìm kiếm</h3>
       <div class="filter-fields">
-        <input type="text" v-model="search" placeholder="🔎 Nhập tên hoặc mã chất liệu" />
+        <input type="text" v-model="search" placeholder="🔎 Nhập tên chất liệu" />
         <select v-model="status">
           <option value="">📦 Tất cả trạng thái</option>
-          <option value="active">✅ Hoạt động</option>
-          <option value="inactive">🚫 Ngừng</option>
+          <option :value="1">✅ Hoạt động</option>
+          <option :value="0">🚫 Ngừng hoạt động</option>
         </select>
-        <button @click="resetFilters" class="reset-btn">♻️ Đặt lại</button>
+        <button @click="resetFilters" class="reset-btn">Đặt lại</button>
       </div>
     </div>
 
     <!-- Danh sách chất liệu -->
     <div class="list-section">
-      <div class="list-header">
-        <h3 class="section-title">📋 Danh sách chất liệu</h3>
+      <div class="list-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h3 class="section-title" style="margin: 0;">📋 Danh Sách Chất Liệu</h3>
         <button @click="showModal = true" class="add-btn">➕ Thêm mới</button>
       </div>
 
       <div class="table-wrapper">
-        <table class="material-table">
-          <thead>
-            <tr>
-              <th>STT</th>
-              <th>Mã</th>
-              <th>Tên chất liệu</th>
-              <th>Trạng thái</th>
-              <th>Hành động</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(item, index) in filteredMaterials" :key="item.id">
-              <td>{{ index + 1 }}</td>
-              <td>{{ item.code }}</td>
-              <td>{{ item.name }}</td>
-              <td>
-                <span :class="['status-tag', item.status === 'active' ? 'active' : 'inactive']">
-                  {{ item.status === 'active' ? 'Hoạt động' : 'Ngừng' }}
-                </span>
-              </td>
-              <td>
-                <button class="action-btn edit">✏️</button>
-                <button class="action-btn view">🔍</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+       <table>
+  <thead>
+    <tr>
+      <th>STT</th>
+      <th>Tên chất liệu</th>
+      <th>Trạng thái</th>
+      <th>Ngày cập nhật</th>
+      <th>Người tạo</th>
+      <th>Người cập nhật</th>
+      <th>Hành động</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr v-for="(item, index) in filteredMaterials" :key="item.id">
+      <td>{{ index + 1 }}</td>
+      <td>{{ item.ten }}</td>
+      <td>
+        <span :class="['status-tag', item.trangThai === 1 ? 'active' : 'inactive']">
+          {{ item.trangThai === 1 ? 'Hoạt động' : 'Ngừng hoạt động' }}
+        </span>
+      </td>
+      <td>{{ item.ngayCapNhat }}</td>
+      <td>{{ item.nguoiTao }}</td>
+      <td>{{ item.nguoiCapNhat }}</td>
+      <td>
+        <button @click="editMaterial(index)">✏️</button>
+        <button @click="deleteMaterial(index)">🗑️</button>
+      </td>
+    </tr>
+  </tbody>
+</table>
       </div>
     </div>
 
@@ -63,62 +67,24 @@
       <div class="modal">
         <h3>➕ Thêm Chất Liệu</h3>
         <label>Tên chất liệu</label>
-        <input type="text" v-model="newMaterial" placeholder="Nhập chất liệu mới" />
+        <input type="text" v-model="newMaterial.ten" placeholder="Nhập chất liệu mới" />
+        <label>Trạng thái</label>
+        <select v-model="newMaterial.trangThai">
+          <option :value="1">Hoạt động</option>
+          <option :value="0">Ngừng hoạt động</option>
+        </select>
+        <label>Ngày cập nhật</label>
+        <input type="date" v-model="newMaterial.ngayCapNhat" />
+        <label>Người tạo</label>
+        <input type="text" v-model="newMaterial.nguoiTao" />
+        <label>Người cập nhật</label>
+        <input type="text" v-model="newMaterial.nguoiCapNhat" />
         <div class="modal-actions">
           <button @click="addMaterial" class="confirm-btn">✔️ Xác nhận</button>
           <button @click="showModal = false" class="cancel-btn">❌ Huỷ</button>
-        </div>
+           </div>
       </div>
     </div>
   </div>
 </template>
-
-<script>
-export default {
-  data() {
-    return {
-      search: '',
-      status: '',
-      showModal: false,
-      newMaterial: '',
-      materials: [
-        { id: 1, code: 'CL001', name: 'Vải Canvas', status: 'active' },
-        { id: 2, code: 'CL002', name: 'Da tổng hợp', status: 'active' },
-        { id: 3, code: 'CL003', name: 'Nhựa TPU', status: 'inactive' },
-      ],
-    };
-  },
-  computed: {
-    filteredMaterials() {
-      return this.materials.filter(item => {
-        const matchesSearch = item.name.toLowerCase().includes(this.search.toLowerCase()) || item.code.toLowerCase().includes(this.search.toLowerCase());
-        const matchesStatus = this.status === '' || item.status === this.status;
-        return matchesSearch && matchesStatus;
-      });
-    },
-  },
-  methods: {
-    resetFilters() {
-      this.search = '';
-      this.status = '';
-    },
-    addMaterial() {
-      if (this.newMaterial.trim()) {
-        const newCode = `CL00${this.materials.length + 1}`;
-        this.materials.push({
-          id: this.materials.length + 1,
-          code: newCode,
-          name: this.newMaterial.trim(),
-          status: 'active',
-        });
-        this.newMaterial = '';
-        this.showModal = false;
-      }
-    },
-  },
-};
-</script>
-
-<style>
-/* CSS đã được di chuyển sang file src/scss/pages/chat-lieu.scss */
-</style>
+<script src="./ChatLieu.js"></script>

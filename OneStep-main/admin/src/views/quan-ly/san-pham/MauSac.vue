@@ -5,14 +5,18 @@
     <!-- Tìm kiếm -->
     <div class="filter-box">
       <label>Tìm kiếm màu sắc:</label>
-      <input v-model="searchQuery" type="text" placeholder="Nhập mã / tên để tìm..." />
-      <button class="button" @click="resetFilter">Đặt lại bộ lọc</button>
+      <div class="filter-row">
+        <input v-model="searchQuery" type="text" placeholder="Nhập mã / tên để tìm..." />
+        <button class="button" @click="resetFilter">Đặt lại bộ lọc</button>
+      </div>
     </div>
 
-    <!-- Bảng danh sách -->
+    <!-- Danh sách màu sắc + nút thêm mới -->
     <div class="table-container">
-      <button class="button" @click="openModal">➕ Thêm mới màu sắc</button>
-      <br /><br />
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+        <h3 style="margin: 0;">Danh Sách Màu Sắc</h3>
+        <button class="button" @click="openModal">➕ Thêm mới màu sắc</button>
+      </div>
       <table class="table">
         <thead>
           <tr>

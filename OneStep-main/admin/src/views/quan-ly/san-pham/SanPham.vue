@@ -4,8 +4,8 @@
     <div class="filter-section">
       <h2>🔍 Bộ lọc tìm kiếm</h2>
       <div class="filter-grid">
-        <input v-model="search" type="text" placeholder="🔎 Mã / Tên sản phẩm" />
-        <button class="btn-reset" @click="resetFilter">♻️ Đặt lại</button>
+        <input v-model="search" type="text" placeholder=" Mã / Tên sản phẩm" />
+        <button class="btn-reset" @click="resetFilter"> Đặt lại</button>
       </div>
     </div>
 
@@ -44,10 +44,11 @@
                 <img :src="product.duongDanAnh" alt="Ảnh SP" style="width:40px;height:40px;" v-if="product.duongDanAnh"/>
               </td>
               <td>
-                <span :class="['status', product.trangThai === 1 ? 'active' : 'inactive']">
-                  {{ product.trangThai === 1 ? 'Hoạt động' : 'Ngừng hoạt động' }}
-                </span>
-              </td>
+  <span :class="['status', product.trangThai === 1 ? 'active' : 'inactive']">
+    {{ product.trangThai === 1 ? 'Hoạt động' : 'Ngừng hoạt động' }}
+  </span>
+</td>
+              
               <td>{{ product.ngayCapNhat }}</td>
               <td>{{ product.nguoiTao }}</td>
               <td>{{ product.nguoiCapNhat }}</td>
