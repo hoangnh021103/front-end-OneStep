@@ -43,7 +43,7 @@
               <td>{{ item.ten }}</td>
               <td>
                 <span :class="['status-tag', item.trangThai === 1 ? 'active' : 'inactive']">
-                  {{ item.trangThai === 1 ? 'Hoạt động' : 'Ngừng' }}
+                  {{ item.trangThai === 1 ? 'Còn Hàng' : 'Hết Hàng' }}
                 </span>
               </td>
               <td>

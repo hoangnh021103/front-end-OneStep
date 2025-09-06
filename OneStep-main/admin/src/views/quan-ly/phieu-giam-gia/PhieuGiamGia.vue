@@ -46,7 +46,7 @@
             <div class="voucher-list-header">
                 <h3>Danh sách phiếu giảm giá</h3>
                 <div>
-                    <span class="voucher-count"><i class="fa fa-ticket"></i> 10 phiếu giảm giá</span>
+                    <span class="voucher-count"><i class="fa fa-ticket"></i> {{ vouchers.length }} phiếu giảm giá</span>
                     <button class="btn add-btn"><i class="fa fa-plus"></i> Thêm mới</button>
                 </div>
             </div>
@@ -78,17 +78,17 @@
                         </tr>
                         <tr v-for="(voucher, index) in vouchers" :key="voucher.id">
                             <td>{{ index + 1 }}</td>
-                            <td>{{ voucher.code }}</td>
-                            <td>{{ voucher.name }}</td>
-                            <td>{{ voucher.condition }}</td>
-                            <td>{{ voucher.value }}</td>
-                            <td>{{ voucher.quantity }}</td>
-                            <td>{{ voucher.startDate }}<br />{{ voucher.startTime || '00:00:00' }}</td>
-                            <td>{{ voucher.endDate }}<br />{{ voucher.endTime || '00:00:00' }}</td>
-                            <td><span :class="['status', voucher.status === 'active' ? 'active' : 'inactive']">{{ voucher.status === 'active' ? 'Đang hoạt động' : 'Hết hạn' }}</span></td>
+                            <td>{{ voucher.ma }}</td>
+                            <td>{{ voucher.ten }}</td>
+                            <td>{{ formatCondition(voucher.dieuKien) }}</td>
+                            <td>{{ formatValue(voucher.giaTri, voucher.loai) }}</td>
+                            <td>{{ voucher.soLuong }}</td>
+                            <td>{{ formatDate(voucher.ngayBatDau) }}</td>
+                            <td>{{ formatDate(voucher.ngayKetThuc) }}</td>
+                            <td><span :class="['status', getStatusClass(voucher.ngayKetThuc)]">{{ getStatusText(voucher.ngayKetThuc) }}</span></td>
                             <td>
-                                <button class="action-btn edit" title="Sửa" @click="editVoucher(index)"><i class="fa fa-edit"></i></button>
-                                <button class="action-btn delete" title="Xóa" @click="deleteVoucher(index)"><i class="fa fa-trash"></i></button>
+                                <button class="action-btn edit" title="Sửa" @click="editVoucher(voucher)"><i class="fa fa-edit"></i></button>
+                                <button class="action-btn delete" title="Xóa" @click="deleteVoucher(voucher.id)"><i class="fa fa-trash"></i></button>
                             </td>
                         </tr>
                     </tbody>
@@ -107,35 +107,3 @@
 </template>
 
 <script src="./PhieuGiamGia.js"></script>
-
-<style scoped>
-/* Empty state styles */
-.no-data {
-  text-align: center;
-  padding: 40px 20px;
-  color: #666;
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-
-.empty-icon {
-  font-size: 48px;
-  opacity: 0.5;
-}
-
-.empty-text {
-  font-size: 18px;
-  font-weight: 500;
-  color: #333;
-}
-
-.empty-subtext {
-  font-size: 14px;
-  color: #999;
-}
-</style>

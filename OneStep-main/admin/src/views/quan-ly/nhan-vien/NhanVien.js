@@ -4,20 +4,24 @@ export default {
     return {
       employees: [],
       search: "",
-      status: "",
+      genderFilter: "",
       showModal: false,
-      newEmployee: {
-        code: "",
-        name: "",
+      editEmployee: null,
+      modalData: {
+        id: 0,
+        hoTen: "",
+        ngaySinh: "",
+        gioiTinh: "",
         email: "",
-        phone: "",
-        joinDate: "",
-        status: "active",
+        soDienThoai: "",
+        diaChi: "",
+        urlAnh: "",
+        vaiTroId: 0,
+        ngayTao: "",
         ngayCapNhat: "",
         nguoiTao: "",
         nguoiCapNhat: ""
       },
-      editIndex: null,
       currentPage: 1,
       pageSize: 5
     };
@@ -27,9 +31,10 @@ export default {
       const keyword = this.search.toLowerCase();
       return this.employees.filter(
         e =>
-          (e.name && e.name.toLowerCase().includes(keyword)) ||
-          (e.code && e.code.toLowerCase().includes(keyword)) &&
-          (this.status === "" || e.status === this.status)
+          (e.hoTen && e.hoTen.toLowerCase().includes(keyword)) ||
+          (e.email && e.email.toLowerCase().includes(keyword)) ||
+          (e.soDienThoai && e.soDienThoai.includes(keyword)) &&
+          (this.genderFilter === "" || e.gioiTinh === this.genderFilter)
       );
     },
     totalPages() {
@@ -59,7 +64,8 @@ export default {
     },
     resetFilter() {
       this.search = "";
-      this.status = "";
+      this.genderFilter = "";
+      this.currentPage = 1;
       this.fetchEmployees();
     },
     changePage(page) {
@@ -67,58 +73,83 @@ export default {
         this.currentPage = page;
       }
     },
-    openModal() {
-      this.showModal = true;
-      this.editIndex = null;
-      this.newEmployee = {
-        code: "",
-        name: "",
+    openAddModal() {
+      this.editEmployee = null;
+      this.modalData = {
+        id: 0,
+        hoTen: "",
+        ngaySinh: "",
+        gioiTinh: "",
         email: "",
-        phone: "",
-        joinDate: "",
-        status: "active",
+        soDienThoai: "",
+        diaChi: "",
+        urlAnh: "",
+        vaiTroId: 0,
+        ngayTao: "",
         ngayCapNhat: "",
         nguoiTao: "",
         nguoiCapNhat: ""
       };
+      this.showModal = true;
     },
     closeModal() {
       this.showModal = false;
     },
     saveEmployee() {
-      if (!this.newEmployee.code) {
-        alert("Vui lòng nhập mã nhân viên.");
+      if (!this.modalData.hoTen) {
+        alert("Vui lòng nhập họ và tên nhân viên.");
         return;
       }
-      if (!this.newEmployee.name) {
-        alert("Vui lòng nhập tên nhân viên.");
-        return;
-      }
-      if (!this.newEmployee.email) {
+      if (!this.modalData.email) {
         alert("Vui lòng nhập email.");
         return;
       }
-      if (!this.newEmployee.phone) {
+      if (!this.modalData.soDienThoai) {
         alert("Vui lòng nhập số điện thoại.");
         return;
       }
-      if (!this.newEmployee.joinDate) {
-        alert("Vui lòng nhập ngày tham gia.");
+      if (!this.modalData.gioiTinh) {
+        alert("Vui lòng chọn giới tính.");
+        return;
+      }
+      if (!this.modalData.vaiTroId || this.modalData.vaiTroId === 0) {
+        alert("Vui lòng chọn vai trò.");
         return;
       }
       // Gọi API thêm/sửa ở đây nếu cần
       this.closeModal();
     },
-    editEmployee(index) {
-      this.editIndex = index;
-      this.newEmployee = { ...this.employees[index] };
+    openEditModal(emp) {
+      this.editEmployee = emp;
+      this.modalData = { ...emp };
       this.showModal = true;
     },
-    deleteEmployee(index) {
+    async deleteEmployee(id) {
       if (confirm("Xác nhận xoá nhân viên này?")) {
-        // Gọi API xoá ở đây nếu cần
-        this.employees.splice(index, 1);
+        try {
+          await axios.delete(`http://localhost:8080/nhan-vien/xoa/${id}`);
+          this.fetchEmployees(); // Refresh danh sách sau khi xóa
+          alert("Xóa nhân viên thành công!");
+        } catch (error) {
+          console.error("Lỗi khi xóa nhân viên:", error);
+          alert("Có lỗi xảy ra khi xóa nhân viên!");
+        }
       }
+    },
+    // Helper methods để format dữ liệu hiển thị
+    formatDate(dateString) {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('vi-VN');
+    },
+    getRoleName(vaiTroId) {
+      const roles = {
+        0: 'Chưa xác định',
+        1: 'Quản lý',
+        2: 'Nhân viên',
+        3: 'Thực tập sinh'
+      };
+      return roles[vaiTroId] || 'Chưa xác định';
     }
   },
   watch: {

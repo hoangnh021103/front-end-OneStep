@@ -10,14 +10,16 @@ export default {
       toDate: "",
       showModal: false,
       newVoucher: {
-        code: "",
-        name: "",
-        condition: "",
-        value: "",
-        quantity: "",
-        startDate: "",
-        endDate: "",
-        status: "active",
+        id: 0,
+        ma: "",
+        ten: "",
+        loai: 0,
+        giaTri: 0,
+        dieuKien: 0,
+        soLuong: 0,
+        ngayBatDau: "",
+        ngayKetThuc: "",
+        duongDanAnh: "",
         ngayCapNhat: "",
         nguoiTao: "",
         nguoiCapNhat: ""
@@ -32,12 +34,12 @@ export default {
       const keyword = this.search.toLowerCase();
       return this.vouchers.filter(
         v =>
-          (v.code && v.code.toLowerCase().includes(keyword)) ||
-          (v.name && v.name.toLowerCase().includes(keyword)) &&
-          (this.status === "" || v.status === this.status) &&
-          (this.discountType === "" || v.discountType === this.discountType) &&
-          (this.fromDate === "" || v.startDate >= this.fromDate) &&
-          (this.toDate === "" || v.endDate <= this.toDate)
+          (v.ma && v.ma.toLowerCase().includes(keyword)) ||
+          (v.ten && v.ten.toLowerCase().includes(keyword)) &&
+          (this.status === "" || this.getStatusText(v.ngayKetThuc) === this.status) &&
+          (this.discountType === "" || v.loai === this.discountType) &&
+          (this.fromDate === "" || v.ngayBatDau >= this.fromDate) &&
+          (this.toDate === "" || v.ngayKetThuc <= this.toDate)
       );
     },
     totalPages() {
@@ -70,14 +72,16 @@ export default {
       this.showModal = true;
       this.editIndex = null;
       this.newVoucher = {
-        code: "",
-        name: "",
-        condition: "",
-        value: "",
-        quantity: "",
-        startDate: "",
-        endDate: "",
-        status: "active",
+        id: 0,
+        ma: "",
+        ten: "",
+        loai: 0,
+        giaTri: 0,
+        dieuKien: 0,
+        soLuong: 0,
+        ngayBatDau: "",
+        ngayKetThuc: "",
+        duongDanAnh: "",
         ngayCapNhat: "",
         nguoiTao: "",
         nguoiCapNhat: ""
@@ -87,47 +91,79 @@ export default {
       this.showModal = false;
     },
     saveVoucher() {
-      if (!this.newVoucher.code) {
+      if (!this.newVoucher.ma) {
         alert("Vui lòng nhập mã phiếu giảm giá.");
         return;
       }
-      if (!this.newVoucher.name) {
+      if (!this.newVoucher.ten) {
         alert("Vui lòng nhập tên phiếu giảm giá.");
         return;
       }
-      if (!this.newVoucher.condition) {
+      if (!this.newVoucher.dieuKien) {
         alert("Vui lòng nhập điều kiện.");
         return;
       }
-      if (!this.newVoucher.value) {
+      if (!this.newVoucher.giaTri) {
         alert("Vui lòng nhập giá trị giảm.");
         return;
       }
-      if (!this.newVoucher.quantity) {
+      if (!this.newVoucher.soLuong) {
         alert("Vui lòng nhập số lượng.");
         return;
       }
-      if (!this.newVoucher.startDate) {
+      if (!this.newVoucher.ngayBatDau) {
         alert("Vui lòng chọn ngày bắt đầu.");
         return;
       }
-      if (!this.newVoucher.endDate) {
+      if (!this.newVoucher.ngayKetThuc) {
         alert("Vui lòng chọn ngày kết thúc.");
         return;
       }
       // Gọi API thêm/sửa ở đây nếu cần
       this.closeModal();
     },
-    editVoucher(index) {
-      this.editIndex = index;
-      this.newVoucher = { ...this.vouchers[index] };
+    editVoucher(voucher) {
+      this.editIndex = voucher.id;
+      this.newVoucher = { ...voucher };
       this.showModal = true;
     },
-    deleteVoucher(index) {
+    async deleteVoucher(id) {
       if (confirm("Xác nhận xoá phiếu giảm giá này?")) {
-        // Gọi API xoá ở đây nếu cần
-        this.vouchers.splice(index, 1);
+        try {
+          await axios.delete(`http://localhost:8080/voucher/xoa/${id}`);
+          this.fetchVouchers(); // Refresh danh sách sau khi xóa
+          alert("Xóa phiếu giảm giá thành công!");
+        } catch (error) {
+          console.error("Lỗi khi xóa phiếu giảm giá:", error);
+          alert("Có lỗi xảy ra khi xóa phiếu giảm giá!");
+        }
       }
+    },
+    // Helper methods để format dữ liệu hiển thị
+    formatDate(dateString) {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('vi-VN');
+    },
+    formatCondition(dieuKien) {
+      return `Đơn hàng tối thiểu ${dieuKien.toLocaleString('vi-VN')}đ`;
+    },
+    formatValue(giaTri, loai) {
+      if (loai === 0) {
+        return `${giaTri}%`;
+      } else {
+        return `${giaTri.toLocaleString('vi-VN')}đ`;
+      }
+    },
+    getStatusText(ngayKetThuc) {
+      const today = new Date();
+      const endDate = new Date(ngayKetThuc);
+      return endDate >= today ? 'Đang hoạt động' : 'Hết hạn';
+    },
+    getStatusClass(ngayKetThuc) {
+      const today = new Date();
+      const endDate = new Date(ngayKetThuc);
+      return endDate >= today ? 'active' : 'inactive';
     }
   },
   mounted() {

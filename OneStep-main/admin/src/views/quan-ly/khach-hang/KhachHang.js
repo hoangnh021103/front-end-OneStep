@@ -4,11 +4,17 @@ export default {
     return {
       customers: [],
       search: "",
-      status: "",
+      genderFilter: "",
       showModal: false,
       newCustomer: {
-        ten: "",
-        trangThai: 1,
+        id: 0,
+        hoTen: "",
+        ngaySinh: "",
+        gioiTinh: "",
+        email: "",
+        soDienThoai: "",
+        urlAnh: "",
+        ngayTao: "",
         ngayCapNhat: "",
         nguoiTao: "",
         nguoiCapNhat: ""
@@ -23,8 +29,10 @@ export default {
       const keyword = this.search.toLowerCase();
       return this.customers.filter(
         c =>
-          (c.ten && c.ten.toLowerCase().includes(keyword)) &&
-          (this.status === "" || c.trangThai == this.status)
+          (c.hoTen && c.hoTen.toLowerCase().includes(keyword)) ||
+          (c.email && c.email.toLowerCase().includes(keyword)) ||
+          (c.soDienThoai && c.soDienThoai.includes(keyword)) &&
+          (this.genderFilter === "" || c.gioiTinh === this.genderFilter)
       );
     },
     totalPages() {
@@ -51,24 +59,30 @@ export default {
         console.log("Response từ API:", res.data);
         
         // Xử lý dữ liệu từ API
-        if (Array.isArray(res.data)) {
-          this.customers = res.data;
-        } else if (res.data && Array.isArray(res.data.data)) {
-          this.customers = res.data.data;
-        } else {
-          this.customers = [];
-        }
+        this.customers = Array.isArray(res.data) ? res.data : res.data.data || [];
         
         console.log("Dữ liệu khách hàng đã load:", this.customers);
+        
       } catch (err) {
         console.error("Lỗi khi gọi API khách hàng:", err);
-        alert("Không thể tải dữ liệu khách hàng. Vui lòng kiểm tra kết nối API.");
         this.customers = [];
+        
+        let errorMessage = "Không thể tải dữ liệu khách hàng.";
+        
+        if (err.code === 'ECONNREFUSED') {
+          errorMessage = "Không thể kết nối đến server. Vui lòng kiểm tra xem server có đang chạy không.";
+        } else if (err.response?.status === 404) {
+          errorMessage = "API endpoint không tồn tại. Vui lòng kiểm tra đường dẫn API.";
+        } else if (err.response?.status === 500) {
+          errorMessage = "Lỗi server. Vui lòng thử lại sau.";
+        }
+        
+        alert(errorMessage);
       }
     },
     resetFilter() {
       this.search = "";
-      this.status = "";
+      this.genderFilter = "";
       this.currentPage = 1;
       this.fetchCustomers();
     },
@@ -81,8 +95,14 @@ export default {
       this.showModal = true;
       this.editIndex = null;
       this.newCustomer = {
-        ten: "",
-        trangThai: 1,
+        id: 0,
+        hoTen: "",
+        ngaySinh: "",
+        gioiTinh: "",
+        email: "",
+        soDienThoai: "",
+        urlAnh: "",
+        ngayTao: "",
         ngayCapNhat: "",
         nguoiTao: "",
         nguoiCapNhat: ""
@@ -92,32 +112,49 @@ export default {
       this.showModal = false;
     },
     saveCustomer() {
-      if (!this.newCustomer.ten) {
-        alert("Vui lòng nhập tên khách hàng.");
+      if (!this.newCustomer.hoTen) {
+        alert("Vui lòng nhập họ và tên khách hàng.");
+        return;
+      }
+      if (!this.newCustomer.email) {
+        alert("Vui lòng nhập email khách hàng.");
+        return;
+      }
+      if (!this.newCustomer.soDienThoai) {
+        alert("Vui lòng nhập số điện thoại khách hàng.");
         return;
       }
       // Gọi API thêm/sửa ở đây nếu cần
       this.closeModal();
     },
-    editCustomer(index) {
-      this.editIndex = index;
-      this.newCustomer = { ...this.customers[index] };
+    editCustomer(customer) {
+      this.editIndex = customer.id;
+      this.newCustomer = { ...customer };
       this.showModal = true;
     },
-    deleteCustomer(index) {
+    async deleteCustomer(id) {
       if (confirm("Xác nhận xoá khách hàng này?")) {
-        // Gọi API xoá ở đây nếu cần
-        this.customers.splice(index, 1);
+        try {
+          await axios.delete(`http://localhost:8080/khach-hang/xoa/${id}`);
+          this.fetchCustomers(); // Refresh danh sách sau khi xóa
+          alert("Xóa khách hàng thành công!");
+        } catch (error) {
+          console.error("Lỗi khi xóa khách hàng:", error);
+          alert("Có lỗi xảy ra khi xóa khách hàng!");
+        }
       }
     },
     openAddModal() {
       this.openModal();
     },
     openEditModal(customer) {
-      const index = this.customers.findIndex(c => c.id === customer.id);
-      if (index !== -1) {
-        this.editCustomer(index);
-      }
+      this.editCustomer(customer);
+    },
+    // Helper method để format ngày tháng
+    formatDate(dateString) {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('vi-VN');
     }
   },
   watch: {
@@ -129,6 +166,7 @@ export default {
     }
   },
   mounted() {
+    console.log("Component mounted, fetching customers...");
     this.fetchCustomers();
   }
 };

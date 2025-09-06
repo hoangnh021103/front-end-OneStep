@@ -6,11 +6,12 @@
     </header>
     <section class="filter-section">
       <div class="filter-row">
-        <input v-model="search" placeholder="Tìm kiếm mã / tên nhân viên..." />
-        <select v-model="status">
-          <option value="">Chọn trạng thái</option>
-          <option value="active">Đang làm việc</option>
-          <option value="inactive">Nghỉ việc</option>
+        <input v-model="search" placeholder="Tìm kiếm họ tên, email hoặc số điện thoại..." />
+        <select v-model="genderFilter">
+          <option value="">Chọn giới tính</option>
+          <option value="Nam">Nam</option>
+          <option value="Nữ">Nữ</option>
+          <option value="Khác">Khác</option>
         </select>
         <button @click="resetFilter">Đặt lại bộ lọc</button>
       </div>
@@ -24,18 +25,21 @@
         <thead>
           <tr>
             <th>STT</th>
-            <th>Mã Nhân Viên</th>
-            <th>Tên Nhân viên</th>
+            <th>Họ tên</th>
+            <th>Ngày sinh</th>
+            <th>Giới tính</th>
             <th>Email</th>
             <th>Số điện thoại</th>
-            <th>Ngày tham gia</th>
-            <th>Trạng thái</th>
+            <th>Địa chỉ</th>
+            <th>Vai trò</th>
+            <th>Ngày tạo</th>
+            <th>Ngày cập nhật</th>
             <th>Hành động</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-if="pagedEmployees.length === 0">
-            <td colspan="8" class="no-data">
+          <tr v-if="employees.length === 0">
+            <td colspan="11" class="no-data">
               <div class="empty-state">
                 <div class="empty-icon">👥</div>
                 <div class="empty-text">Chưa có nhân viên nào</div>
@@ -45,19 +49,18 @@
           </tr>
           <tr v-for="(emp, idx) in pagedEmployees" :key="emp.id">
             <td>{{ (currentPage-1)*pageSize + idx + 1 }}</td>
-            <td>{{ emp.code }}</td>
-            <td>{{ emp.name }}</td>
+            <td>{{ emp.hoTen }}</td>
+            <td>{{ formatDate(emp.ngaySinh) }}</td>
+            <td>{{ emp.gioiTinh }}</td>
             <td>{{ emp.email }}</td>
-            <td>{{ emp.phone }}</td>
-            <td>{{ emp.joinDate }}</td>
+            <td>{{ emp.soDienThoai }}</td>
+            <td>{{ emp.diaChi }}</td>
+            <td>{{ getRoleName(emp.vaiTroId) }}</td>
+            <td>{{ formatDate(emp.ngayTao) }}</td>
+            <td>{{ formatDate(emp.ngayCapNhat) }}</td>
             <td>
-              <span :class="['status-badge', emp.status === 'active' ? 'active' : 'inactive']">
-                {{ emp.status === 'active' ? 'Đang làm việc' : 'Nghỉ việc' }}
-              </span>
-            </td>
-            <td>
-              <button @click="openEditModal(emp)">✏️</button>
-              <button @click="deleteEmployee(emp)">🗑</button>
+              <button class="action-btn edit" @click="openEditModal(emp)" title="Sửa">✏️</button>
+              <button class="action-btn delete" @click="deleteEmployee(emp.id)" title="Xóa">🗑</button>
             </td>
           </tr>
         </tbody>
@@ -83,14 +86,23 @@
       <div class="modal-content">
         <h3>{{ editEmployee ? 'Sửa nhân viên' : 'Thêm nhân viên' }}</h3>
         <form @submit.prevent="saveEmployee">
-          <input v-model="modalData.code" placeholder="Mã nhân viên" required />
-          <input v-model="modalData.name" placeholder="Tên nhân viên" required />
-          <input v-model="modalData.email" placeholder="Email" required />
-          <input v-model="modalData.phone" placeholder="Số điện thoại" required />
-          <input v-model="modalData.joinDate" placeholder="Ngày tham gia" required />
-          <select v-model="modalData.status">
-            <option value="active">Đang làm việc</option>
-            <option value="inactive">Nghỉ việc</option>
+          <input v-model="modalData.hoTen" placeholder="Họ và tên" required />
+          <input v-model="modalData.ngaySinh" type="date" placeholder="Ngày sinh" />
+          <select v-model="modalData.gioiTinh">
+            <option value="">Chọn giới tính</option>
+            <option value="Nam">Nam</option>
+            <option value="Nữ">Nữ</option>
+            <option value="Khác">Khác</option>
+          </select>
+          <input v-model="modalData.email" type="email" placeholder="Email" required />
+          <input v-model="modalData.soDienThoai" placeholder="Số điện thoại" required />
+          <input v-model="modalData.diaChi" placeholder="Địa chỉ" />
+          <input v-model="modalData.urlAnh" placeholder="URL ảnh (tùy chọn)" />
+          <select v-model="modalData.vaiTroId">
+            <option value="0">Chọn vai trò</option>
+            <option value="1">Quản lý</option>
+            <option value="2">Nhân viên</option>
+            <option value="3">Thực tập sinh</option>
           </select>
           <div class="modal-actions">
             <button type="submit">Lưu</button>
@@ -102,108 +114,7 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'EmployeeManager',
-  data() {
-    return {
-      search: '',
-      status: '',
-      showModal: false,
-      editEmployee: null,
-      modalData: {
-        code: '',
-        name: '',
-        email: '',
-        phone: '',
-        joinDate: '',
-        status: 'active'
-      },
-      currentPage: 1,
-      pageSize: 5,
-      employees: []
-    }
-  },
-  computed: {
-    filteredEmployees() {
-      return this.employees.filter(emp => {
-        const matchSearch = this.search === '' || emp.name.toLowerCase().includes(this.search.toLowerCase()) || emp.code.toLowerCase().includes(this.search.toLowerCase());
-        const matchStatus = this.status === '' || emp.status === this.status;
-        return matchSearch && matchStatus;
-      });
-    },
-    totalPages() {
-      return Math.ceil(this.filteredEmployees.length / this.pageSize) || 1;
-    },
-    pagedEmployees() {
-      const start = (this.currentPage - 1) * this.pageSize;
-      return this.filteredEmployees.slice(start, start + this.pageSize);
-    },
-    visiblePages() {
-      let pages = [];
-      let start = Math.max(1, this.currentPage - 1);
-      let end = Math.min(this.totalPages, start + 1);
-      if (end - start < 1) start = Math.max(1, end - 1);
-      for (let i = start; i <= end; i++) pages.push(i);
-      return pages;
-    }
-  },
-  watch: {
-    filteredEmployees() {
-      if (this.currentPage > this.totalPages) this.currentPage = this.totalPages;
-    },
-    pageSize() {
-      this.currentPage = 1;
-    }
-  },
-  methods: {
-    resetFilter() {
-      this.search = '';
-      this.status = '';
-    },
-    openAddModal() {
-      this.editEmployee = null;
-      this.modalData = {
-        code: '',
-        name: '',
-        email: '',
-        phone: '',
-        joinDate: '',
-        status: 'active'
-      };
-      this.showModal = true;
-    },
-    openEditModal(emp) {
-      this.editEmployee = emp;
-      this.modalData = { ...emp };
-      this.showModal = true;
-    },
-    closeModal() {
-      this.showModal = false;
-    },
-    saveEmployee() {
-      if (this.editEmployee) {
-        Object.assign(this.editEmployee, this.modalData);
-      } else {
-        const newId = this.employees.length ? Math.max(...this.employees.map(e => e.id)) + 1 : 1;
-        this.employees.push({ ...this.modalData, id: newId });
-      }
-      this.closeModal();
-    },
-    deleteEmployee(emp) {
-      if (confirm('Bạn có chắc chắn muốn xóa nhân viên này?')) {
-        this.employees = this.employees.filter(e => e.id !== emp.id);
-      }
-    },
-    changePage(page) {
-      if (page >= 1 && page <= this.totalPages) {
-        this.currentPage = page;
-      }
-    }
-    
-  }
-}
-</script>
+<script src="./NhanVien.js"></script>
 
 <style scoped>
 /* Empty state styles */

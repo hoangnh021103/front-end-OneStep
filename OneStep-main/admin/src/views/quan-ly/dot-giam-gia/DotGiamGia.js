@@ -4,20 +4,19 @@ export default {
     return {
       discounts: [],
       search: "",
-      status: "",
       showModal: false,
-      newDiscount: {
-        code: "",
-        name: "",
-        value: "",
-        startDate: "",
-        endDate: "",
-        status: "active",
+      editingId: null,
+      isLoading: false,
+      form: {
+        id: 0,
+        sanPhamId: 0,
+        tenSanPham: "",
+        voucherId: 0,
+        tenVoucher: "",
         ngayCapNhat: "",
         nguoiTao: "",
         nguoiCapNhat: ""
       },
-      editIndex: null,
       currentPage: 1,
       pageSize: 5
     };
@@ -26,10 +25,9 @@ export default {
     filteredDiscounts() {
       const keyword = this.search.toLowerCase();
       return this.discounts.filter(d => {
-        const matchesSearch = (d.code && d.code.toLowerCase().includes(keyword)) ||
-                             (d.name && d.name.toLowerCase().includes(keyword));
-        const matchesStatus = this.status === "" || d.status === this.status;
-        return matchesSearch && matchesStatus;
+        const matchesSearch = (d.tenSanPham && d.tenSanPham.toLowerCase().includes(keyword)) ||
+                             (d.tenVoucher && d.tenVoucher.toLowerCase().includes(keyword));
+        return matchesSearch;
       });
     },
     totalPages() {
@@ -43,70 +41,108 @@ export default {
   methods: {
     async fetchDiscounts() {
       try {
-        const res = await axios.get("http://localhost:8080/dot-giam-gia/hien-thi");
+        this.isLoading = true;
+        const res = await axios.get("http://localhost:8080/san-pham-khuyen-mai/hien-thi");
         this.discounts = Array.isArray(res.data) ? res.data : res.data.data || [];
       } catch (err) {
-        console.error(err);
+        console.error("Lỗi khi tải dữ liệu đợt giảm giá:", err);
+        alert("Không thể tải dữ liệu đợt giảm giá. Vui lòng thử lại sau.");
+      } finally {
+        this.isLoading = false;
       }
     },
     resetFilters() {
       this.search = "";
-      this.status = "";
       this.currentPage = 1;
       this.fetchDiscounts();
     },
-    openModal() {
+    openAddModal() {
+      this.editingId = null;
+      this.resetForm();
       this.showModal = true;
-      this.editIndex = null;
-      this.newDiscount = {
-        code: "",
-        name: "",
-        value: "",
-        startDate: "",
-        endDate: "",
-        status: "active",
-        ngayCapNhat: "",
-        nguoiTao: "",
-        nguoiCapNhat: ""
-      };
     },
     closeModal() {
       this.showModal = false;
     },
-    saveDiscount() {
-      if (!this.newDiscount.code) {
-        alert("Vui lòng nhập mã đợt giảm giá.");
+    async saveDiscount() {
+      // Validation
+      if (!this.form.sanPhamId || this.form.sanPhamId <= 0) {
+        alert("Vui lòng nhập ID sản phẩm hợp lệ.");
         return;
       }
-      if (!this.newDiscount.name) {
-        alert("Vui lòng nhập tên đợt giảm giá.");
+      if (!this.form.tenSanPham.trim()) {
+        alert("Vui lòng nhập tên sản phẩm.");
         return;
       }
-      if (!this.newDiscount.value) {
-        alert("Vui lòng nhập giá trị giảm.");
+      if (!this.form.voucherId || this.form.voucherId <= 0) {
+        alert("Vui lòng nhập ID voucher hợp lệ.");
         return;
       }
-      if (!this.newDiscount.startDate) {
-        alert("Vui lòng chọn ngày bắt đầu.");
+      if (!this.form.tenVoucher.trim()) {
+        alert("Vui lòng nhập tên voucher.");
         return;
       }
-      if (!this.newDiscount.endDate) {
-        alert("Vui lòng chọn ngày kết thúc.");
-        return;
+
+      try {
+        this.isLoading = true;
+        
+        if (this.editingId) {
+          // Cập nhật đợt giảm giá
+          await axios.put(`http://localhost:8080/san-pham-khuyen-mai/cap-nhat/${this.editingId}`, this.form);
+          alert("Cập nhật đợt giảm giá thành công!");
+        } else {
+          // Thêm mới đợt giảm giá
+          await axios.post("http://localhost:8080/san-pham-khuyen-mai/them", this.form);
+          alert("Thêm đợt giảm giá thành công!");
+        }
+        
+        this.closeModal();
+        this.fetchDiscounts(); // Refresh danh sách
+      } catch (error) {
+        console.error("Lỗi khi lưu đợt giảm giá:", error);
+        alert("Có lỗi xảy ra khi lưu đợt giảm giá!");
+      } finally {
+        this.isLoading = false;
       }
-      // Gọi API thêm/sửa ở đây nếu cần
-      this.closeModal();
     },
-    editDiscount(index) {
-      this.editIndex = index;
-      this.newDiscount = { ...this.discounts[index] };
+    openEditModal(discount) {
+      this.editingId = discount.id;
+      this.form = { ...discount };
       this.showModal = true;
     },
-    deleteDiscount(index) {
+    async deleteDiscount(id) {
       if (confirm("Xác nhận xoá đợt giảm giá này?")) {
-        // Gọi API xoá ở đây nếu cần
-        this.discounts.splice(index, 1);
+        try {
+          this.isLoading = true;
+          await axios.delete(`http://localhost:8080/san-pham-khuyen-mai/xoa/${id}`);
+          this.fetchDiscounts(); // Refresh danh sách sau khi xóa
+          alert("Xóa đợt giảm giá thành công!");
+        } catch (error) {
+          console.error("Lỗi khi xóa đợt giảm giá:", error);
+          alert("Có lỗi xảy ra khi xóa đợt giảm giá!");
+        } finally {
+          this.isLoading = false;
+        }
       }
+    },
+    // Helper method để format ngày tháng
+    formatDate(dateString) {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('vi-VN');
+    },
+    // Helper method để reset form
+    resetForm() {
+      this.form = {
+        id: 0,
+        sanPhamId: 0,
+        tenSanPham: "",
+        voucherId: 0,
+        tenVoucher: "",
+        ngayCapNhat: "",
+        nguoiTao: "",
+        nguoiCapNhat: ""
+      };
     }
   },
   mounted() {
