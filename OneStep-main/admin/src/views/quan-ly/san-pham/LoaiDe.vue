@@ -41,16 +41,16 @@
           <tbody>
             <tr v-for="(item, index) in filteredSoles" :key="item.id">
               <td>{{ index + 1 }}</td>
-              <td>{{ item.code }}</td>
-              <td>{{ item.name }}</td>
+              <td>{{ item.ma }}</td>
+              <td>{{ item.ten }}</td>
               <td>
-                <span :class="['status-tag', item.status === 'active' ? 'active' : 'inactive']">
-                  {{ item.status === 'active' ? 'Hoạt động' : 'Ngừng' }}
+                <span :class="['status-tag', item.trangThai === 1 ? 'active' : 'inactive']">
+                  {{ item.trangThai === 1 ? 'Hoạt động' : 'Ngừng' }}
                 </span>
               </td>
               <td>
-                <button class="action-btn edit">✏️</button>
-                <button class="action-btn view">🔍</button>
+                <button @click="editSole(index)" class="action-btn edit">✏️</button>
+                <button @click="deleteSole(index)" class="action-btn view">🗑️</button>
               </td>
             </tr>
           </tbody>
@@ -63,9 +63,10 @@
       <div class="modal">
         <h3>➕ Thêm Loại Đế</h3>
         <label>Tên loại đế</label>
-        <input type="text" v-model="newSole" placeholder="Nhập tên loại đế" />
+        <input type="text" v-model="newSole.ten" placeholder="Nhập tên loại đế" />
+        <input type="text" v-model="newSole.ma" placeholder="Nhập mã loại đế" />
         <div class="modal-actions">
-          <button @click="addSole" class="confirm-btn">✔️ Thêm</button>
+          <button @click="saveSole" class="confirm-btn">✔️ Thêm</button>
           <button @click="showModal = false" class="cancel-btn">❌ Huỷ</button>
         </div>
       </div>
@@ -73,51 +74,7 @@
   </div>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      search: '',
-      status: '',
-      showModal: false,
-      newSole: '',
-      soles: [
-        { id: 1, code: 'DE001', name: 'Đế cao su', status: 'active' },
-        { id: 2, code: 'DE002', name: 'Đế EVA', status: 'active' },
-        { id: 3, code: 'DE003', name: 'Đế PU', status: 'inactive' },
-      ],
-    };
-  },
-  computed: {
-    filteredSoles() {
-      return this.soles.filter(item => {
-        const matchSearch = item.name.toLowerCase().includes(this.search.toLowerCase()) || item.code.toLowerCase().includes(this.search.toLowerCase());
-        const matchStatus = this.status === '' || item.status === this.status;
-        return matchSearch && matchStatus;
-      });
-    },
-  },
-  methods: {
-    resetFilters() {
-      this.search = '';
-      this.status = '';
-    },
-    addSole() {
-      if (this.newSole.trim()) {
-        const newCode = `DE00${this.soles.length + 1}`;
-        this.soles.push({
-          id: this.soles.length + 1,
-          code: newCode,
-          name: this.newSole.trim(),
-          status: 'active',
-        });
-        this.newSole = '';
-        this.showModal = false;
-      }
-    },
-  },
-};
-</script>
+<script src="./LoaiDe.js"></script>
 
 <style scoped>
 /* Được chia sẻ và đồng bộ với các trang quản lý khác */

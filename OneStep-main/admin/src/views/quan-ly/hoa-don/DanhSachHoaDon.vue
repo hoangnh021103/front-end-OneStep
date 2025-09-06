@@ -7,10 +7,6 @@
             <!-- Header -->
             <header class="header">
                 <div></div>
-                <div class="user-info"> 
-                    <span>Dường Phúc Hình</span>
-                    <img class="avatar" src="https://ui-avatars.com/api/?name=Nguyen+Trung+Hieu" alt="avatar" />
-                </div>
             </header>
             <div class="page-title">
                 <h2>Quản lý hóa đơn</h2>
@@ -54,6 +50,15 @@
                         </tr>
                     </thead>
                     <tbody>
+                        <tr v-if="tabInvoices.length === 0">
+                            <td colspan="11" class="no-data">
+                                <div class="empty-state">
+                                    <div class="empty-icon">🧾</div>
+                                    <div class="empty-text">Chưa có hóa đơn nào</div>
+                                    <div class="empty-subtext">Dữ liệu hóa đơn sẽ hiển thị ở đây</div>
+                                </div>
+                            </td>
+                        </tr>
                         <tr v-for="(inv, idx) in tabInvoices" :key="inv.id">
                             <td>{{ idx + 1 }}</td>
                             <td>{{ inv.code }}</td>
@@ -92,28 +97,7 @@ export default {
             fromDate: '',
             toDate: '',
             tab: 'all',
-            invoices: [
-                {
-                    id: 1, code: 'HD3420', customerName: 'Nguyễn Trung Hiếu', customerPhone: '0123456789',
-                    type: 'OFFLINE', staffCode: 'hieu123', staffName: 'Nguyễn Trung Hiếu',
-                    total: '0 đ', createdAt: '2025-07-24', status: 'pending'
-                },
-                {
-                   id: 1, code: 'HD3420', customerName: 'Nguyễn Trung Hiếu', customerPhone: '0123456789',
-                    type: 'OFFLINE', staffCode: 'hieu123', staffName: 'Nguyễn Trung Hiếu',
-                    total: '0 đ', createdAt: '2025-07-24', status: 'pending'
-                },
-                {
-                    id: 3, code: 'HD6662', customerName: 'Nguyễn Trung Hiếu', customerPhone: '0123456789',
-                    type: 'OFFLINE', staffCode: 'hieu123', staffName: 'Nguyễn Trung Hiếu',
-                    total: '2.500.000 đ', createdAt: '2025-07-24', status: 'done'
-                },
-                {
-                    id: 4, code: 'HD1472', customerName: 'Nguyễn Trung Hiếu', customerPhone: '0123456789',
-                    type: 'OFFLINE', staffCode: 'Duy8726', staffName: 'Nguyễn Trung Hiếu',
-                    total: '0 đ', createdAt: '2025-07-24', status: 'pending'
-                }
-            ]
+            invoices: []
         }
     },
     computed: {
@@ -167,3 +151,35 @@ export default {
     }
 }
 </script>
+
+<style scoped>
+/* Empty state styles */
+.no-data {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.empty-icon {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+.empty-text {
+  font-size: 18px;
+  font-weight: 500;
+  color: #333;
+}
+
+.empty-subtext {
+  font-size: 14px;
+  color: #999;
+}
+</style>

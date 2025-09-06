@@ -49,8 +49,12 @@
                         </td>
                     </tr>
                     <tr v-if="filteredDiscounts.length === 0">
-                        <td colspan="8" style="text-align:center; padding: 20px;">
-                            Không có đợt giảm giá nào
+                        <td colspan="8" class="no-data">
+                            <div class="empty-state">
+                                <div class="empty-icon">🎯</div>
+                                <div class="empty-text">Chưa có đợt giảm giá nào</div>
+                                <div class="empty-subtext">Nhấn "Thêm mới đợt giảm giá" để tạo đợt giảm giá đầu tiên</div>
+                            </div>
                         </td>
                     </tr>
                 </tbody>
@@ -108,10 +112,7 @@ import { reactive, ref, computed } from "vue";
 
 const filters = reactive({ code: "", status: "" });
 
-const discounts = ref([
-    { id: 1, code: "DGG001", name: "Tết 2025", value: "20%", startDate: "2025-02-01", endDate: "2025-02-15", status: "active" },
-    { id: 2, code: "DGG002", name: "Adidas Week", value: "15%", startDate: "2025-01-21", endDate: "2025-01-28", status: "expired" }
-]);
+const discounts = ref([]);
 
 const currentPage = ref(1);
 const pageSize = ref(5);
@@ -123,8 +124,8 @@ const filteredDiscounts = computed(() => {
     return discounts.value.filter(d => {
         const matchCodeName =
             !filters.code ||
-            d.code.toLowerCase().includes(filters.code.toLowerCase()) ||
-            d.name.toLowerCase().includes(filters.code.toLowerCase());
+            (d.code && d.code.toLowerCase().includes(filters.code.toLowerCase())) ||
+            (d.name && d.name.toLowerCase().includes(filters.code.toLowerCase()));
         const matchStatus = !filters.status || d.status === filters.status;
         return matchCodeName && matchStatus;
     });
@@ -158,4 +159,36 @@ const deleteDiscount = (id) => {
     }
 };
 </script>
+
+<style scoped>
+/* Empty state styles */
+.no-data {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.empty-icon {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+.empty-text {
+  font-size: 18px;
+  font-weight: 500;
+  color: #333;
+}
+
+.empty-subtext {
+  font-size: 14px;
+  color: #999;
+}
+</style>
 

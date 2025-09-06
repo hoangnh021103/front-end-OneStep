@@ -67,49 +67,28 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>1</td>
-                            <td>PGG005</td>
-                            <td>Voucher thành viên VIP</td>
-                            <td>3.000.000 đ</td>
-                            <td>30%</td>
-                            <td>25</td>
-                            <td>2024-01-01<br />00:00:00</td>
-                            <td>2024-12-31<br />00:00:00</td>
-                            <td><span class="status active">Đang hoạt động</span></td>
-                            <td>
-                                <button class="action-btn edit" title="Sửa"><i class="fa fa-edit"></i></button>
-                                <button class="action-btn delete" title="Xóa"><i class="fa fa-trash"></i></button>
+                        <tr v-if="vouchers.length === 0">
+                            <td colspan="10" class="no-data">
+                                <div class="empty-state">
+                                    <div class="empty-icon">🎫</div>
+                                    <div class="empty-text">Chưa có phiếu giảm giá nào</div>
+                                    <div class="empty-subtext">Nhấn "Thêm mới" để tạo phiếu giảm giá đầu tiên</div>
+                                </div>
                             </td>
                         </tr>
-                        <tr>
-                            <td>2</td>
-                            <td>PGG004</td>
-                            <td>Giảm giá Black Friday</td>
-                            <td>1.500.000 đ</td>
-                            <td>25%</td>
-                            <td>75</td>
-                            <td>2024-11-24<br />00:00:00</td>
-                            <td>2024-11-30<br />00:00:00</td>
-                            <td><span class="status active">Đang hoạt động</span></td>
+                        <tr v-for="(voucher, index) in vouchers" :key="voucher.id">
+                            <td>{{ index + 1 }}</td>
+                            <td>{{ voucher.code }}</td>
+                            <td>{{ voucher.name }}</td>
+                            <td>{{ voucher.condition }}</td>
+                            <td>{{ voucher.value }}</td>
+                            <td>{{ voucher.quantity }}</td>
+                            <td>{{ voucher.startDate }}<br />{{ voucher.startTime || '00:00:00' }}</td>
+                            <td>{{ voucher.endDate }}<br />{{ voucher.endTime || '00:00:00' }}</td>
+                            <td><span :class="['status', voucher.status === 'active' ? 'active' : 'inactive']">{{ voucher.status === 'active' ? 'Đang hoạt động' : 'Hết hạn' }}</span></td>
                             <td>
-                                <button class="action-btn edit" title="Sửa"><i class="fa fa-edit"></i></button>
-                                <button class="action-btn delete" title="Xóa"><i class="fa fa-trash"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>3</td>
-                            <td>PGG003</td>
-                            <td>Khuyến mãi cuối năm</td>
-                            <td>2.000.000 đ</td>
-                            <td>20%</td>
-                            <td>200</td>
-                            <td>2024-07-01<br />00:00:00</td>
-                            <td>2024-07-31<br />00:00:00</td>
-                            <td><span class="status active">Đang hoạt động</span></td>
-                            <td>
-                                <button class="action-btn edit" title="Sửa"><i class="fa fa-edit"></i></button>
-                                <button class="action-btn delete" title="Xóa"><i class="fa fa-trash"></i></button>
+                                <button class="action-btn edit" title="Sửa" @click="editVoucher(index)"><i class="fa fa-edit"></i></button>
+                                <button class="action-btn delete" title="Xóa" @click="deleteVoucher(index)"><i class="fa fa-trash"></i></button>
                             </td>
                         </tr>
                     </tbody>
@@ -127,12 +106,36 @@
     </div>
 </template>
 
-<script>
-export default {
-  name: 'PhieuGiamGia'
-}
-</script>
+<script src="./PhieuGiamGia.js"></script>
 
-<style>
-/* CSS đã được di chuyển đến src/scss/pages/phieu-giam-gia.scss */
+<style scoped>
+/* Empty state styles */
+.no-data {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.empty-icon {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+.empty-text {
+  font-size: 18px;
+  font-weight: 500;
+  color: #333;
+}
+
+.empty-subtext {
+  font-size: 14px;
+  color: #999;
+}
 </style>

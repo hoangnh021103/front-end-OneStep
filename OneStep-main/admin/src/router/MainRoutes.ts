@@ -43,11 +43,6 @@ const MainRoutes = {
       component: () => import('@/views/quan-ly/san-pham/LoaiDe.vue')
     },
     {
-      name: 'DanhMuc',
-      path: '/quan-ly/san-pham/danh-muc',
-      component: () => import('@/views/quan-ly/san-pham/DanhMuc.vue')
-    },
-    {
       name: 'KichThuoc',
       path: '/quan-ly/san-pham/kich-thuoc',
       component: () => import('@/views/quan-ly/san-pham/KichThuoc.vue')

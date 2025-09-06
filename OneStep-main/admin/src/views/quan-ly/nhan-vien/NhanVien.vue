@@ -34,6 +34,15 @@
           </tr>
         </thead>
         <tbody>
+          <tr v-if="pagedEmployees.length === 0">
+            <td colspan="8" class="no-data">
+              <div class="empty-state">
+                <div class="empty-icon">👥</div>
+                <div class="empty-text">Chưa có nhân viên nào</div>
+                <div class="empty-subtext">Nhấn "Thêm mới nhân viên" để bắt đầu</div>
+              </div>
+            </td>
+          </tr>
           <tr v-for="(emp, idx) in pagedEmployees" :key="emp.id">
             <td>{{ (currentPage-1)*pageSize + idx + 1 }}</td>
             <td>{{ emp.code }}</td>
@@ -112,14 +121,7 @@ export default {
       },
       currentPage: 1,
       pageSize: 5,
-      employees: [
-        { id: 1, code: 'NV005', name: 'Hoàng Văn Em', email: 'em.hv@gmail.com', phone: '0956789012', joinDate: '21/09/2023', status: 'active' },
-        { id: 2, code: 'NV004', name: 'Phạm Thị Dung', email: 'dung.pt@gmail.com', phone: '0945678901', joinDate: '21/09/2022', status: 'active' },
-        { id: 3, code: 'NV003', name: 'Lê Minh Cường', email: 'cuong.lm@gmail.com', phone: '0934567890', joinDate: '21/09/2022', status: 'active' },
-        { id: 4, code: 'NV002', name: 'Trần Thị Bình', email: 'binh.tt@gmail.com', phone: '0923456789', joinDate: '21/09/2021', status: 'inactive' },
-        { id: 5, code: 'NV001', name: 'Nguyễn Văn A', email: 'a.nv@gmail.com', phone: '0912345678', joinDate: '21/09/2020', status: 'inactive' },
-        { id: 6, code: 'NV006', name: 'Nguyễn Văn B', email: 'b.nv@gmail.com', phone: '0901234567', joinDate: '21/09/2019', status: 'active' },
-      ]
+      employees: []
     }
   },
   computed: {
@@ -203,6 +205,34 @@ export default {
 }
 </script>
 
-<style>
-/* CSS đã được di chuyển đến src/scss/pages/nhan-vien.scss */
+<style scoped>
+/* Empty state styles */
+.no-data {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.empty-icon {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+.empty-text {
+  font-size: 18px;
+  font-weight: 500;
+  color: #333;
+}
+
+.empty-subtext {
+  font-size: 14px;
+  color: #999;
+}
 </style>

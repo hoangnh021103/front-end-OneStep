@@ -71,11 +71,6 @@ const sidebarItem: menu[] = [
         icon: CircleIcon,
         to: '/quan-ly/san-pham/loai-de'
       },
-      {
-        title: 'Danh mục',
-        icon: CircleIcon,
-        to: '/quan-ly/san-pham/danh-muc'
-      },
       // Thêm mới
       {
         title: 'Kích thước',

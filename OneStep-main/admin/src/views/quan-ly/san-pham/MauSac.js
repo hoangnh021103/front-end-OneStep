@@ -7,7 +7,7 @@ export default {
       showModal: false,
       newColor: {
         ten: "",
-        ma: "",
+        maMau: "",
         hex: "#000000",
         trangThai: 1,
         ngayCapNhat: "",
@@ -23,7 +23,7 @@ export default {
       return this.colors.filter(
         c =>
           (c.ten && c.ten.toLowerCase().includes(keyword)) ||
-          (c.ma && c.ma.toLowerCase().includes(keyword))
+          (c.maMau && c.maMau.toLowerCase().includes(keyword))
       );
     }
   },
@@ -45,7 +45,7 @@ export default {
       this.editIndex = null;
       this.newColor = {
         ten: "",
-        ma: "",
+        maMau: "",
         hex: "#000000",
         trangThai: 1,
         ngayCapNhat: "",
@@ -59,7 +59,7 @@ export default {
     saveColor() {
       if (
         !this.newColor.ten ||
-        !this.newColor.ma ||
+        !this.newColor.maMau ||
         !/^#[0-9A-Fa-f]{6}$/.test(this.newColor.hex)
       ) {
         alert("Vui lòng nhập thông tin hợp lệ.");
