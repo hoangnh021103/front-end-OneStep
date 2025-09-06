@@ -13,13 +13,13 @@
           <option value="Nữ">Nữ</option>
           <option value="Khác">Khác</option>
         </select>
-        <button @click="resetFilter">Đặt lại bộ lọc</button>
+        <button @click="resetFilter"><i class="fa fa-undo"></i> Đặt lại bộ lọc</button>
       </div>
     </section>
     <section class="employee-list-section">
       <div class="list-header">
         <span>Danh sách nhân viên</span>
-        <button class="add-btn" @click="openAddModal">Thêm mới nhân viên</button>
+        <button class="add-btn" @click="openAddModal"><i class="fa fa-plus"></i> Thêm mới nhân viên</button>
       </div>
       <table class="employee-table">
         <thead>
@@ -41,7 +41,7 @@
           <tr v-if="employees.length === 0">
             <td colspan="11" class="no-data">
               <div class="empty-state">
-                <div class="empty-icon">👥</div>
+                <div class="empty-icon"><i class="fa fa-users"></i></div>
                 <div class="empty-text">Chưa có nhân viên nào</div>
                 <div class="empty-subtext">Nhấn "Thêm mới nhân viên" để bắt đầu</div>
               </div>
@@ -59,8 +59,18 @@
             <td>{{ formatDate(emp.ngayTao) }}</td>
             <td>{{ formatDate(emp.ngayCapNhat) }}</td>
             <td>
+<<<<<<< HEAD
               <button class="action-btn edit" @click="openEditModal(emp)" title="Sửa">✏️</button>
               <button class="action-btn delete" @click="deleteEmployee(emp.id)" title="Xóa">🗑</button>
+=======
+              <span :class="['status-badge', emp.status === 'active' ? 'active' : 'inactive']">
+                {{ emp.status === 'active' ? 'Đang làm việc' : 'Nghỉ việc' }}
+              </span>
+            </td>
+            <td>
+              <button class="action-btn edit" title="Sửa" @click="openEditModal(emp)"><i class="fa fa-edit"></i></button>
+              <button class="action-btn delete" title="Xóa" @click="deleteEmployee(emp)"><i class="fa fa-trash"></i></button>
+>>>>>>> 8edc597e162da5cf6c069f921f2136418cb5d479
             </td>
           </tr>
         </tbody>
@@ -105,8 +115,8 @@
             <option value="3">Thực tập sinh</option>
           </select>
           <div class="modal-actions">
-            <button type="submit">Lưu</button>
-            <button type="button" @click="closeModal">Hủy</button>
+            <button type="submit"><i class="fa fa-check"></i> Lưu</button>
+            <button type="button" @click="closeModal"><i class="fa fa-times"></i> Hủy</button>
           </div>
         </form>
       </div>
