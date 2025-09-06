@@ -5,11 +5,11 @@
     </header>
     <section class="filter-section">
       <div class="filter-row">
-        <input v-model="search" placeholder="Nhập mã / tên để tìm kiếm..." />
+        <input v-model="search" placeholder="Nhập tên để tìm kiếm..." />
         <select v-model="status">
           <option value="">Chọn trạng thái</option>
-          <option value="active">Kích hoạt</option>
-          <option value="inactive">Chưa kích hoạt</option>
+          <option value="1">Hoạt động</option>
+          <option value="0">Ngừng</option>
         </select>
         <button @click="resetFilter">Đặt lại bộ lọc</button>
       </div>
@@ -23,29 +23,25 @@
         <thead>
           <tr>
             <th>STT</th>
-            <th>Mã KH</th>
             <th>Tên KH</th>
-            <th>SDT</th>
-            <th>Ngày tham gia</th>
             <th>Trạng thái</th>
+            <th>Ngày cập nhật</th>
             <th>Hành động</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="(cus, idx) in pagedCustomers" :key="cus.id">
             <td>{{ (currentPage-1)*pageSize + idx + 1 }}</td>
-            <td>{{ cus.code }}</td>
-            <td>{{ cus.name }}</td>
-            <td>{{ cus.phone }}</td>
-            <td>{{ cus.joinDate }}</td>
+            <td>{{ cus.ten }}</td>
             <td>
-              <span :class="['status-badge', cus.status === 'active' ? 'active' : 'inactive']">
-                {{ cus.status === 'active' ? 'Kích hoạt' : 'Chưa kích hoạt' }}
+              <span :class="['status-badge', cus.trangThai === 1 ? 'active' : 'inactive']">
+                {{ cus.trangThai === 1 ? 'Hoạt động' : 'Ngừng' }}
               </span>
             </td>
+            <td>{{ cus.ngayCapNhat }}</td>
             <td>
-              <button @click="openEditModal(cus)">✏️</button>
-              <button @click="deleteCustomer(cus.id)">🗑</button>
+              <button @click="editCustomer(idx)">✏️</button>
+              <button @click="deleteCustomer(idx)">🗑</button>
             </td>
           </tr>
         </tbody>
@@ -72,15 +68,12 @@
    <!-- Modal Thêm/Sửa -->
 <div v-if="showModal" class="modal-overlay">
   <div class="modal-content">
-    <h3>{{ editCustomer ? 'Sửa khách hàng' : 'Thêm khách hàng' }}</h3>
+    <h3>{{ editIndex !== null ? 'Sửa khách hàng' : 'Thêm khách hàng' }}</h3>
     <form @submit.prevent="saveCustomer">
-      <input v-model="modalData.code" placeholder="Mã KH" required />
-      <input v-model="modalData.name" placeholder="Tên KH" required />
-      <input v-model="modalData.phone" placeholder="Số điện thoại" required />
-      <input v-model="modalData.joinDate" placeholder="Ngày tham gia" required />
-      <select v-model="modalData.status">
-        <option value="active">Kích hoạt</option>
-        <option value="inactive">Chưa kích hoạt</option>
+      <input v-model="newCustomer.ten" placeholder="Tên khách hàng" required />
+      <select v-model="newCustomer.trangThai">
+        <option :value="1">Hoạt động</option>
+        <option :value="0">Ngừng</option>
       </select>
       <div class="modal-actions">
         <button type="submit">Lưu</button>
@@ -94,6 +87,3 @@
 
 <script src="./KhachHang.js"></script>
 
-<style>
-/* Styles moved to SCSS file: src/scss/pages/khach-hang.scss */
-</style>

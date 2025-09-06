@@ -7,11 +7,8 @@ export default {
       status: "",
       showModal: false,
       newCustomer: {
-        code: "",
-        name: "",
-        phone: "",
-        joinDate: "",
-        status: "active",
+        ten: "",
+        trangThai: 1,
         ngayCapNhat: "",
         nguoiTao: "",
         nguoiCapNhat: ""
@@ -26,9 +23,8 @@ export default {
       const keyword = this.search.toLowerCase();
       return this.customers.filter(
         c =>
-          (c.name && c.name.toLowerCase().includes(keyword)) ||
-          (c.code && c.code.toLowerCase().includes(keyword)) &&
-          (this.status === "" || c.status === this.status)
+          (c.ten && c.ten.toLowerCase().includes(keyword)) &&
+          (this.status === "" || c.trangThai == this.status)
       );
     },
     totalPages() {
@@ -50,10 +46,24 @@ export default {
   methods: {
     async fetchCustomers() {
       try {
+        console.log("Đang gọi API khách hàng...");
         const res = await axios.get("http://localhost:8080/khach-hang/hien-thi");
-        this.customers = Array.isArray(res.data) ? res.data : res.data.data || [];
+        console.log("Response từ API:", res.data);
+        
+        // Xử lý dữ liệu từ API
+        if (Array.isArray(res.data)) {
+          this.customers = res.data;
+        } else if (res.data && Array.isArray(res.data.data)) {
+          this.customers = res.data.data;
+        } else {
+          this.customers = [];
+        }
+        
+        console.log("Dữ liệu khách hàng đã load:", this.customers);
       } catch (err) {
-        console.error(err);
+        console.error("Lỗi khi gọi API khách hàng:", err);
+        alert("Không thể tải dữ liệu khách hàng. Vui lòng kiểm tra kết nối API.");
+        this.customers = [];
       }
     },
     resetFilter() {
@@ -71,11 +81,8 @@ export default {
       this.showModal = true;
       this.editIndex = null;
       this.newCustomer = {
-        code: "",
-        name: "",
-        phone: "",
-        joinDate: "",
-        status: "active",
+        ten: "",
+        trangThai: 1,
         ngayCapNhat: "",
         nguoiTao: "",
         nguoiCapNhat: ""
@@ -85,20 +92,8 @@ export default {
       this.showModal = false;
     },
     saveCustomer() {
-      if (!this.newCustomer.code) {
-        alert("Vui lòng nhập mã khách hàng.");
-        return;
-      }
-      if (!this.newCustomer.name) {
+      if (!this.newCustomer.ten) {
         alert("Vui lòng nhập tên khách hàng.");
-        return;
-      }
-      if (!this.newCustomer.phone) {
-        alert("Vui lòng nhập số điện thoại.");
-        return;
-      }
-      if (!this.newCustomer.joinDate) {
-        alert("Vui lòng nhập ngày tham gia.");
         return;
       }
       // Gọi API thêm/sửa ở đây nếu cần
@@ -113,6 +108,15 @@ export default {
       if (confirm("Xác nhận xoá khách hàng này?")) {
         // Gọi API xoá ở đây nếu cần
         this.customers.splice(index, 1);
+      }
+    },
+    openAddModal() {
+      this.openModal();
+    },
+    openEditModal(customer) {
+      const index = this.customers.findIndex(c => c.id === customer.id);
+      if (index !== -1) {
+        this.editCustomer(index);
       }
     }
   },
