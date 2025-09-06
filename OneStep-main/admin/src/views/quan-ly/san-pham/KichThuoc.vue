@@ -10,7 +10,7 @@
     <div class="filter-section">
       <h3 class="section-title">🔍 Bộ lọc tìm kiếm</h3>
       <div class="filter-fields">
-        <input type="text" v-model="search" placeholder="🔎 Nhập mã hoặc tên kích thước" />
+        <input type="text" v-model="search" placeholder="🔎 Nhập tên kích thước" />
         <select v-model="status">
           <option value="">📦 Tất cả trạng thái</option>
           <option value="1">✅ Hoạt động</option>
@@ -32,7 +32,6 @@
           <thead>
             <tr>
               <th>STT</th>
-              <th>Mã</th>
               <th>Tên size</th>
               <th>Trạng thái</th>
               <th>Hành động</th>
@@ -41,7 +40,6 @@
           <tbody>
             <tr v-for="(item, index) in filteredSizes" :key="item.id">
               <td>{{ index + 1 }}</td>
-              <td>{{ item.ma }}</td>
               <td>{{ item.ten }}</td>
               <td>
                 <span :class="['status-tag', item.trangThai === 1 ? 'active' : 'inactive']">
@@ -64,8 +62,6 @@
         <h3>{{ editIndex !== null ? '✏️ Chỉnh Sửa Kích Thước' : '➕ Thêm Kích Thước' }}</h3>
         <label for="sizeNameInput">Tên kích thước</label>
         <input id="sizeNameInput" type="text" v-model="newSize.ten" placeholder="Nhập tên kích thước" />
-        <label for="sizeCodeInput">Mã kích thước</label>
-        <input id="sizeCodeInput" type="text" v-model="newSize.ma" placeholder="Nhập mã kích thước" />
         <div class="modal-actions">
           <button @click="addSize" class="confirm-btn">✔️ {{ editIndex !== null ? 'Cập nhật' : 'Thêm' }}</button>
           <button @click="closeModal" class="cancel-btn">❌ Huỷ</button>

@@ -8,7 +8,6 @@ export default {
       showModal: false,
       newSole: {
         ten: "",
-        ma: "",
         trangThai: 1,
         ngayCapNhat: "",
         nguoiTao: "",
@@ -22,8 +21,7 @@ export default {
       const keyword = this.search.toLowerCase();
       return this.soles.filter(
         s =>
-          (s.ten && s.ten.toLowerCase().includes(keyword)) ||
-          (s.ma && s.ma.toLowerCase().includes(keyword)) &&
+          (s.ten && s.ten.toLowerCase().includes(keyword)) &&
           (this.status === "" || s.trangThai == this.status)
       );
     }
@@ -31,7 +29,7 @@ export default {
   methods: {
     async fetchSoles() {
       try {
-        const res = await axios.get("http://localhost:8080/loai-de/hien-thi");
+        const res = await axios.get("http://localhost:8080/de-giay/hien-thi");
         this.soles = Array.isArray(res.data) ? res.data : res.data.data || [];
       } catch (err) {
         console.error(err);
@@ -47,7 +45,6 @@ export default {
       this.editIndex = null;
       this.newSole = {
         ten: "",
-        ma: "",
         trangThai: 1,
         ngayCapNhat: "",
         nguoiTao: "",
@@ -60,10 +57,6 @@ export default {
     saveSole() {
       if (!this.newSole.ten) {
         alert("Vui lòng nhập tên loại đế.");
-        return;
-      }
-      if (!this.newSole.ma) {
-        alert("Vui lòng nhập mã loại đế.");
         return;
       }
       // Gọi API thêm/sửa ở đây nếu cần

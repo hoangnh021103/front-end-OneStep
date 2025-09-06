@@ -4,9 +4,9 @@ export default {
     return {
       invoices: [],
       search: "",
+      status: "",
       fromDate: "",
       toDate: "",
-      tab: "all",
       showModal: false,
       newInvoice: {
         code: "",
@@ -27,25 +27,17 @@ export default {
   },
   computed: {
     filteredInvoices() {
-      return this.invoices
-        .filter(inv => {
-          const matchSearch = this.search === "" ||
-            inv.customerName.toLowerCase().includes(this.search.toLowerCase()) ||
-            inv.customerPhone.includes(this.search) ||
-            inv.staffName.toLowerCase().includes(this.search.toLowerCase());
-          const matchFrom = !this.fromDate || inv.createdAt >= this.fromDate;
-          const matchTo = !this.toDate || inv.createdAt <= this.toDate;
-          return matchSearch && matchFrom && matchTo;
-        })
-        .map(inv => ({
-          ...inv,
-          statusLabel: this.statusLabel(inv.status),
-          statusClass: inv.status
-        }));
-    },
-    tabInvoices() {
-      if (this.tab === "all") return this.filteredInvoices;
-      return this.filteredInvoices.filter(inv => inv.status === this.tab);
+      const keyword = this.search.toLowerCase();
+      return this.invoices.filter(
+        inv =>
+          (inv.customerName && inv.customerName.toLowerCase().includes(keyword)) ||
+          (inv.customerPhone && inv.customerPhone.includes(keyword)) ||
+          (inv.staffName && inv.staffName.toLowerCase().includes(keyword)) ||
+          (inv.code && inv.code.toLowerCase().includes(keyword)) &&
+          (this.status === "" || inv.status == this.status) &&
+          (!this.fromDate || inv.createdAt >= this.fromDate) &&
+          (!this.toDate || inv.createdAt <= this.toDate)
+      );
     }
   },
   methods: {
@@ -57,14 +49,12 @@ export default {
         console.error(err);
       }
     },
-    resetFilter() {
+    resetFilters() {
       this.search = "";
+      this.status = "";
       this.fromDate = "";
       this.toDate = "";
       this.fetchInvoices();
-    },
-    countByStatus(status) {
-      return this.filteredInvoices.filter(inv => inv.status === status).length;
     },
     formatDate(date) {
       if (!date) return "";
