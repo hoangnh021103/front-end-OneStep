@@ -12,13 +12,13 @@
           <option value="active">Đang làm việc</option>
           <option value="inactive">Nghỉ việc</option>
         </select>
-        <button @click="resetFilter">Đặt lại bộ lọc</button>
+        <button @click="resetFilter"><i class="fa fa-undo"></i> Đặt lại bộ lọc</button>
       </div>
     </section>
     <section class="employee-list-section">
       <div class="list-header">
         <span>Danh sách nhân viên</span>
-        <button class="add-btn" @click="openAddModal">Thêm mới nhân viên</button>
+        <button class="add-btn" @click="openAddModal"><i class="fa fa-plus"></i> Thêm mới nhân viên</button>
       </div>
       <table class="employee-table">
         <thead>
@@ -37,7 +37,7 @@
           <tr v-if="pagedEmployees.length === 0">
             <td colspan="8" class="no-data">
               <div class="empty-state">
-                <div class="empty-icon">👥</div>
+                <div class="empty-icon"><i class="fa fa-users"></i></div>
                 <div class="empty-text">Chưa có nhân viên nào</div>
                 <div class="empty-subtext">Nhấn "Thêm mới nhân viên" để bắt đầu</div>
               </div>
@@ -56,8 +56,8 @@
               </span>
             </td>
             <td>
-              <button @click="openEditModal(emp)">✏️</button>
-              <button @click="deleteEmployee(emp)">🗑</button>
+              <button class="action-btn edit" title="Sửa" @click="openEditModal(emp)"><i class="fa fa-edit"></i></button>
+              <button class="action-btn delete" title="Xóa" @click="deleteEmployee(emp)"><i class="fa fa-trash"></i></button>
             </td>
           </tr>
         </tbody>
@@ -93,8 +93,8 @@
             <option value="inactive">Nghỉ việc</option>
           </select>
           <div class="modal-actions">
-            <button type="submit">Lưu</button>
-            <button type="button" @click="closeModal">Hủy</button>
+            <button type="submit"><i class="fa fa-check"></i> Lưu</button>
+            <button type="button" @click="closeModal"><i class="fa fa-times"></i> Hủy</button>
           </div>
         </form>
       </div>

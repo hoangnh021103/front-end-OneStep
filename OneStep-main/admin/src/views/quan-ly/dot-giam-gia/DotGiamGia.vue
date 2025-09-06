@@ -10,9 +10,9 @@
                     <option value="active">Đang hoạt động</option>
                     <option value="expired">Hết hạn</option>
                 </select>
-                <button class="reset-btn" @click="resetFilters">Đặt lại bộ lọc</button>
+                <button class="reset-btn" @click="resetFilters"><i class="fa fa-undo"></i> Đặt lại bộ lọc</button>
             </div>
-            <button class="add-btn" @click="openAddModal">Thêm mới đợt giảm giá</button>
+            <button class="add-btn" @click="openAddModal"><i class="fa fa-plus"></i> Thêm mới đợt giảm giá</button>
         </header>
 
         <div class="table-wrapper">
@@ -44,14 +44,14 @@
                             </span>
                         </td>
                         <td class="action-buttons">
-                            <button class="edit-btn" @click="openEditModal(discount)">✏️</button>
-                            <button class="delete-btn" @click="deleteDiscount(discount.id)">🗑️</button>
+                            <button class="edit-btn" title="Sửa" @click="openEditModal(discount)"><i class="fa fa-edit"></i></button>
+                            <button class="delete-btn" title="Xóa" @click="deleteDiscount(discount.id)"><i class="fa fa-trash"></i></button>
                         </td>
                     </tr>
                     <tr v-if="filteredDiscounts.length === 0">
                         <td colspan="8" class="no-data">
                             <div class="empty-state">
-                                <div class="empty-icon">🎯</div>
+                                <div class="empty-icon"><i class="fa fa-percent"></i></div>
                                 <div class="empty-text">Chưa có đợt giảm giá nào</div>
                                 <div class="empty-subtext">Nhấn "Thêm mới đợt giảm giá" để tạo đợt giảm giá đầu tiên</div>
                             </div>
@@ -97,8 +97,8 @@
                         <option value="expired">Hết hạn</option>
                     </select>
                     <div class="modal-actions">
-                        <button type="submit" class="save-btn">Lưu</button>
-                        <button type="button" class="cancel-btn" @click="closeModal">Hủy</button>
+                        <button type="submit" class="save-btn"><i class="fa fa-check"></i> Lưu</button>
+                        <button type="button" class="cancel-btn" @click="closeModal"><i class="fa fa-times"></i> Hủy</button>
                     </div>
                 </form>
             </div>

@@ -18,7 +18,7 @@
                     <input v-model="search" placeholder="Nhập tên khách hàng, sđt, tên nhân viên..." />
                     <input type="date" v-model="fromDate" />
                     <input type="date" v-model="toDate" />
-                    <button @click="resetFilter">Đặt lại bộ lọc</button>
+                    <button @click="resetFilter"><i class="fa fa-undo"></i> Đặt lại bộ lọc</button>
                 </div>
             </div>
             <!-- Tabs -->
@@ -53,7 +53,7 @@
                         <tr v-if="tabInvoices.length === 0">
                             <td colspan="11" class="no-data">
                                 <div class="empty-state">
-                                    <div class="empty-icon">🧾</div>
+                                    <div class="empty-icon"><i class="fa fa-file-invoice"></i></div>
                                     <div class="empty-text">Chưa có hóa đơn nào</div>
                                     <div class="empty-subtext">Dữ liệu hóa đơn sẽ hiển thị ở đây</div>
                                 </div>
@@ -75,9 +75,7 @@
                                 <span :class="['status-badge', inv.statusClass]">{{ inv.statusLabel }}</span>
                             </td>
                             <td>
-                                <button class="action-btn" title="Xem chi tiết">
-                                    <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M12 5c-7 0-9 7-9 7s2 7 9 7 9-7 9-7-2-7-9-7zm0 12c-4.418 0-7.364-3.134-8.484-5C4.636 8.134 7.582 5 12 5s7.364 3.134 8.484 5C19.364 13.866 16.418 17 12 17zm0-10a5 5 0 100 10 5 5 0 000-10zm0 8a3 3 0 110-6 3 3 0 010 6z" fill="#444"/></svg>
-                                </button>
+                                <button class="action-btn" title="Xem chi tiết"><i class="fa fa-eye"></i></button>
                             </td>
                         </tr>
                     </tbody>

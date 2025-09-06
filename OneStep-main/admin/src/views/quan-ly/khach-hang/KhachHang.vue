@@ -11,13 +11,13 @@
           <option value="1">Hoạt động</option>
           <option value="0">Ngừng</option>
         </select>
-        <button @click="resetFilter">Đặt lại bộ lọc</button>
+        <button @click="resetFilter"><i class="fa fa-undo"></i> Đặt lại bộ lọc</button>
       </div>
     </section>
     <section class="customer-list-section">
       <div class="list-header">
         <span>{{ filteredCustomers.length }} khách hàng</span>
-        <button class="add-btn" @click="openAddModal">Thêm mới khách hàng</button>
+        <button class="add-btn" @click="openAddModal"><i class="fa fa-plus"></i> Thêm mới khách hàng</button>
       </div>
       <table class="customer-table">
         <thead>
@@ -40,8 +40,8 @@
             </td>
             <td>{{ cus.ngayCapNhat }}</td>
             <td>
-              <button @click="editCustomer(idx)">✏️</button>
-              <button @click="deleteCustomer(idx)">🗑</button>
+              <button class="action-btn edit" title="Sửa" @click="editCustomer(idx)"><i class="fa fa-edit"></i></button>
+              <button class="action-btn delete" title="Xóa" @click="deleteCustomer(idx)"><i class="fa fa-trash"></i></button>
             </td>
           </tr>
         </tbody>
@@ -76,8 +76,8 @@
         <option :value="0">Ngừng</option>
       </select>
       <div class="modal-actions">
-        <button type="submit">Lưu</button>
-        <button type="button" @click="closeModal">Hủy</button>
+        <button type="submit"><i class="fa fa-check"></i> Lưu</button>
+        <button type="button" @click="closeModal"><i class="fa fa-times"></i> Hủy</button>
       </div>
     </form>
   </div>

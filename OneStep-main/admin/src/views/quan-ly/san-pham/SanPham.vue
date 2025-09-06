@@ -2,18 +2,18 @@
   <div class="container">
     <!-- Bộ lọc -->
     <div class="filter-section">
-      <h2>🔍 Bộ lọc tìm kiếm</h2>
+      <h2>Bộ lọc tìm kiếm</h2>
       <div class="filter-grid">
-        <input v-model="search" type="text" placeholder=" Tên sản phẩm" />
-        <button class="btn-reset" @click="resetFilter"> Đặt lại</button>
+        <input v-model="search" type="text" placeholder="Tên sản phẩm" />
+        <button class="btn-reset" @click="resetFilter"><i class="fa fa-undo"></i> Đặt lại</button>
       </div>
     </div>
 
     <!-- Danh sách sản phẩm -->
     <div class="product-section">
       <div class="header">
-        <h2>📋 Danh sách sản phẩm</h2>
-        <button class="btn-add">+ Thêm sản phẩm</button>
+        <h2>Danh sách sản phẩm</h2>
+        <button class="btn-add"><i class="fa fa-plus"></i> Thêm sản phẩm</button>
       </div>
 
       <div class="table-wrapper">
@@ -42,8 +42,8 @@
                 </span>
               </td>
               <td class="action-cell">
-                <button class="action-btn edit">✏️</button>
-                <button class="action-btn view">🔍</button>
+                <button class="action-btn edit" title="Sửa"><i class="fa fa-edit"></i></button>
+                <button class="action-btn view" title="Xem"><i class="fa fa-eye"></i></button>
               </td>
             </tr>
           </tbody>

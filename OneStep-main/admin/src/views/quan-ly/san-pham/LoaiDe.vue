@@ -2,29 +2,29 @@
   <div class="page-container">
     <!-- Tiêu đề -->
     <div class="page-header">
-      <h2 class="page-title">🥿 Quản Lý Loại Đế</h2>
+      <h2 class="page-title">Quản Lý Loại Đế</h2>
       <p class="page-subtitle">Thêm, chỉnh sửa và tìm kiếm các loại đế giày</p>
     </div>
 
     <!-- Bộ lọc -->
     <div class="filter-section">
-      <h3 class="section-title">🔍 Bộ lọc</h3>
+      <h3 class="section-title">Bộ lọc</h3>
       <div class="filter-fields">
-        <input type="text" v-model="search" placeholder="🔎 Tìm theo tên" />
+        <input type="text" v-model="search" placeholder="Tìm theo tên" />
         <select v-model="status">
           <option value="">Tất cả trạng thái</option>
           <option value="1">Còn hàng</option>
           <option value="0">Hết hàng</option>
         </select>
-        <button @click="resetFilters" class="reset-btn">♻️ Đặt lại</button>
+        <button @click="resetFilters" class="reset-btn"><i class="fa fa-undo"></i> Đặt lại</button>
       </div>
     </div>
 
     <!-- Danh sách loại đế -->
     <div class="list-section">
       <div class="list-header">
-        <h3 class="section-title">📋 Danh sách loại đế</h3>
-        <button @click="showModal = true" class="add-btn">➕ Thêm mới</button>
+        <h3 class="section-title">Danh sách loại đế</h3>
+        <button @click="showModal = true" class="add-btn"><i class="fa fa-plus"></i> Thêm mới</button>
       </div>
 
       <div class="table-wrapper">
@@ -47,8 +47,8 @@
                 </span>
               </td>
               <td>
-                <button @click="editSole(index)" class="action-btn edit">✏️</button>
-                <button @click="deleteSole(index)" class="action-btn view">🗑️</button>
+                <button class="action-btn edit" title="Sửa" @click="editSole(index)"><i class="fa fa-edit"></i></button>
+                <button class="action-btn delete" title="Xóa" @click="deleteSole(index)"><i class="fa fa-trash"></i></button>
               </td>
             </tr>
           </tbody>
@@ -59,12 +59,12 @@
     <!-- Modal thêm -->
     <div class="modal-overlay" v-if="showModal">
       <div class="modal">
-        <h3>➕ Thêm Loại Đế</h3>
+        <h3>Thêm Loại Đế</h3>
         <label>Tên loại đế</label>
         <input type="text" v-model="newSole.ten" placeholder="Nhập tên loại đế" />
         <div class="modal-actions">
-          <button @click="saveSole" class="confirm-btn">✔️ Thêm</button>
-          <button @click="showModal = false" class="cancel-btn">❌ Huỷ</button>
+          <button @click="saveSole" class="confirm-btn"><i class="fa fa-check"></i> Thêm</button>
+          <button @click="showModal = false" class="cancel-btn"><i class="fa fa-times"></i> Huỷ</button>
         </div>
       </div>
     </div>

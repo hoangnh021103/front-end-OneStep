@@ -3,29 +3,29 @@
   <div class="thuong-hieu page-container">
     <!-- Tiêu đề -->
     <div class="page-header">
-      <h2 class="page-title">🏷️ Quản lý Thương Hiệu</h2>
+      <h2 class="page-title">Quản lý Thương Hiệu</h2>
       <p class="page-subtitle">Tạo, chỉnh sửa và quản lý thương hiệu sản phẩm</p>
     </div>
 
     <!-- Bộ lọc -->
     <div class="filter-section">
-      <h3 class="section-title">🔍 Bộ lọc tìm kiếm</h3>
+      <h3 class="section-title">Bộ lọc tìm kiếm</h3>
       <div class="filter-fields">
-        <input type="text" v-model="search" placeholder="🔎 Tìm theo tên thương hiệu" />
+        <input type="text" v-model="search" placeholder="Tìm theo tên thương hiệu" />
         <select v-model="status">
-          <option value="">📦 Tất cả trạng thái</option>
-          <option :value="1">✅ Còn hàng</option>
-          <option :value="0">🚫 Hết hàng</option>
+          <option value="">Tất cả trạng thái</option>
+          <option :value="1">Còn hàng</option>
+          <option :value="0">Hết hàng</option>
         </select>
-        <button @click="resetFilters" class="reset-btn">♻️ Đặt lại</button>
+        <button @click="resetFilters" class="reset-btn"><i class="fa fa-undo"></i> Đặt lại</button>
       </div>
     </div>
 
     <!-- Danh sách -->
     <div class="list-section">
       <div class="list-header">
-        <h3 class="section-title">📋 Danh sách thương hiệu</h3>
-        <button @click="openModal" class="add-btn">➕ Thêm mới</button>
+        <h3 class="section-title">Danh sách thương hiệu</h3>
+        <button @click="openModal" class="add-btn"><i class="fa fa-plus"></i> Thêm mới</button>
       </div>
 
       <div class="brand-table-wrapper">
@@ -53,8 +53,8 @@
                 </span>
               </td>
               <td>
-                <button @click="editBrand(index)" class="action-btn edit">✏️</button>
-                <button @click="deleteBrand(index)" class="action-btn delete">🗑️</button>
+                <button class="action-btn edit" title="Sửa" @click="editBrand(index)"><i class="fa fa-edit"></i></button>
+                <button class="action-btn delete" title="Xóa" @click="deleteBrand(index)"><i class="fa fa-trash"></i></button>
               </td>
             </tr>
           </tbody>
@@ -66,7 +66,7 @@
     <!-- Modal thêm/sửa -->
     <div class="modal-overlay" v-if="showModal">
       <div class="modal">
-        <h3>{{ editIndex !== null ? '✏️ Sửa Thương Hiệu' : '➕ Thêm Thương Hiệu' }}</h3>
+        <h3>{{ editIndex !== null ? 'Sửa Thương Hiệu' : 'Thêm Thương Hiệu' }}</h3>
 
         <label for="brandNameInput">Tên thương hiệu *</label>
         <input id="brandNameInput" type="text" v-model="newBrand.ten" placeholder="Nhập tên thương hiệu" />
@@ -76,13 +76,13 @@
 
         <label for="brandStatusSelect">Trạng thái</label>
         <select id="brandStatusSelect" v-model="newBrand.trangThai">
-          <option :value="1">✅ Còn hàng</option>
-          <option :value="0">🚫 Hết hàng</option>
+          <option :value="1">Còn hàng</option>
+          <option :value="0">Hết hàng</option>
         </select>
 
         <div class="modal-actions">
-          <button @click="saveBrand" class="confirm-btn">✔️ {{ editIndex !== null ? 'Cập nhật' : 'Thêm' }}</button>
-          <button @click="closeModal" class="cancel-btn">❌ Huỷ</button>
+          <button @click="saveBrand" class="confirm-btn"><i class="fa fa-check"></i> {{ editIndex !== null ? 'Cập nhật' : 'Thêm' }}</button>
+          <button @click="closeModal" class="cancel-btn"><i class="fa fa-times"></i> Huỷ</button>
         </div>
       </div>
     </div>
