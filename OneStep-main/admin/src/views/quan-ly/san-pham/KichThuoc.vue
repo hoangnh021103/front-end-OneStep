@@ -33,7 +33,6 @@
             <tr>
               <th>STT</th>
               <th>Tên size</th>
-              <th>Trạng thái</th>
               <th>Hành động</th>
             </tr>
           </thead>
@@ -41,11 +40,6 @@
             <tr v-for="(item, index) in filteredSizes" :key="item.id">
               <td>{{ index + 1 }}</td>
               <td>{{ item.ten }}</td>
-              <td>
-                <span :class="['status-tag', item.trangThai === 1 ? 'active' : 'inactive']">
-                  {{ item.trangThai === 1 ? 'Hoạt động' : 'Ngừng' }}
-                </span>
-              </td>
               <td>
                 <button @click="editSize(index)" class="action-btn edit">✏️</button>
                 <button @click="deleteSize(index)" class="action-btn view">🗑️</button>
