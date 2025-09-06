@@ -7,15 +7,10 @@ export default {
       status: "",
       showModal: false,
       newProduct: {
-        maSanPham: "",
         tenSanPham: "",
-        maCode: "",
         moTa: "",
         duongDanAnh: "",
-        trangThai: 1,
-        ngayCapNhat: "",
-        nguoiTao: "",
-        nguoiCapNhat: ""
+        trangThai: 1
       },
       editIndex: null
     };
@@ -25,9 +20,7 @@ export default {
       const keyword = this.search.toLowerCase();
       return this.products.filter(
         p =>
-          (p.tenSanPham && p.tenSanPham.toLowerCase().includes(keyword)) ||
-          (p.maSanPham && p.maSanPham.toLowerCase().includes(keyword)) ||
-          (p.maCode && p.maCode.toLowerCase().includes(keyword)) &&
+          (p.tenSanPham && p.tenSanPham.toLowerCase().includes(keyword)) &&
           (this.status === "" || p.trangThai == this.status)
       );
     }
@@ -50,15 +43,10 @@ export default {
       this.showModal = true;
       this.editIndex = null;
       this.newProduct = {
-        maSanPham: "",
         tenSanPham: "",
-        maCode: "",
         moTa: "",
         duongDanAnh: "",
-        trangThai: 1,
-        ngayCapNhat: "",
-        nguoiTao: "",
-        nguoiCapNhat: ""
+        trangThai: 1
       };
     },
     closeModal() {
@@ -67,10 +55,6 @@ export default {
     saveProduct() {
       if (!this.newProduct.tenSanPham) {
         alert("Vui lòng nhập tên sản phẩm.");
-        return;
-      }
-      if (!this.newProduct.maSanPham) {
-        alert("Vui lòng nhập mã sản phẩm.");
         return;
       }
       // Gọi API thêm/sửa ở đây nếu cần

@@ -7,12 +7,8 @@ export default {
       showModal: false,
       newColor: {
         ten: "",
-        maMau: "",
         hex: "#000000",
-        trangThai: 1,
-        ngayCapNhat: "",
-        nguoiTao: "",
-        nguoiCapNhat: ""
+        trangThai: 1
       },
       editIndex: null
     };
@@ -22,8 +18,7 @@ export default {
       const keyword = this.searchQuery.toLowerCase();
       return this.colors.filter(
         c =>
-          (c.ten && c.ten.toLowerCase().includes(keyword)) ||
-          (c.maMau && c.maMau.toLowerCase().includes(keyword))
+          (c.ten && c.ten.toLowerCase().includes(keyword))
       );
     }
   },
@@ -45,12 +40,8 @@ export default {
       this.editIndex = null;
       this.newColor = {
         ten: "",
-        maMau: "",
         hex: "#000000",
-        trangThai: 1,
-        ngayCapNhat: "",
-        nguoiTao: "",
-        nguoiCapNhat: ""
+        trangThai: 1
       };
     },
     closeModal() {
@@ -59,7 +50,6 @@ export default {
     saveColor() {
       if (
         !this.newColor.ten ||
-        !this.newColor.maMau ||
         !/^#[0-9A-Fa-f]{6}$/.test(this.newColor.hex)
       ) {
         alert("Vui lòng nhập thông tin hợp lệ.");

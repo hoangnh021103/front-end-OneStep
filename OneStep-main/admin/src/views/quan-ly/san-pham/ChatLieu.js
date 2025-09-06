@@ -8,10 +8,7 @@ export default {
       showModal: false,
       newMaterial: {
         ten: "",
-        trangThai: 1,
-        ngayCapNhat: "",
-        nguoiTao: "",
-        nguoiCapNhat: ""
+        trangThai: 1
       },
       editIndex: null
     };
@@ -45,10 +42,7 @@ export default {
       this.editIndex = null;
       this.newMaterial = {
         ten: "",
-        trangThai: 1,
-        ngayCapNhat: "",
-        nguoiTao: "",
-        nguoiCapNhat: ""
+        trangThai: 1
       };
     },
     closeModal() {

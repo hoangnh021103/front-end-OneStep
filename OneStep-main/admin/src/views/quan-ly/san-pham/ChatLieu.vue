@@ -13,8 +13,8 @@
         <input type="text" v-model="search" placeholder="🔎 Nhập tên chất liệu" />
         <select v-model="status">
           <option value="">📦 Tất cả trạng thái</option>
-          <option :value="1">✅ Hoạt động</option>
-          <option :value="0">🚫 Ngừng hoạt động</option>
+          <option :value="1">✅ Còn hàng</option>
+          <option :value="0">🚫 Hết hàng</option>
         </select>
         <button @click="resetFilters" class="reset-btn">Đặt lại</button>
       </div>
@@ -34,9 +34,6 @@
       <th>STT</th>
       <th>Tên chất liệu</th>
       <th>Trạng thái</th>
-      <th>Ngày cập nhật</th>
-      <th>Người tạo</th>
-      <th>Người cập nhật</th>
       <th>Hành động</th>
     </tr>
   </thead>
@@ -46,12 +43,9 @@
       <td>{{ item.ten }}</td>
       <td>
         <span :class="['status-tag', item.trangThai === 1 ? 'active' : 'inactive']">
-          {{ item.trangThai === 1 ? 'Hoạt động' : 'Ngừng hoạt động' }}
+          {{ item.trangThai === 1 ? 'Còn hàng' : 'Hết hàng' }}
         </span>
       </td>
-      <td>{{ item.ngayCapNhat }}</td>
-      <td>{{ item.nguoiTao }}</td>
-      <td>{{ item.nguoiCapNhat }}</td>
       <td>
         <button @click="editMaterial(index)">✏️</button>
         <button @click="deleteMaterial(index)">🗑️</button>
@@ -70,15 +64,9 @@
         <input type="text" v-model="newMaterial.ten" placeholder="Nhập chất liệu mới" />
         <label>Trạng thái</label>
         <select v-model="newMaterial.trangThai">
-          <option :value="1">Hoạt động</option>
-          <option :value="0">Ngừng hoạt động</option>
+          <option :value="1">Còn hàng</option>
+          <option :value="0">Hết hàng</option>
         </select>
-        <label>Ngày cập nhật</label>
-        <input type="date" v-model="newMaterial.ngayCapNhat" />
-        <label>Người tạo</label>
-        <input type="text" v-model="newMaterial.nguoiTao" />
-        <label>Người cập nhật</label>
-        <input type="text" v-model="newMaterial.nguoiCapNhat" />
         <div class="modal-actions">
           <button @click="addMaterial" class="confirm-btn">✔️ Xác nhận</button>
           <button @click="showModal = false" class="cancel-btn">❌ Huỷ</button>

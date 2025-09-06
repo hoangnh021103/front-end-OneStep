@@ -9,10 +9,7 @@ export default {
       newBrand: {
         ten: "",
         hinhAnh: "",
-        trangThai: 1,
-        ngayCapNhat: "",
-        nguoiTao: "",
-        nguoiCapNhat: ""
+        trangThai: 1
       },
       editIndex: null
     };
@@ -47,10 +44,7 @@ export default {
       this.newBrand = {
         ten: "",
         hinhAnh: "",
-        trangThai: 1,
-        ngayCapNhat: "",
-        nguoiTao: "",
-        nguoiCapNhat: ""
+        trangThai: 1
       };
     },
     closeModal() {

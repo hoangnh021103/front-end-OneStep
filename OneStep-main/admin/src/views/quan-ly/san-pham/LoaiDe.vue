@@ -13,8 +13,8 @@
         <input type="text" v-model="search" placeholder="🔎 Tìm theo tên" />
         <select v-model="status">
           <option value="">Tất cả trạng thái</option>
-          <option value="active">Hoạt động</option>
-          <option value="inactive">Ngừng</option>
+          <option value="1">Còn hàng</option>
+          <option value="0">Hết hàng</option>
         </select>
         <button @click="resetFilters" class="reset-btn">♻️ Đặt lại</button>
       </div>
@@ -43,7 +43,7 @@
               <td>{{ item.ten }}</td>
               <td>
                 <span :class="['status-tag', item.trangThai === 1 ? 'active' : 'inactive']">
-                  {{ item.trangThai === 1 ? 'Hoạt động' : 'Ngừng' }}
+                  {{ item.trangThai === 1 ? 'Còn hàng' : 'Hết hàng' }}
                 </span>
               </td>
               <td>
