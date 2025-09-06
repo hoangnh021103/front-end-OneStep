@@ -85,70 +85,7 @@
     </div>
 </template>
 
-<script>
-import '@/scss/pages/hoa-don.scss'
-export default {
-    name: 'HoaDon',
-    data() {
-        return {
-            search: '',
-            fromDate: '',
-            toDate: '',
-            tab: 'all',
-            invoices: []
-        }
-    },
-    computed: {
-        filteredInvoices() {
-            return this.invoices
-                .filter(inv => {
-                    const matchSearch = this.search === '' ||
-                        inv.customerName.toLowerCase().includes(this.search.toLowerCase()) ||
-                        inv.customerPhone.includes(this.search) ||
-                        inv.staffName.toLowerCase().includes(this.search.toLowerCase());
-                    const matchFrom = !this.fromDate || inv.createdAt >= this.fromDate;
-                    const matchTo = !this.toDate || inv.createdAt <= this.toDate;
-                    return matchSearch && matchFrom && matchTo;
-                })
-                .map(inv => ({
-                    ...inv,
-                    statusLabel: this.statusLabel(inv.status),
-                    statusClass: inv.status
-                }));
-        },
-        tabInvoices() {
-            if (this.tab === 'all') return this.filteredInvoices;
-            return this.filteredInvoices.filter(inv => inv.status === this.tab);
-        }
-    },
-    methods: {
-        resetFilter() {
-            this.search = '';
-            this.fromDate = '';
-            this.toDate = '';
-        },
-        countByStatus(status) {
-            return this.filteredInvoices.filter(inv => inv.status === status).length;
-        },
-        formatDate(date) {
-            if (!date) return '';
-            const d = new Date(date);
-            return d.toLocaleDateString('vi-VN');
-        },
-        statusLabel(status) {
-            switch (status) {
-                case 'pending': return 'Chờ xác nhận';
-                case 'confirmed': return 'Đã xác nhận';
-                case 'shipping': return 'Chờ giao';
-                case 'delivering': return 'Đang giao';
-                case 'done': return 'Hoàn thành';
-                case 'cancel': return 'Đã hủy';
-                default: return '';
-            }
-        }
-    }
-}
-</script>
+<script src="./DanhSachHoaDon.js"></script>
 
 <style scoped>
 /* Empty state styles */

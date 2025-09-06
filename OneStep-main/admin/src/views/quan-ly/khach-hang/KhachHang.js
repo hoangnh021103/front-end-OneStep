@@ -29,9 +29,9 @@ export default {
       const keyword = this.search.toLowerCase();
       return this.customers.filter(
         c =>
-          (c.hoTen && c.hoTen.toLowerCase().includes(keyword)) ||
+          ((c.hoTen && c.hoTen.toLowerCase().includes(keyword)) ||
           (c.email && c.email.toLowerCase().includes(keyword)) ||
-          (c.soDienThoai && c.soDienThoai.includes(keyword)) &&
+          (c.soDienThoai && c.soDienThoai.includes(keyword))) &&
           (this.genderFilter === "" || c.gioiTinh === this.genderFilter)
       );
     },

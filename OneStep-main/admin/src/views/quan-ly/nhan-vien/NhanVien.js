@@ -31,9 +31,9 @@ export default {
       const keyword = this.search.toLowerCase();
       return this.employees.filter(
         e =>
-          (e.hoTen && e.hoTen.toLowerCase().includes(keyword)) ||
+          ((e.hoTen && e.hoTen.toLowerCase().includes(keyword)) ||
           (e.email && e.email.toLowerCase().includes(keyword)) ||
-          (e.soDienThoai && e.soDienThoai.includes(keyword)) &&
+          (e.soDienThoai && e.soDienThoai.includes(keyword))) &&
           (this.genderFilter === "" || e.gioiTinh === this.genderFilter)
       );
     },

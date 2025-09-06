@@ -34,10 +34,10 @@ export default {
       const keyword = this.search.toLowerCase();
       return this.vouchers.filter(
         v =>
-          (v.ma && v.ma.toLowerCase().includes(keyword)) ||
-          (v.ten && v.ten.toLowerCase().includes(keyword)) &&
+          ((v.ma && v.ma.toLowerCase().includes(keyword)) ||
+          (v.ten && v.ten.toLowerCase().includes(keyword))) &&
           (this.status === "" || this.getStatusText(v.ngayKetThuc) === this.status) &&
-          (this.discountType === "" || v.loai === this.discountType) &&
+          (this.discountType === "" || v.loai == this.discountType) &&
           (this.fromDate === "" || v.ngayBatDau >= this.fromDate) &&
           (this.toDate === "" || v.ngayKetThuc <= this.toDate)
       );

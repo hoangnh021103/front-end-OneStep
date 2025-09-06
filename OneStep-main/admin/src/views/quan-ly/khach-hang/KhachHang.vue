@@ -18,14 +18,12 @@
     <section class="customer-list-section">
       <div class="list-header">
         <span>{{ filteredCustomers.length }} khách hàng</span>
-<<<<<<< HEAD
+
         <div class="header-actions">
           <button class="refresh-btn" @click="fetchCustomers" title="Tải lại dữ liệu">🔄</button>
-          <button class="add-btn" @click="openAddModal">Thêm mới khách hàng</button>
+          <button class="add-btn" @click="openAddModal"><i class="fa fa-plus"></i> Thêm mới khách hàng</button>
         </div>
-=======
-        <button class="add-btn" @click="openAddModal"><i class="fa fa-plus"></i> Thêm mới khách hàng</button>
->>>>>>> 8edc597e162da5cf6c069f921f2136418cb5d479
+
       </div>
       <table class="customer-table">
         <thead>
@@ -61,19 +59,8 @@
             <td>{{ formatDate(cus.ngayTao) }}</td>
             <td>{{ formatDate(cus.ngayCapNhat) }}</td>
             <td>
-<<<<<<< HEAD
               <button class="action-btn edit" @click="editCustomer(cus)" title="Sửa">✏️</button>
               <button class="action-btn delete" @click="deleteCustomer(cus.id)" title="Xóa">🗑</button>
-=======
-              <span :class="['status-badge', cus.trangThai === 1 ? 'active' : 'inactive']">
-                {{ cus.trangThai === 1 ? 'Hoạt động' : 'Ngừng' }}
-              </span>
-            </td>
-            <td>{{ cus.ngayCapNhat }}</td>
-            <td>
-              <button class="action-btn edit" title="Sửa" @click="editCustomer(idx)"><i class="fa fa-edit"></i></button>
-              <button class="action-btn delete" title="Xóa" @click="deleteCustomer(idx)"><i class="fa fa-trash"></i></button>
->>>>>>> 8edc597e162da5cf6c069f921f2136418cb5d479
             </td>
           </tr>
         </tbody>
@@ -97,7 +84,6 @@
     </section>
 
     <!-- Modal Thêm/Sửa -->
-   <!-- Modal Thêm/Sửa -->
 <div v-if="showModal" class="modal-overlay">
   <div class="modal-content">
     <h3>{{ editIndex !== null ? 'Sửa khách hàng' : 'Thêm khách hàng' }}</h3>

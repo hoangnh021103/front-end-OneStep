@@ -94,12 +94,12 @@
                     </tbody>
                 </table>
                 <div class="pagination">
-  <button class="page-btn" disabled><i class="fa fa-angle-left"></i></button>
-  <button class="page-btn active">1</button>
-  <button class="page-btn">2</button>
-  <button class="page-btn">3</button>
-  <button class="page-btn"><i class="fa fa-angle-right"></i></button>
-</div>
+                    <button class="page-btn" disabled><i class="fa fa-angle-left"></i></button>
+                    <button class="page-btn active">1</button>
+                    <button class="page-btn">2</button>
+                    <button class="page-btn">3</button>
+                    <button class="page-btn"><i class="fa fa-angle-right"></i></button>
+                </div>
 
             </div>
         </div>

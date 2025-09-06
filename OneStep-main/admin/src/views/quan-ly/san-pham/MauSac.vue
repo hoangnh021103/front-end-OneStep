@@ -69,7 +69,7 @@
 
         <div class="modal-actions">
           <button class="button" @click="saveColor"><i class="fa fa-check"></i> Xác nhận</button>
-          <button @click="closeModal"><i class="fa fa-times"></i> Huỷ</button>
+          <button class="button" @click="closeModal"><i class="fa fa-times"></i> Huỷ</button>
         </div>
       </div>
     </div>

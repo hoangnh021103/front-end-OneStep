@@ -59,18 +59,8 @@
             <td>{{ formatDate(emp.ngayTao) }}</td>
             <td>{{ formatDate(emp.ngayCapNhat) }}</td>
             <td>
-<<<<<<< HEAD
               <button class="action-btn edit" @click="openEditModal(emp)" title="Sửa">✏️</button>
               <button class="action-btn delete" @click="deleteEmployee(emp.id)" title="Xóa">🗑</button>
-=======
-              <span :class="['status-badge', emp.status === 'active' ? 'active' : 'inactive']">
-                {{ emp.status === 'active' ? 'Đang làm việc' : 'Nghỉ việc' }}
-              </span>
-            </td>
-            <td>
-              <button class="action-btn edit" title="Sửa" @click="openEditModal(emp)"><i class="fa fa-edit"></i></button>
-              <button class="action-btn delete" title="Xóa" @click="deleteEmployee(emp)"><i class="fa fa-trash"></i></button>
->>>>>>> 8edc597e162da5cf6c069f921f2136418cb5d479
             </td>
           </tr>
         </tbody>
@@ -125,35 +115,3 @@
 </template>
 
 <script src="./NhanVien.js"></script>
-
-<style scoped>
-/* Empty state styles */
-.no-data {
-  text-align: center;
-  padding: 40px 20px;
-  color: #666;
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-
-.empty-icon {
-  font-size: 48px;
-  opacity: 0.5;
-}
-
-.empty-text {
-  font-size: 18px;
-  font-weight: 500;
-  color: #333;
-}
-
-.empty-subtext {
-  font-size: 14px;
-  color: #999;
-}
-</style>
