@@ -7,7 +7,7 @@
       <label>Tìm kiếm màu sắc:</label>
       <div class="filter-row">
         <input v-model="searchQuery" type="text" placeholder="Nhập tên để tìm..." />
-        <button class="button" @click="resetFilter">Đặt lại bộ lọc</button>
+        <button class="button" @click="resetFilter"><i class="fa fa-undo"></i> Đặt lại bộ lọc</button>
       </div>
     </div>
 
@@ -15,7 +15,7 @@
     <div class="table-container">
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
         <h3 style="margin: 0;">Danh Sách Màu Sắc</h3>
-        <button class="button" @click="openModal">➕ Thêm mới màu sắc</button>
+        <button class="button" @click="openModal"><i class="fa fa-plus"></i> Thêm mới màu sắc</button>
       </div>
       <table class="table">
         <thead>
@@ -41,8 +41,8 @@
               </span>
             </td>
             <td class="actions">
-              <button @click="editColor(index)">✏️</button>
-              <button @click="deleteColor(index)">♻️</button>
+              <button class="action-btn edit" title="Sửa" @click="editColor(index)"><i class="fa fa-edit"></i></button>
+              <button class="action-btn delete" title="Xóa" @click="deleteColor(index)"><i class="fa fa-trash"></i></button>
             </td>
           </tr>
         </tbody>
@@ -68,8 +68,8 @@
         </select>
 
         <div class="modal-actions">
-          <button class="button" @click="saveColor">Xác nhận</button>
-          <button @click="closeModal">Huỷ</button>
+          <button class="button" @click="saveColor"><i class="fa fa-check"></i> Xác nhận</button>
+          <button @click="closeModal"><i class="fa fa-times"></i> Huỷ</button>
         </div>
       </div>
     </div>
