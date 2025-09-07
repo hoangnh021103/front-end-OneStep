@@ -48,23 +48,59 @@ export default {
     closeModal() {
       this.showModal = false;
     },
-    saveSole() {
+
+    // 🟢 thêm mới hoặc cập nhật
+    async saveSole() {
       if (!this.newSole.ten) {
         alert("Vui lòng nhập tên loại đế.");
         return;
       }
-      // Gọi API thêm/sửa ở đây nếu cần
-      this.closeModal();
+
+      try {
+        if (this.editIndex === null) {
+          // ➕ Thêm mới
+          const res = await axios.post("http://localhost:8080/de-giay/add", this.newSole);
+          this.soles.push(res.data);
+          alert("Thêm loại đế thành công!");
+        } else {
+          // ✏️ Cập nhật
+          const soleId = this.soles[this.editIndex].id;
+          const res = await axios.put(
+            `http://localhost:8080/de-giay/update/${soleId}`,
+            this.newSole
+          );
+
+          // Cập nhật lại trong mảng
+          this.soles.splice(this.editIndex, 1, res.data);
+
+          alert("Cập nhật loại đế thành công!");
+        }
+        this.closeModal();
+      } catch (err) {
+        console.error("Lỗi khi lưu loại đế:", err);
+        alert("Có lỗi xảy ra khi lưu loại đế!");
+      }
     },
+
+    // 🟢 mở modal edit
     editSole(index) {
       this.editIndex = index;
       this.newSole = { ...this.soles[index] };
       this.showModal = true;
     },
-    deleteSole(index) {
+
+    // 🟢 xóa loại đế
+    async deleteSole(index) {
+      const sole = this.soles[index];
       if (confirm("Xác nhận xoá loại đế này?")) {
-        // Gọi API xoá ở đây nếu cần
-        this.soles.splice(index, 1);
+        try {
+          await axios.delete(`http://localhost:8080/de-giay/delete/${sole.id}`);
+          this.soles.splice(index, 1);
+          alert("Xóa loại đế thành công!");
+        } catch (err) {
+          console.error("Lỗi khi xoá loại đế:", err);
+          alert("Có lỗi xảy ra khi xoá loại đế!");
+        }
       }
     }
   },
