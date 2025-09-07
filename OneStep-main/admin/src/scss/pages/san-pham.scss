@@ -96,6 +96,13 @@
         text-align: center;
         border-bottom: 1px solid #e1e8ed;
       }
+      .product-thumb {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 1px solid #eee;
+      }
       th {
         font-weight: 600;
         color: #555;

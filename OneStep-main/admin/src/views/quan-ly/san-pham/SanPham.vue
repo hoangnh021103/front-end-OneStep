@@ -34,7 +34,7 @@
               <td>{{ product.tenSanPham }}</td>
               <td>{{ product.moTa }}</td>
               <td>
-                <img :src="product.duongDanAnh" alt="Ảnh SP" style="width:40px;height:40px;" v-if="product.duongDanAnh"/>
+                <img :src="product.duongDanAnh" alt="Ảnh SP" class="product-thumb" v-if="product.duongDanAnh"/>
               </td>
               <td>
                 <span :class="['status', product.trangThai === 1 ? 'active' : 'inactive']">

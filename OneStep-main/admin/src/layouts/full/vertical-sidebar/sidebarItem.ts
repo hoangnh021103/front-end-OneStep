@@ -8,8 +8,7 @@ import {
   KeyIcon,
   BugIcon,
   DashboardIcon,
-  BrandChromeIcon,
-  HelpIcon
+ 
 } from 'vue-tabler-icons';
 
 export interface menu {
@@ -103,6 +102,12 @@ const sidebarItem: menu[] = [
     title: 'Quản lý phiếu giảm giá',
     icon: CircleIcon,
     to: '/quan-ly/phieu-giam-gia'
+  },
+
+  {
+    title: 'Thư viện ảnh',
+    icon: CircleIcon, // hoặc icon khác bạn thích
+    to: '/quan-ly/hinh-anh/thu-vien-anh'
   },
   { divider: true }
 ];
