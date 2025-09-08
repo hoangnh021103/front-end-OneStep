@@ -58,16 +58,7 @@
           <input v-model="newColor.ten" type="text" placeholder="Nhập tên màu sắc" />
         </div>
 
-        <div class="form-row">
-          <div class="form-group" style="flex:1;">
-            <label>Mã hex *</label>
-            <input v-model="newColor.hex" type="text" placeholder="#000000" @input="updatePreview" />
-          </div>
-          <div class="form-group preview-group">
-            <label>Xem trước</label>
-            <div class="color-preview" :style="{ backgroundColor: newColor.hex }"></div>
-          </div>
-        </div>
+        
 
         <div class="form-group">
           <label>Trạng thái</label>

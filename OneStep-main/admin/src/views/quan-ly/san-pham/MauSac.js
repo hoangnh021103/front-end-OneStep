@@ -7,7 +7,6 @@ export default {
       showModal: false,
       newColor: {
         ten: "",
-        hex: "#000000",
         trangThai: 1
       },
       editIndex: null
@@ -40,7 +39,6 @@ export default {
       this.editIndex = null;
       this.newColor = {
         ten: "",
-        hex: "#000000",
         trangThai: 1
       };
     },
@@ -48,26 +46,28 @@ export default {
       this.showModal = false;
     },
     async saveColor() {
-      if (
-        !this.newColor.ten ||
-        !/^#[0-9A-Fa-f]{6}$/.test(this.newColor.hex)
-      ) {
-        alert("Vui lòng nhập thông tin hợp lệ.");
+      if (!this.newColor.ten) {
+        alert("Vui lòng nhập tên màu sắc.");
         return;
       }
       try {
+        const payload = {
+          ten: this.newColor.ten,
+          trangThai: this.newColor.trangThai
+        };
         if (this.editIndex === null) {
-          await axios.post("http://localhost:8080/mau-sac/add", this.newColor);
+          await axios.post("http://localhost:8080/mau-sac/add", payload);
           alert("Thêm màu sắc thành công!");
         } else {
           const id = this.colors[this.editIndex].id;
-          await axios.put(`http://localhost:8080/mau-sac/update/${id}`, this.newColor);
+          await axios.put(`http://localhost:8080/mau-sac/update/${id}`, payload);
           alert("Cập nhật màu sắc thành công!");
         }
         await this.fetchColors();
       } catch (err) {
-        console.error("Lỗi khi lưu màu sắc:", err);
-        alert("Có lỗi xảy ra khi lưu màu sắc!");
+        const serverMessage = err?.response?.data?.message || err?.response?.data || err?.message || "Không xác định";
+        console.error("Lỗi khi lưu màu sắc:", serverMessage, err);
+        alert(`Có lỗi xảy ra khi lưu màu sắc: ${serverMessage}`);
       }
       this.closeModal();
     },
