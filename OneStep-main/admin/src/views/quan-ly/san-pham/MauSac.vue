@@ -53,19 +53,29 @@
     <div class="overlay" v-if="showModal" @click.self="closeModal">
       <div class="modal">
         <h3>{{ editIndex !== null ? 'Sửa màu sắc' : 'Thêm màu sắc' }}</h3>
-        <label>Tên màu sắc *</label>
-        <input v-model="newColor.ten" type="text" placeholder="Nhập tên màu sắc" />
+        <div class="form-group">
+          <label>Tên màu sắc *</label>
+          <input v-model="newColor.ten" type="text" placeholder="Nhập tên màu sắc" />
+        </div>
 
+        <div class="form-row">
+          <div class="form-group" style="flex:1;">
+            <label>Mã hex *</label>
+            <input v-model="newColor.hex" type="text" placeholder="#000000" @input="updatePreview" />
+          </div>
+          <div class="form-group preview-group">
+            <label>Xem trước</label>
+            <div class="color-preview" :style="{ backgroundColor: newColor.hex }"></div>
+          </div>
+        </div>
 
-        <label>Mã hex *</label>
-        <input v-model="newColor.hex" type="text" placeholder="#000000" @input="updatePreview" />
-        <div class="color-preview" :style="{ backgroundColor: newColor.hex }"></div>
-
-        <label>Trạng thái</label>
-        <select v-model="newColor.trangThai">
-          <option :value="1">Còn hàng</option>
-          <option :value="0">Hết hàng</option>
-        </select>
+        <div class="form-group">
+          <label>Trạng thái</label>
+          <select v-model="newColor.trangThai">
+            <option :value="1">Còn hàng</option>
+            <option :value="0">Hết hàng</option>
+          </select>
+        </div>
 
         <div class="modal-actions">
           <button class="button" @click="saveColor"><i class="fa fa-check"></i> Xác nhận</button>
@@ -76,3 +86,76 @@
   </div>
 </template>
 <script src="./MauSac.js"></script>
+<style scoped>
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal {
+  width: 520px;
+  max-width: 90vw;
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px 18px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+.modal h3 {
+  margin: 0 0 12px 0;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 12px;
+}
+.form-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+label {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+input, select {
+  height: 36px;
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+.preview-group {
+  display: flex;
+  flex-direction: column;
+}
+.color-preview {
+  width: 40px;
+  height: 36px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+}
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #4f46e5;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.button:hover { opacity: 0.92; }
+.actions .action-btn {
+  margin-right: 6px;
+}
+</style>

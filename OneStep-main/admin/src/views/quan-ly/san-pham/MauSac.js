@@ -47,7 +47,7 @@ export default {
     closeModal() {
       this.showModal = false;
     },
-    saveColor() {
+    async saveColor() {
       if (
         !this.newColor.ten ||
         !/^#[0-9A-Fa-f]{6}$/.test(this.newColor.hex)
@@ -55,7 +55,20 @@ export default {
         alert("Vui lòng nhập thông tin hợp lệ.");
         return;
       }
-      // Gọi API thêm/sửa ở đây nếu cần
+      try {
+        if (this.editIndex === null) {
+          await axios.post("http://localhost:8080/mau-sac/add", this.newColor);
+          alert("Thêm màu sắc thành công!");
+        } else {
+          const id = this.colors[this.editIndex].id;
+          await axios.put(`http://localhost:8080/mau-sac/update/${id}`, this.newColor);
+          alert("Cập nhật màu sắc thành công!");
+        }
+        await this.fetchColors();
+      } catch (err) {
+        console.error("Lỗi khi lưu màu sắc:", err);
+        alert("Có lỗi xảy ra khi lưu màu sắc!");
+      }
       this.closeModal();
     },
     editColor(index) {
@@ -63,10 +76,17 @@ export default {
       this.newColor = { ...this.colors[index] };
       this.showModal = true;
     },
-    deleteColor(index) {
+    async deleteColor(index) {
+      const color = this.colors[index];
       if (confirm("Xác nhận xoá màu này?")) {
-        // Gọi API xoá ở đây nếu cần
-        this.colors.splice(index, 1);
+        try {
+          await axios.delete(`http://localhost:8080/mau-sac/delete/${color.id}`);
+          await this.fetchColors();
+          alert("Xóa màu sắc thành công!");
+        } catch (err) {
+          console.error("Lỗi khi xóa màu sắc:", err);
+          alert("Không thể xóa màu sắc. Vui lòng thử lại!");
+        }
       }
     },
     updatePreview() {
