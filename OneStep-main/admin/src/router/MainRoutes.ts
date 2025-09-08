@@ -28,6 +28,11 @@ const MainRoutes = {
       component: () => import('@/views/quan-ly/san-pham/SanPham.vue')
     },
     {
+      name: 'ThemSanPham',
+      path: '/quan-ly/san-pham/san-pham/them',
+      component: () => import('@/views/quan-ly/san-pham/ThemSanPham.vue')
+    },
+    {
       name: 'MauSac',
       path: '/quan-ly/san-pham/mau-sac',
       component: () => import('@/views/quan-ly/san-pham/MauSac.vue')

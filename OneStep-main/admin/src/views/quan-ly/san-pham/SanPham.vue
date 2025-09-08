@@ -13,7 +13,7 @@
     <div class="product-section">
       <div class="header">
         <h2>Danh sách sản phẩm</h2>
-        <button class="btn-add"><i class="fa fa-plus"></i> Thêm sản phẩm</button>
+        <button class="btn-add" @click="$router.push({ name: 'ThemSanPham' })"><i class="fa fa-plus"></i> Thêm sản phẩm</button>
       </div>
 
       <div class="table-wrapper">
