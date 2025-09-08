@@ -33,7 +33,6 @@
           <thead>
             <tr>
               <th>STT</th>
-              <th>Logo</th>
               <th>Tên thương hiệu</th>
               <th>Trạng thái</th>
               <th>Hành động</th>
@@ -42,10 +41,6 @@
           <tbody>
             <tr v-for="(brand, index) in filteredBrands" :key="brand.id">
               <td>{{ index + 1 }}</td>
-              <td>
-                <img :src="brand.hinhAnh" :alt="brand.ten" class="brand-logo" v-if="brand.hinhAnh"/>
-                <span v-else class="no-logo">Không có ảnh</span>
-              </td>
               <td>{{ brand.ten }}</td>
               <td>
                 <span :class="['status-tag', brand.trangThai === 1 ? 'active' : 'inactive']">
@@ -70,10 +65,6 @@
 
         <label for="brandNameInput">Tên thương hiệu *</label>
         <input id="brandNameInput" type="text" v-model="newBrand.ten" placeholder="Nhập tên thương hiệu" />
-
-        <label for="brandImageInput">Hình ảnh</label>
-        <input id="brandImageInput" type="text" v-model="newBrand.hinhAnh" placeholder="Nhập link ảnh logo" />
-
         <label for="brandStatusSelect">Trạng thái</label>
         <select id="brandStatusSelect" v-model="newBrand.trangThai">
           <option :value="1">Còn hàng</option>

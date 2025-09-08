@@ -8,7 +8,6 @@ export default {
       showModal: false,
       newBrand: {
         ten: "",
-        hinhAnh: "",
         trangThai: 1
       },
       editIndex: null
@@ -30,7 +29,8 @@ export default {
         const res = await axios.get("http://localhost:8080/thuong-hieu/hien-thi");
         this.brands = Array.isArray(res.data) ? res.data : res.data.data || [];
       } catch (err) {
-        console.error(err);
+        console.error("Lỗi khi tải danh sách thương hiệu:", err);
+        alert("Có lỗi xảy ra khi tải danh sách thương hiệu!");
       }
     },
     resetFilters() {
@@ -43,30 +43,64 @@ export default {
       this.editIndex = null;
       this.newBrand = {
         ten: "",
-        hinhAnh: "",
         trangThai: 1
       };
     },
     closeModal() {
       this.showModal = false;
+      this.editIndex = null;
+      this.newBrand = {
+        ten: "",
+        trangThai: 1
+      };
     },
-    saveBrand() {
+    async saveBrand() {
       if (!this.newBrand.ten) {
         alert("Vui lòng nhập tên thương hiệu.");
         return;
       }
-      // Gọi API thêm/sửa ở đây nếu cần
-      this.closeModal();
+
+      try {
+        if (this.editIndex === null) {
+          const res = await axios.post(
+            "http://localhost:8080/thuong-hieu/add",
+            this.newBrand
+          );
+          this.brands.push(res.data);
+          alert("Thêm thương hiệu thành công!");
+        } else {
+          const brandId = this.brands[this.editIndex].id;
+          const res = await axios.put(
+            `http://localhost:8080/thuong-hieu/update/${brandId}`,
+            this.newBrand
+          );
+          this.brands.splice(this.editIndex, 1, res.data);
+          alert("Cập nhật thương hiệu thành công!");
+        }
+        this.closeModal();
+      } catch (err) {
+        console.error("Lỗi khi lưu thương hiệu:", err);
+        alert("Có lỗi xảy ra khi lưu thương hiệu!");
+      }
     },
     editBrand(index) {
       this.editIndex = index;
       this.newBrand = { ...this.brands[index] };
       this.showModal = true;
     },
-    deleteBrand(index) {
+    async deleteBrand(index) {
+      const brand = this.brands[index];
       if (confirm("Xác nhận xoá thương hiệu này?")) {
-        // Gọi API xoá ở đây nếu cần
-        this.brands.splice(index, 1);
+        try {
+          await axios.delete(
+            `http://localhost:8080/thuong-hieu/delete/${brand.id}`
+          );
+          this.brands.splice(index, 1);
+          alert("Xóa thương hiệu thành công!");
+        } catch (err) {
+          console.error("Lỗi khi xoá thương hiệu:", err);
+          alert("Có lỗi xảy ra khi xoá thương hiệu!");
+        }
       }
     }
   },
