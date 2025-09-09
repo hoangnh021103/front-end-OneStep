@@ -77,11 +77,6 @@ const MainRoutes = {
       path: '/quan-ly/dot-giam-gia',
       component: () => import('@/views/quan-ly/dot-giam-gia/DotGiamGia.vue')
     },
-    {
-      name: 'ThuVienAnh',
-      path: '/quan-ly/hinh-anh/thu-vien-anh',
-      component: () => import('@/views/quan-ly/hinh-anh/ThuVienAnh.vue')
-    }
   ]
 };
 

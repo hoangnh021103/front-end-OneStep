@@ -96,6 +96,7 @@
           </select>
           <input v-model="modalData.email" type="email" placeholder="Email" required />
           <input v-model="modalData.soDienThoai" placeholder="Số điện thoại" required />
+          
           <input v-model="modalData.diaChi" placeholder="Địa chỉ" />
           <input v-model="modalData.urlAnh" placeholder="URL ảnh (tùy chọn)" />
           <select v-model="modalData.vaiTroId">

@@ -9,7 +9,7 @@ import VueApexCharts from 'vue3-apexcharts';
 import VueTablerIcons from 'vue-tabler-icons';
 
 import { fakeBackend } from '@/utils/helpers/fake-backend';
-
+import 'vue3-toastify/dist/index.css';
 // print
 import print from 'vue3-print-nb';
 

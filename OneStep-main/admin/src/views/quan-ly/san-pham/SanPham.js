@@ -1,4 +1,4 @@
-import axios from "axios";
+import { sanPhamApi } from '@/api/sanPhamApi';
 export default {
   data() {
     return {
@@ -28,10 +28,11 @@ export default {
   methods: {
     async fetchProducts() {
       try {
-        const res = await axios.get("http://localhost:8080/san-pham/hien-thi");
-        this.products = Array.isArray(res.data) ? res.data : res.data.data || [];
+        const data = await sanPhamApi.layDanhSachSanPham();
+        this.products = Array.isArray(data) ? data : data.data || [];
       } catch (err) {
-        console.error(err);
+        console.error('Lỗi khi lấy danh sách sản phẩm:', err);
+        alert('Không thể tải danh sách sản phẩm. Vui lòng thử lại sau.');
       }
     },
     resetFilter() {
@@ -52,23 +53,46 @@ export default {
     closeModal() {
       this.showModal = false;
     },
-    saveProduct() {
+    async saveProduct() {
       if (!this.newProduct.tenSanPham) {
         alert("Vui lòng nhập tên sản phẩm.");
         return;
       }
-      // Gọi API thêm/sửa ở đây nếu cần
-      this.closeModal();
+      
+      try {
+        if (this.editIndex !== null) {
+          // Cập nhật sản phẩm
+          await sanPhamApi.capNhatSanPham(this.newProduct.id || this.newProduct.maSanPham, this.newProduct);
+          alert('Cập nhật sản phẩm thành công!');
+        } else {
+          // Thêm sản phẩm mới
+          await sanPhamApi.themSanPham(this.newProduct);
+          alert('Thêm sản phẩm thành công!');
+        }
+        this.closeModal();
+        this.fetchProducts(); // Tải lại danh sách
+      } catch (err) {
+        const msg = err?.response?.data?.message || err?.response?.data || err?.message || 'Không xác định';
+        console.error('Lỗi khi lưu sản phẩm:', msg, err);
+        alert(`Không thể lưu sản phẩm: ${msg}`);
+      }
     },
     editProduct(index) {
       this.editIndex = index;
       this.newProduct = { ...this.products[index] };
       this.showModal = true;
     },
-    deleteProduct(index) {
+    async deleteProduct(index) {
       if (confirm("Xác nhận xoá sản phẩm này?")) {
-        // Gọi API xoá ở đây nếu cần
-        this.products.splice(index, 1);
+        try {
+          const product = this.products[index];
+          await sanPhamApi.xoaSanPham(product.id || product.maSanPham);
+          alert('Xóa sản phẩm thành công!');
+          this.products.splice(index, 1);
+        } catch (err) {
+          console.error('Lỗi khi xóa sản phẩm:', err);
+          alert('Không thể xóa sản phẩm. Vui lòng thử lại sau.');
+        }
       }
     }
   },
