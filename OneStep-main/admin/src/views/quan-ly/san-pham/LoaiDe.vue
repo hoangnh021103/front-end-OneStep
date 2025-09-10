@@ -93,6 +93,7 @@
 
 <script>
 import axios from "axios";
+import { toast } from 'vue3-toastify';
 export default {
   data() {
     return {
@@ -146,7 +147,7 @@ export default {
     // 🟢 thêm mới hoặc cập nhật
     async saveSole() {
       if (!this.newSole.ten) {
-        alert("Vui lòng nhập tên loại đế.");
+        toast.error("Vui lòng nhập tên loại đế.");
         return;
       }
 
@@ -155,7 +156,7 @@ export default {
           // ➕ Thêm mới
           const res = await axios.post("http://localhost:8080/de-giay/add", this.newSole);
           this.soles.push(res.data);
-          alert("Thêm loại đế thành công!");
+          toast.success("Thêm loại đế thành công!");
         } else {
           // ✏️ Cập nhật
           const soleId = this.soles[this.editIndex].id;
@@ -167,12 +168,12 @@ export default {
           // Cập nhật lại trong mảng
           this.soles.splice(this.editIndex, 1, res.data);
 
-          alert("Cập nhật loại đế thành công!");
+          toast.success("Cập nhật loại đế thành công!");
         }
         this.closeModal();
       } catch (err) {
         console.error("Lỗi khi lưu loại đế:", err);
-        alert("Có lỗi xảy ra khi lưu loại đế!");
+        toast.error("Có lỗi xảy ra khi lưu loại đế!");
       }
     },
 
@@ -190,10 +191,10 @@ export default {
         try {
           await axios.delete(`http://localhost:8080/de-giay/delete/${sole.id}`);
           this.soles.splice(index, 1);
-          alert("Xóa loại đế thành công!");
+          toast.success("Xóa loại đế thành công!");
         } catch (err) {
           console.error("Lỗi khi xoá loại đế:", err);
-          alert("Có lỗi xảy ra khi xoá loại đế!");
+          toast.error("Có lỗi xảy ra khi xoá loại đế!");
         }
       }
     }

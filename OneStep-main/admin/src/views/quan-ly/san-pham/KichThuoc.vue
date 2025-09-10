@@ -104,6 +104,7 @@
 </template>
 <script>
 import axios from "axios";
+import { toast } from 'vue3-toastify';
 export default {
   data() {
     return {
@@ -147,7 +148,7 @@ export default {
         console.log("Dữ liệu kích thước đã load:", this.sizes);
       } catch (err) {
         console.error("Lỗi khi gọi API kích thước:", err);
-        alert("Không thể tải dữ liệu kích thước. Vui lòng kiểm tra kết nối API.");
+        toast.error("Không thể tải dữ liệu kích thước. Vui lòng kiểm tra kết nối API.");
         this.sizes = [];
       }
     },
@@ -169,7 +170,7 @@ export default {
     },
     saveSize() {
       if (!this.newSize.ten) {
-        alert("Vui lòng nhập tên kích thước.");
+        toast.error("Vui lòng nhập tên kích thước.");
         return;
       }
       // Gọi API thêm/sửa ở đây nếu cần
@@ -187,6 +188,7 @@ export default {
       if (confirm("Xác nhận xoá kích thước này?")) {
         // Gọi API xoá ở đây nếu cần
         this.sizes.splice(index, 1);
+        toast.success("Xóa kích thước thành công!");
       }
     }
   },

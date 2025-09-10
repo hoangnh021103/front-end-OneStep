@@ -78,6 +78,7 @@
 </template>
 <script>
 import axios from "axios";
+import { toast } from 'vue3-toastify';
 export default {
   data() {
     return {
@@ -126,7 +127,7 @@ export default {
     },
     async saveColor() {
       if (!this.newColor.ten) {
-        alert("Vui lòng nhập tên màu sắc.");
+        toast.error("Vui lòng nhập tên màu sắc.");
         return;
       }
       try {
@@ -136,17 +137,17 @@ export default {
         };
         if (this.editIndex === null) {
           await axios.post("http://localhost:8080/mau-sac/add", payload);
-          alert("Thêm màu sắc thành công!");
+          toast.success("Thêm màu sắc thành công!");
         } else {
           const id = this.colors[this.editIndex].id;
           await axios.put(`http://localhost:8080/mau-sac/update/${id}`, payload);
-          alert("Cập nhật màu sắc thành công!");
+          toast.success("Cập nhật màu sắc thành công!");
         }
         await this.fetchColors();
       } catch (err) {
         const serverMessage = err?.response?.data?.message || err?.response?.data || err?.message || "Không xác định";
         console.error("Lỗi khi lưu màu sắc:", serverMessage, err);
-        alert(`Có lỗi xảy ra khi lưu màu sắc: ${serverMessage}`);
+        toast.error(`Có lỗi xảy ra khi lưu màu sắc: ${serverMessage}`);
       }
       this.closeModal();
     },
@@ -161,10 +162,10 @@ export default {
         try {
           await axios.delete(`http://localhost:8080/mau-sac/delete/${color.id}`);
           await this.fetchColors();
-          alert("Xóa màu sắc thành công!");
+          toast.success("Xóa màu sắc thành công!");
         } catch (err) {
           console.error("Lỗi khi xóa màu sắc:", err);
-          alert("Không thể xóa màu sắc. Vui lòng thử lại!");
+          toast.error("Không thể xóa màu sắc. Vui lòng thử lại!");
         }
       }
     },
