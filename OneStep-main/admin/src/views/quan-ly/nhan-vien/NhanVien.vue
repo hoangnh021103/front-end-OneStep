@@ -115,4 +115,213 @@
   </div>
 </template>
 
-<script src="./NhanVien.js"></script>
+<script>
+import { nhanVienApi } from '@/api/nhanVienApi';
+
+export default {
+  data() {
+    return {
+      employees: [],
+      search: "",
+      genderFilter: "",
+      showModal: false,
+      editEmployee: null,
+      modalData: {
+        id: 0,
+        hoTen: "",
+        ngaySinh: "",
+        gioiTinh: "",
+        email: "",
+        soDienThoai: "",
+        diaChi: "",
+        urlAnh: "",
+        vaiTroId: 0,
+        ngayTao: "",
+        ngayCapNhat: ""
+      },
+      currentPage: 1,
+      pageSize: 10,
+      roles: {
+        1: "Quản lý",
+        2: "Nhân viên", 
+        3: "Thực tập sinh"
+      }
+    };
+  },
+  computed: {
+    filteredEmployees() {
+      const keyword = this.search.toLowerCase();
+      return this.employees.filter(
+        emp =>
+          ((emp.hoTen && emp.hoTen.toLowerCase().includes(keyword)) ||
+          (emp.email && emp.email.toLowerCase().includes(keyword)) ||
+          (emp.soDienThoai && emp.soDienThoai.includes(keyword))) &&
+          (this.genderFilter === "" || emp.gioiTinh === this.genderFilter)
+      );
+    },
+    totalPages() {
+      return Math.ceil(this.filteredEmployees.length / this.pageSize) || 1;
+    },
+    pagedEmployees() {
+      const start = (this.currentPage - 1) * this.pageSize;
+      return this.filteredEmployees.slice(start, start + this.pageSize);
+    },
+    visiblePages() {
+      let pages = [];
+      let start = Math.max(1, this.currentPage - 2);
+      let end = Math.min(this.totalPages, start + 4);
+      if (end - start < 4) start = Math.max(1, end - 4);
+      for (let i = start; i <= end; i++) pages.push(i);
+      return pages;
+    }
+  },
+  methods: {
+    async fetchEmployees() {
+      try {
+        console.log("Đang gọi API nhân viên...");
+        const data = await nhanVienApi.layDanhSachNhanVien();
+        console.log("Response từ API:", data);
+        
+        // Xử lý dữ liệu từ API
+        this.employees = Array.isArray(data) ? data : data.data || [];
+        
+        console.log("Dữ liệu nhân viên đã load:", this.employees);
+        
+      } catch (err) {
+        console.error("Lỗi khi gọi API nhân viên:", err);
+        this.employees = [];
+        
+        let errorMessage = "Không thể tải dữ liệu nhân viên.";
+        
+        if (err.code === 'ECONNREFUSED') {
+          errorMessage = "Không thể kết nối đến server. Vui lòng kiểm tra xem server có đang chạy không.";
+        } else if (err.response?.status === 404) {
+          errorMessage = "API endpoint không tồn tại. Vui lòng kiểm tra đường dẫn API.";
+        } else if (err.response?.status === 500) {
+          errorMessage = "Lỗi server. Vui lòng thử lại sau.";
+        }
+        
+        alert(errorMessage);
+      }
+    },
+    
+    resetFilter() {
+      this.search = "";
+      this.genderFilter = "";
+      this.currentPage = 1;
+      this.fetchEmployees();
+    },
+    
+    changePage(page) {
+      if (page >= 1 && page <= this.totalPages) {
+        this.currentPage = page;
+      }
+    },
+    
+    openAddModal() {
+      this.showModal = true;
+      this.editEmployee = null;
+      this.modalData = {
+        id: 0,
+        hoTen: "",
+        ngaySinh: "",
+        gioiTinh: "",
+        email: "",
+        soDienThoai: "",
+        diaChi: "",
+        urlAnh: "",
+        vaiTroId: 0,
+        ngayTao: "",
+        ngayCapNhat: ""
+      };
+    },
+    
+    openEditModal(employee) {
+      this.showModal = true;
+      this.editEmployee = employee;
+      this.modalData = { ...employee };
+    },
+    
+    closeModal() {
+      this.showModal = false;
+      this.editEmployee = null;
+    },
+    
+    async saveEmployee() {
+      // Validation
+      if (!this.modalData.hoTen) {
+        alert("Vui lòng nhập họ và tên nhân viên.");
+        return;
+      }
+      if (!this.modalData.email) {
+        alert("Vui lòng nhập email nhân viên.");
+        return;
+      }
+      if (!this.modalData.soDienThoai) {
+        alert("Vui lòng nhập số điện thoại nhân viên.");
+        return;
+      }
+      if (!this.modalData.vaiTroId || this.modalData.vaiTroId === 0) {
+        alert("Vui lòng chọn vai trò cho nhân viên.");
+        return;
+      }
+      
+      try {
+        if (this.editEmployee) {
+          // Cập nhật nhân viên
+          await nhanVienApi.capNhatNhanVien(this.modalData.id, this.modalData);
+          alert('Cập nhật nhân viên thành công!');
+        } else {
+          // Thêm nhân viên mới
+          await nhanVienApi.themNhanVien(this.modalData);
+          alert('Thêm nhân viên thành công!');
+        }
+        this.closeModal();
+        this.fetchEmployees(); // Tải lại danh sách
+      } catch (err) {
+        const msg = err?.response?.data?.message || err?.response?.data || err?.message || 'Không xác định';
+        console.error('Lỗi khi lưu nhân viên:', msg, err);
+        alert(`Không thể lưu nhân viên: ${msg}`);
+      }
+    },
+    
+    async deleteEmployee(id) {
+      if (confirm("Xác nhận xoá nhân viên này?")) {
+        try {
+          await nhanVienApi.xoaNhanVien(id);
+          alert('Xóa nhân viên thành công!');
+          this.fetchEmployees(); // Refresh danh sách sau khi xóa
+        } catch (err) {
+          console.error('Lỗi khi xóa nhân viên:', err);
+          alert('Không thể xóa nhân viên. Vui lòng thử lại sau.');
+        }
+      }
+    },
+    
+    getRoleName(roleId) {
+      return this.roles[roleId] || "Không xác định";
+    },
+    
+    // Helper method để format ngày tháng
+    formatDate(dateString) {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('vi-VN');
+    }
+  },
+  
+  watch: {
+    filteredEmployees() {
+      if (this.currentPage > this.totalPages) this.currentPage = this.totalPages;
+    },
+    pageSize() {
+      this.currentPage = 1;
+    }
+  },
+  
+  mounted() {
+    console.log("Component mounted, fetching employees...");
+    this.fetchEmployees();
+  }
+};
+</script>

@@ -77,7 +77,7 @@ export default {
       status: '',
       thuongHieuList: [],
       chatLieuList: [],
-      deGiayList: [],
+deGiayList: [],
       kieuDangList: [],
       hangSanXuatList: [],
     };
@@ -155,7 +155,7 @@ export default {
       }
     },
     getThuongHieuName(id) {
-      const thuongHieu = this.thuongHieuList.find(item => item.id === id);
+const thuongHieu = this.thuongHieuList.find(item => item.id === id);
       return thuongHieu ? thuongHieu.ten : 'N/A';
     },
     getChatLieuName(id) {
@@ -186,7 +186,7 @@ export default {
       if (confirm('Xác nhận xóa sản phẩm này?')) {
         try {
           const product = this.products[index];
-          await fetch(`http://localhost:8080/san-pham/xoa/${product.maSanPham}`, {
+          await fetch(`http://localhost:8080/san-pham/delete/${product.maSanPham}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ ...product, daXoa: 1 }),

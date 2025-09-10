@@ -70,7 +70,7 @@
         </div>
         <div class="form-group">
           <label>Kiểu dáng *</label>
-          <select v-model="form.kieuDangId" :class="{ 'error': errors.kieuDangId }">
+<select v-model="form.kieuDangId" :class="{ 'error': errors.kieuDangId }">
             <option value="0" disabled>Chọn kiểu dáng</option>
             <option v-for="kieuDang in kieuDangList" :key="kieuDang.id" :value="kieuDang.id">
               {{ kieuDang.ten }}
@@ -165,7 +165,7 @@ export default {
         moTa: '',
         thuongHieuId: '',
         chatLieuId: '',
-        deGiayId: '',
+deGiayId: '',
         kieuDangId: '',
         duongDanAnh: '',
         trangThai: '',
@@ -264,7 +264,7 @@ export default {
         this.errors.deGiayId = 'Đế giày là bắt buộc.';
         isValid = false;
       }
-      if (!this.form.kieuDangId) {
+if (!this.form.kieuDangId) {
         this.errors.kieuDangId = 'Kiểu dáng là bắt buộc.';
         isValid = false;
       }
@@ -393,7 +393,7 @@ export default {
 .form-group select,
 .form-group textarea {
   padding: 10px 12px;
-  border: 1px solid #ccc;
+border: 1px solid #ccc;
   border-radius: 8px;
   font-size: 15px;
   outline: none;
