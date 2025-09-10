@@ -120,6 +120,7 @@
 </template>
 <script>
 import axios from "axios";
+import { toast } from 'vue3-toastify';
 export default {
   name: "ThuVienAnh",
   data() {
@@ -176,7 +177,7 @@ export default {
           this.dsAnh = [];
         }
       } catch (err) {
-        alert("Không thể tải danh sách ảnh sản phẩm!");
+        toast.error("Không thể tải danh sách ảnh sản phẩm!");
         this.dsAnh = [];
       }
     },
@@ -241,7 +242,7 @@ export default {
           this.fetchAnhSanPham();
           this.closeModal();
         } catch (err) {
-          alert("Lỗi khi thêm ảnh: " + (err.response?.data?.message || err.message));
+          toast.error("Lỗi khi thêm ảnh: " + (err.response?.data?.message || err.message));
         }
       }
     },

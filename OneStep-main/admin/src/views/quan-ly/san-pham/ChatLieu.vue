@@ -101,6 +101,7 @@
 
 <script>
 import axios from "axios";
+import { toast } from 'vue3-toastify';
 
 export default {
   data() {
@@ -134,7 +135,7 @@ export default {
         this.materials = Array.isArray(res.data) ? res.data : res.data.data || [];
       } catch (err) {
         console.error("Lỗi khi tải chất liệu:", err);
-        alert("Không thể tải dữ liệu chất liệu!");
+        toast.error("Không thể tải dữ liệu chất liệu!");
       }
     },
 
@@ -163,7 +164,7 @@ export default {
     // 🟢 Lưu (thêm/sửa) chất liệu
     async saveMaterial() {
       if (!this.newMaterial.ten) {
-        alert("Vui lòng nhập tên chất liệu.");
+        toast.error("Vui lòng nhập tên chất liệu.");
         return;
       }
 
@@ -172,17 +173,17 @@ export default {
           // 🆕 Thêm mới
           const res = await axios.post("http://localhost:8080/chat-lieu/add", this.newMaterial);
           this.materials.push(res.data);
-          alert("Thêm chất liệu thành công!");
+          toast.success("Thêm chất liệu thành công!");
         } else {
           // ✏️ Cập nhật
           const id = this.materials[this.editIndex].id;
           const res = await axios.put(`http://localhost:8080/chat-lieu/update/${id}`, this.newMaterial);
           this.materials.splice(this.editIndex, 1, res.data);
-          alert("Cập nhật chất liệu thành công!");
+          toast.success("Cập nhật chất liệu thành công!");
         }
       } catch (err) {
         console.error("Lỗi khi lưu chất liệu:", err);
-        alert("Có lỗi xảy ra khi lưu chất liệu!");
+        toast.error("Có lỗi xảy ra khi lưu chất liệu!");
       }
 
       this.closeModal();
@@ -207,10 +208,10 @@ export default {
         try {
           await axios.delete(`http://localhost:8080/chat-lieu/delete/${material.id}`);
           this.materials.splice(index, 1);
-          alert("Xóa chất liệu thành công!");
+          toast.success("Xóa chất liệu thành công!");
         } catch (err) {
           console.error("Lỗi khi xóa chất liệu:", err);
-          alert("Không thể xóa chất liệu. Vui lòng thử lại!");
+          toast.error("Không thể xóa chất liệu. Vui lòng thử lại!");
         }
       }
     }

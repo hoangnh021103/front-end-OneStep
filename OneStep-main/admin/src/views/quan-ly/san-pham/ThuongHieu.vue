@@ -81,6 +81,7 @@
 </template>
 <script>
 import axios from "axios";
+import { toast } from 'vue3-toastify';
 export default {
   data() {
     return {
@@ -112,7 +113,7 @@ export default {
         this.brands = Array.isArray(res.data) ? res.data : res.data.data || [];
       } catch (err) {
         console.error("Lỗi khi tải danh sách thương hiệu:", err);
-        alert("Có lỗi xảy ra khi tải danh sách thương hiệu!");
+        toast.error("Có lỗi xảy ra khi tải danh sách thương hiệu!");
       }
     },
     resetFilters() {
@@ -138,7 +139,7 @@ export default {
     },
     async saveBrand() {
       if (!this.newBrand.ten) {
-        alert("Vui lòng nhập tên thương hiệu.");
+        toast.error("Vui lòng nhập tên thương hiệu.");
         return;
       }
 
@@ -149,7 +150,7 @@ export default {
             this.newBrand
           );
           this.brands.push(res.data);
-          alert("Thêm thương hiệu thành công!");
+          toast.success("Thêm thương hiệu thành công!");
         } else {
           const brandId = this.brands[this.editIndex].id;
           const res = await axios.put(
@@ -157,12 +158,12 @@ export default {
             this.newBrand
           );
           this.brands.splice(this.editIndex, 1, res.data);
-          alert("Cập nhật thương hiệu thành công!");
+          toast.success("Cập nhật thương hiệu thành công!");
         }
         this.closeModal();
       } catch (err) {
         console.error("Lỗi khi lưu thương hiệu:", err);
-        alert("Có lỗi xảy ra khi lưu thương hiệu!");
+        toast.error("Có lỗi xảy ra khi lưu thương hiệu!");
       }
     },
     editBrand(index) {
@@ -178,10 +179,10 @@ export default {
             `http://localhost:8080/thuong-hieu/delete/${brand.id}`
           );
           this.brands.splice(index, 1);
-          alert("Xóa thương hiệu thành công!");
+          toast.success("Xóa thương hiệu thành công!");
         } catch (err) {
           console.error("Lỗi khi xoá thương hiệu:", err);
-          alert("Có lỗi xảy ra khi xoá thương hiệu!");
+          toast.error("Có lỗi xảy ra khi xoá thương hiệu!");
         }
       }
     }

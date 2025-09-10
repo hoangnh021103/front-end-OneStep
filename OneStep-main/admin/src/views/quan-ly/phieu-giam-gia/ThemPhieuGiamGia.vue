@@ -172,8 +172,8 @@ export default {
           this.isEditing = true;
           toast.info('Đã tải thông tin phiếu giảm giá');
         } catch (error) {
-          console.error('Lỗi khi tải thông tin phiếu giảm giá:', error);
-          toast.error('Không thể tải thông tin phiếu giảm giá');
+        console.error('Lỗi khi tải thông tin phiếu giảm giá:', error);
+        toast.error('Không thể tải thông tin phiếu giảm giá');
         } finally {
           this.isSubmitting = false;
         }
@@ -263,7 +263,7 @@ export default {
         this.$router.push({ name: 'PhieuGiamGia' });
       } catch (err) {
         const action = this.isEditing ? 'cập nhật' : 'thêm';
-        toast.error(`Không thể ${action} phiếu giảm giá.`);
+        toast(`Không thể ${action} phiếu giảm giá.`);
         console.error(`Lỗi khi ${action} phiếu giảm giá:`, err);
       } finally {
         this.isSubmitting = false;

@@ -183,7 +183,7 @@ deGiayId: '',
         const data = await response.json();
         this.thuongHieuList = Array.isArray(data) ? data : data.data || [];
       } catch (err) {
-        toast.error('Không thể tải danh sách thương hiệu.');
+        toast('Không thể tải danh sách thương hiệu.');
       }
     },
     async fetchChatLieu() {
@@ -192,7 +192,7 @@ deGiayId: '',
         const data = await response.json();
         this.chatLieuList = Array.isArray(data) ? data : data.data || [];
       } catch (err) {
-        toast.error('Không thể tải danh sách chất liệu.');
+        toast('Không thể tải danh sách chất liệu.');
       }
     },
     async fetchDeGiay() {
@@ -201,7 +201,7 @@ deGiayId: '',
         const data = await response.json();
         this.deGiayList = Array.isArray(data) ? data : data.data || [];
       } catch (err) {
-        toast.error('Không thể tải danh sách đế giày.');
+        toast('Không thể tải danh sách đế giày.');
       }
     },
     async fetchKieuDang() {
@@ -210,7 +210,7 @@ deGiayId: '',
         const data = await response.json();
         this.kieuDangList = Array.isArray(data) ? data : data.data || [];
       } catch (err) {
-        toast.error('Không thể tải danh sách kiểu dáng.');
+        toast('Không thể tải danh sách kiểu dáng.');
       }
     },
     handleImageUpload(event) {
@@ -307,7 +307,7 @@ if (!this.form.kieuDangId) {
         toast.success('Thêm sản phẩm thành công!');
         this.$router.push({ name: 'SanPham' });
       } catch (err) {
-        toast.error('Không thể thêm sản phẩm.');
+        toast('Không thể thêm sản phẩm.');
       } finally {
         this.isSubmitting = false;
         this.isUploading = false;

@@ -117,6 +117,7 @@
 
 <script>
 import { nhanVienApi } from '@/api/nhanVienApi';
+import { toast } from 'vue3-toastify';
 
 export default {
   data() {
@@ -189,6 +190,7 @@ export default {
         
       } catch (err) {
         console.error("Lỗi khi gọi API nhân viên:", err);
+        toast.error("Không thể tải danh sách nhân viên.");
         this.employees = [];
         
         let errorMessage = "Không thể tải dữ liệu nhân viên.";
@@ -250,19 +252,19 @@ export default {
     async saveEmployee() {
       // Validation
       if (!this.modalData.hoTen) {
-        alert("Vui lòng nhập họ và tên nhân viên.");
+        toast.error("Vui lòng nhập họ và tên nhân viên.");
         return;
       }
       if (!this.modalData.email) {
-        alert("Vui lòng nhập email nhân viên.");
+        toast.error("Vui lòng nhập email nhân viên.");
         return;
       }
       if (!this.modalData.soDienThoai) {
-        alert("Vui lòng nhập số điện thoại nhân viên.");
+        toast.error("Vui lòng nhập số điện thoại nhân viên.");
         return;
       }
       if (!this.modalData.vaiTroId || this.modalData.vaiTroId === 0) {
-        alert("Vui lòng chọn vai trò cho nhân viên.");
+        toast.error("Vui lòng chọn vai trò cho nhân viên.");
         return;
       }
       
@@ -270,18 +272,18 @@ export default {
         if (this.editEmployee) {
           // Cập nhật nhân viên
           await nhanVienApi.capNhatNhanVien(this.modalData.id, this.modalData);
-          alert('Cập nhật nhân viên thành công!');
+          toast.success('Cập nhật nhân viên thành công!');
         } else {
           // Thêm nhân viên mới
           await nhanVienApi.themNhanVien(this.modalData);
-          alert('Thêm nhân viên thành công!');
+          toast.success('Thêm nhân viên thành công!');
         }
         this.closeModal();
         this.fetchEmployees(); // Tải lại danh sách
       } catch (err) {
         const msg = err?.response?.data?.message || err?.response?.data || err?.message || 'Không xác định';
         console.error('Lỗi khi lưu nhân viên:', msg, err);
-        alert(`Không thể lưu nhân viên: ${msg}`);
+        toast.error(`Không thể lưu nhân viên: ${msg}`);
       }
     },
     
@@ -289,11 +291,11 @@ export default {
       if (confirm("Xác nhận xoá nhân viên này?")) {
         try {
           await nhanVienApi.xoaNhanVien(id);
-          alert('Xóa nhân viên thành công!');
+          toast.success('Xóa nhân viên thành công!');
           this.fetchEmployees(); // Refresh danh sách sau khi xóa
         } catch (err) {
           console.error('Lỗi khi xóa nhân viên:', err);
-          alert('Không thể xóa nhân viên. Vui lòng thử lại sau.');
+          toast.error('Không thể xóa nhân viên. Vui lòng thử lại sau.');
         }
       }
     },

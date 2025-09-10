@@ -87,6 +87,7 @@
 
 <script>
 import axios from "axios";
+import { toast } from 'vue3-toastify';
 export default {
   data() {
     return {
@@ -153,6 +154,7 @@ export default {
         
       } catch (err) {
         console.error("Lỗi khi gọi API khách hàng:", err);
+        toast.error("Không thể tải danh sách khách hàng.");
         this.customers = [];
         
         let errorMessage = "Không thể tải dữ liệu khách hàng.";
@@ -165,7 +167,7 @@ export default {
           errorMessage = "Lỗi server. Vui lòng thử lại sau.";
         }
         
-        alert(errorMessage);
+        toast.error(errorMessage);
       }
     },
     resetFilter() {
@@ -201,15 +203,15 @@ export default {
     },
     saveCustomer() {
       if (!this.newCustomer.hoTen) {
-        alert("Vui lòng nhập họ và tên khách hàng.");
+        toast.error("Vui lòng nhập họ và tên khách hàng.");
         return;
       }
       if (!this.newCustomer.email) {
-        alert("Vui lòng nhập email khách hàng.");
+        toast.error("Vui lòng nhập email khách hàng.");
         return;
       }
       if (!this.newCustomer.soDienThoai) {
-        alert("Vui lòng nhập số điện thoại khách hàng.");
+        toast.error("Vui lòng nhập số điện thoại khách hàng.");
         return;
       }
       // Gọi API thêm/sửa ở đây nếu cần
@@ -225,10 +227,10 @@ export default {
         try {
           await axios.delete(`http://localhost:8080/khach-hang/xoa/${id}`);
           this.fetchCustomers(); // Refresh danh sách sau khi xóa
-          alert("Xóa khách hàng thành công!");
+          toast.success("Xóa khách hàng thành công!");
         } catch (error) {
           console.error("Lỗi khi xóa khách hàng:", error);
-          alert("Có lỗi xảy ra khi xóa khách hàng!");
+          toast.error("Có lỗi xảy ra khi xóa khách hàng!");
         }
       }
     },
