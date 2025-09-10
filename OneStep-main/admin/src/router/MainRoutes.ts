@@ -68,9 +68,19 @@ const MainRoutes = {
       component: () => import('@/views/quan-ly/khach-hang/KhachHang.vue')
     },
     {
-      name: 'QuanLyPhieuGiamGia',
+      name: 'PhieuGiamGia',
       path: '/quan-ly/phieu-giam-gia',
       component: () => import('@/views/quan-ly/phieu-giam-gia/PhieuGiamGia.vue')
+    },
+    {
+      name: 'ThemPhieuGiamGia',
+      path: '/quan-ly/phieu-giam-gia/them',
+      component: () => import('@/views/quan-ly/phieu-giam-gia/ThemPhieuGiamGia.vue')
+    },
+    {
+      name: 'SuaPhieuGiamGia',
+      path: '/quan-ly/phieu-giam-gia/sua/:id',
+      component: () => import('@/views/quan-ly/phieu-giam-gia/ThemPhieuGiamGia.vue')
     },
     {
       name: 'QuanLyDotGiamGia',

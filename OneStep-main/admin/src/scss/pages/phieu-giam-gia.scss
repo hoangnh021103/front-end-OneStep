@@ -1,289 +1,168 @@
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css');
 
+// Keep styles consistent with dot-giam-gia.scss
+$primary-blue: #2563eb;
+$light-blue: #4ade80;
+$red: #dc2626;
+$pink: #f87171;
+$dark-gray: #222;
+$light-gray: #ccc;
+$border-color: #ddd;
+$background-white: #fff;
+$shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+$padding-default: 20px;
+$padding-small: 6px 10px;
+$padding-btn: 6px 14px;
+$padding-status: 4px 8px;
+
+$border-radius-default: 12px;
+$border-radius-small: 6px;
+$border-radius-tiny: 4px;
+
+$font-size-small: 0.9rem;
+$font-size-tiny: 0.8rem;
+$font-size-icon: 1rem;
+
+@mixin button-base($bg-color) {
+  background: $bg-color;
+  color: $background-white;
+  border: none;
+  padding: $padding-btn;
+  border-radius: $border-radius-small;
+  cursor: pointer;
+}
+
+@mixin input-select-base {
+  padding: $padding-small;
+  border: 1px solid $light-gray;
+  border-radius: $border-radius-tiny;
+}
+
+@mixin status-base($bg-color) {
+  padding: $padding-status;
+  border-radius: $border-radius-small;
+  font-size: $font-size-tiny;
+  color: $background-white;
+  background-color: $bg-color;
+}
+
 .voucher-admin {
-  background: linear-gradient(135deg, #f8fafc 0%, #e6f0ff 100%);
-  min-height: 100vh;
-  padding: 32px 0;
-  font-family: 'Segoe UI', Arial, sans-serif;
+  background: $background-white;
+  padding: $padding-default;
+  border-radius: $border-radius-default;
+  box-shadow: $shadow;
+  margin-top: 30px;
 
   .header {
-    margin-bottom: 24px;
-    text-align: center;
-
-    h2 {
-      font-size: 2rem;
-      font-weight: 700;
-      color: #1677ff;
-      letter-spacing: 1px;
-    }
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
   }
 
   .filter-section {
-    background: #fff;
-    border-radius: 12px;
-    padding: 24px 32px;
-    margin: 0 auto 32px auto;
-    box-shadow: 0 4px 24px rgba(22,119,255,0.07);
-    max-width: 1100px;
-
-    h3 {
-      font-size: 1.1rem;
-      margin-bottom: 18px;
-      font-weight: 600;
-      color: #1677ff;
-    }
-
-    .filter-box {
-      display: flex;
-      flex-direction: column;
-    }
-
     .filter-row {
       display: flex;
-      gap: 24px;
+      gap: 10px;
       flex-wrap: wrap;
     }
-
     .filter-item {
       display: flex;
       flex-direction: column;
-      min-width: 180px;
-      margin-bottom: 0;
-
-      label {
-        font-size: 14px;
-        margin-bottom: 6px;
-        color: #555;
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-
-      input,
-      select {
-        padding: 8px 12px;
-        border: 1px solid #d9d9d9;
-        border-radius: 6px;
-        font-size: 15px;
-        background: #f7faff;
-        transition: border 0.2s;
-
-        &:focus {
-          border: 1.5px solid #1677ff;
-          outline: none;
-          background: #fff;
-        }
-      }
-
-      span {
-        margin: 0 4px;
-        align-self: center;
-      }
-    }
-
-    .date-range .date-inputs {
-      display: flex;
-      align-items: center;
       gap: 6px;
+      min-width: 180px;
+      label { font-size: 14px; color: #555; }
+      input, select { @include input-select-base; }
     }
-
+    // Push the reset action block to the far right
     .filter-actions {
-      display: flex;
+      margin-left: auto;
       align-items: flex-end;
-      min-width: 120px;
+      display: flex;
     }
+    .reset-btn { @include button-base($dark-gray); }
   }
 
-  .btn {
-    background: linear-gradient(90deg, #1677ff 60%, #52c41a 100%);
-    color: #fff;
-    border: none;
-    padding: 9px 22px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 15px;
-    font-weight: 600;
-    box-shadow: 0 2px 8px rgba(22,119,255,0.08);
-    transition: background 0.2s, box-shadow 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 7px;
-
-    &:hover {
-      background: linear-gradient(90deg, #52c41a 60%, #1677ff 100%);
-      box-shadow: 0 4px 16px rgba(22,119,255,0.13);
-    }
-
-    &.add-btn {
-      background: linear-gradient(90deg, #52c41a 60%, #1677ff 100%);
-      margin-left: 16px;
-      padding: 9px 20px;
-
-      &:hover {
-        background: linear-gradient(90deg, #1677ff 60%, #52c41a 100%);
-      }
-    }
-
-    &.reset-btn {
-      background: #f0f5ff;
-      color: #1677ff;
-      border: 1px solid #1677ff;
-      font-weight: 500;
-      transition: background 0.2s, color 0.2s;
-
-      &:hover {
-        background: #e6f7ff;
-        color: #52c41a;
-      }
-    }
-  }
+  .btn.add-btn { @include button-base($primary-blue); font-weight: 600; }
 
   .voucher-list-section {
-    background: #fff;
-    border-radius: 12px;
-    padding: 28px 32px;
-    box-shadow: 0 4px 24px rgba(22,119,255,0.07);
-    max-width: 1100px;
-    margin: 0 auto;
-
-    .voucher-list-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 18px;
-
-      h3 {
-        font-size: 1.1rem;
-        color: #1677ff;
-        font-weight: 600;
-        margin: 0;
-      }
-    }
-
-    .voucher-count {
-      font-size: 15px;
-      color: #555;
-      margin-right: 18px;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .table-responsive {
-      overflow-x: auto;
-    }
-
+    margin-top: 10px;
     .voucher-table {
       width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
-      background: #fff;
-      border-radius: 10px;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(22,119,255,0.04);
-
-      th, td {
-        border-bottom: 1px solid #f0f0f0;
-        padding: 10px 12px;
-        text-align: center;
-        font-size: 15px;
-        vertical-align: middle;
-      }
-
-      th {
-        background: #f0f5ff;
-        font-weight: 700;
-        color: #1677ff;
-        border-top: none;
-      }
-
-      tr:last-child td {
-        border-bottom: none;
-      }
+      border-collapse: collapse;
+      font-size: $font-size-small;
+      th, td { border: 1px solid $border-color; padding: 8px 10px; text-align: left; }
     }
-
-    .status.active {
-      background: #e6fffb;
-      color: #13c2c2;
-      padding: 4px 14px;
-      border-radius: 14px;
-      font-size: 14px;
-      font-weight: 600;
-      display: inline-block;
-      box-shadow: 0 1px 4px rgba(19,194,194,0.07);
-    }
-
-    .action-btn {
-      background: #f0f5ff;
-      border: none;
-      border-radius: 5px;
-      margin: 0 2px;
-      padding: 7px 10px;
-      cursor: pointer;
-      color: #1677ff;
-      font-size: 17px;
-      transition: background 0.2s, color 0.2s;
-
-      &.edit:hover {
-        background: #e6fffb;
-        color: #13c2c2;
-      }
-
-      &.delete {
-        background: #fff1f0;
-        color: #ff4d4f;
-
-        &:hover {
-          background: #fff0f6;
-          color: #d4380d;
-        }
-      }
-    }
-
-    .pagination {
+    .voucher-list-header {
       display: flex;
-      justify-content: center;
       align-items: center;
-      margin-top: 24px;
-      gap: 8px;
-
-      .page-btn {
-        background: #f0f5ff;
-        color: #1677ff;
-        border: none;
-        padding: 6px 12px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 15px;
-        transition: background 0.2s, color 0.2s;
-
-        &:hover {
-          background: #1677ff;
-          color: #fff;
-        }
-
-        &.active {
-          background: #1677ff;
-          color: #fff;
-          font-weight: bold;
-        }
-
-        &:disabled {
-          cursor: not-allowed;
-          opacity: 0.5;
-        }
+      justify-content: space-between;
+      gap: 10px;
+      > div {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 10px;
       }
     }
   }
 
-  @media (max-width: 900px) {
-    .filter-row {
-      flex-direction: column;
-      gap: 12px;
+  .status {
+    @include status-base(transparent);
+    &.active { background-color: $light-blue; }
+    &.inactive { background-color: $pink; }
+  }
+
+  .action-btn {
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: $font-size-icon;
+    margin-right: 4px;
+    &.edit { color: $primary-blue; }
+    &.delete { color: $red; }
+  }
+
+  .pagination {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 10px;
+    .page-btn {
+      padding: 4px 8px;
+      border: 1px solid $border-color;
+      background: $background-white;
+      cursor: pointer;
+      &.active { background: $primary-blue; color: $background-white; }
     }
-    .voucher-list-section, .filter-section {
-      padding: 16px 6px;
+    select { margin-left: auto; padding: 4px; }
+  }
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  .modal {
+    background: $background-white;
+    padding: $padding-default;
+    border-radius: 8px;
+    width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    input, select { padding: 6px; border: 1px solid $light-gray; border-radius: $border-radius-tiny; width: 100%; }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      .save-btn { @include button-base($primary-blue); }
+      .cancel-btn { @include button-base($light-gray); }
     }
   }
 }

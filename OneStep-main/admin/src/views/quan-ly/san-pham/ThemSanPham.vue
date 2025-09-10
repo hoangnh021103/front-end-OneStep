@@ -19,6 +19,16 @@
           <span class="error-message" v-if="errors.tenSanPham">{{ errors.tenSanPham }}</span>
         </div>
         <div class="form-group">
+          <label>Mã code</label>
+          <input
+            v-model="form.maCode"
+            type="text"
+            placeholder="Nhập mã code"
+            :class="{ 'error': errors.maCode }"
+          />
+          <span class="error-message" v-if="errors.maCode">{{ errors.maCode }}</span>
+        </div>
+        <div class="form-group">
           <label>Mô tả</label>
           <textarea
             v-model="form.moTa"
@@ -27,6 +37,46 @@
             :class="{ 'error': errors.moTa }"
           ></textarea>
           <span class="error-message" v-if="errors.moTa">{{ errors.moTa }}</span>
+        </div>
+        <div class="form-group">
+          <label>Thương hiệu *</label>
+          <select v-model="form.thuongHieuId" :class="{ 'error': errors.thuongHieuId }">
+            <option value="0" disabled>Chọn thương hiệu</option>
+            <option v-for="thuongHieu in thuongHieuList" :key="thuongHieu.id" :value="thuongHieu.id">
+              {{ thuongHieu.ten }}
+            </option>
+          </select>
+          <span class="error-message" v-if="errors.thuongHieuId">{{ errors.thuongHieuId }}</span>
+        </div>
+        <div class="form-group">
+          <label>Chất liệu *</label>
+          <select v-model="form.chatLieuId" :class="{ 'error': errors.chatLieuId }">
+            <option value="0" disabled>Chọn chất liệu</option>
+            <option v-for="chatLieu in chatLieuList" :key="chatLieu.id" :value="chatLieu.id">
+              {{ chatLieu.ten }}
+            </option>
+          </select>
+          <span class="error-message" v-if="errors.chatLieuId">{{ errors.chatLieuId }}</span>
+        </div>
+        <div class="form-group">
+          <label>Đế giày *</label>
+          <select v-model="form.deGiayId" :class="{ 'error': errors.deGiayId }">
+            <option value="0" disabled>Chọn đế giày</option>
+            <option v-for="deGiay in deGiayList" :key="deGiay.id" :value="deGiay.id">
+              {{ deGiay.ten }}
+            </option>
+          </select>
+          <span class="error-message" v-if="errors.deGiayId">{{ errors.deGiayId }}</span>
+        </div>
+        <div class="form-group">
+          <label>Kiểu dáng *</label>
+<select v-model="form.kieuDangId" :class="{ 'error': errors.kieuDangId }">
+            <option value="0" disabled>Chọn kiểu dáng</option>
+            <option v-for="kieuDang in kieuDangList" :key="kieuDang.id" :value="kieuDang.id">
+              {{ kieuDang.ten }}
+            </option>
+          </select>
+          <span class="error-message" v-if="errors.kieuDangId">{{ errors.kieuDangId }}</span>
         </div>
         <div class="form-group">
           <label>Ảnh đại diện *</label>
@@ -58,10 +108,10 @@
           <span class="error-message" v-if="errors.duongDanAnh">{{ errors.duongDanAnh }}</span>
         </div>
         <div class="form-group">
-          <label>Trạng thái</label>
+          <label>Trạng thái *</label>
           <select v-model="form.trangThai" :class="{ 'error': errors.trangThai }">
-            <option :value="1">Còn hàng</option>
-            <option :value="0">Hết hàng</option>
+            <option value="1">Còn hàng</option>
+            <option value="0">Hết hàng</option>
           </select>
           <span class="error-message" v-if="errors.trangThai">{{ errors.trangThai }}</span>
         </div>
@@ -79,7 +129,7 @@
           @click="$router.push({ name: 'SanPham' })"
           :disabled="isSubmitting"
         >
-          <i class="fa fa-times"></i> Huỷ
+          <i class="fa fa-times"></i> Hủy
         </button>
       </div>
     </div>
@@ -87,7 +137,6 @@
 </template>
 
 <script>
-import { sanPhamApi } from '@/api/sanPhamApi';
 import { toast } from 'vue3-toastify';
 
 export default {
@@ -96,30 +145,84 @@ export default {
     return {
       form: {
         tenSanPham: '',
+        maCode: '',
         moTa: '',
+        thuongHieuId: 0,
+        chatLieuId: 0,
+        deGiayId: 0,
+        kieuDangId: 0,
         duongDanAnh: null,
-        trangThai: 1
+        trangThai: 1,
+        ngayCapNhat: new Date().toISOString().split('T')[0],
+        daXoa: 0,
       },
       imageUrl: null,
       isSubmitting: false,
       isUploading: false,
       errors: {
         tenSanPham: '',
+        maCode: '',
         moTa: '',
+        thuongHieuId: '',
+        chatLieuId: '',
+deGiayId: '',
+        kieuDangId: '',
         duongDanAnh: '',
-        trangThai: ''
-      }
+        trangThai: '',
+      },
+      thuongHieuList: [],
+      chatLieuList: [],
+      deGiayList: [],
+      kieuDangList: [],
     };
   },
   methods: {
+    async fetchThuongHieu() {
+      try {
+        const response = await fetch('http://localhost:8080/thuong-hieu/hien-thi');
+        const data = await response.json();
+        this.thuongHieuList = Array.isArray(data) ? data : data.data || [];
+      } catch (err) {
+        toast.error('Không thể tải danh sách thương hiệu.');
+      }
+    },
+    async fetchChatLieu() {
+      try {
+        const response = await fetch('http://localhost:8080/chat-lieu/hien-thi');
+        const data = await response.json();
+        this.chatLieuList = Array.isArray(data) ? data : data.data || [];
+      } catch (err) {
+        toast.error('Không thể tải danh sách chất liệu.');
+      }
+    },
+    async fetchDeGiay() {
+      try {
+        const response = await fetch('http://localhost:8080/de-giay/hien-thi');
+        const data = await response.json();
+        this.deGiayList = Array.isArray(data) ? data : data.data || [];
+      } catch (err) {
+        toast.error('Không thể tải danh sách đế giày.');
+      }
+    },
+    async fetchKieuDang() {
+      try {
+        const response = await fetch('http://localhost:8080/kieu-dang/hien-thi');
+        const data = await response.json();
+        this.kieuDangList = Array.isArray(data) ? data : data.data || [];
+      } catch (err) {
+        toast.error('Không thể tải danh sách kiểu dáng.');
+      }
+    },
     handleImageUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
 
-      const validImageTypes = ['image/jpeg', 'image/png', 'image/gif'];
       const maxSize = 5 * 1024 * 1024; // 5MB
 
- 
+      if (file.size > maxSize) {
+        this.errors.duongDanAnh = 'Kích thước ảnh không được vượt quá 5MB.';
+        return;
+      }
 
       this.isUploading = true;
       const reader = new FileReader();
@@ -132,11 +235,37 @@ export default {
       reader.readAsDataURL(file);
     },
     validateForm() {
-      this.errors = { tenSanPham: '', moTa: '', duongDanAnh: '', trangThai: '' };
+      this.errors = {
+        tenSanPham: '',
+        maCode: '',
+        moTa: '',
+        thuongHieuId: '',
+        chatLieuId: '',
+        deGiayId: '',
+        kieuDangId: '',
+        duongDanAnh: '',
+        trangThai: '',
+      };
       let isValid = true;
 
       if (!this.form.tenSanPham.trim()) {
         this.errors.tenSanPham = 'Tên sản phẩm là bắt buộc.';
+        isValid = false;
+      }
+      if (!this.form.thuongHieuId) {
+        this.errors.thuongHieuId = 'Thương hiệu là bắt buộc.';
+        isValid = false;
+      }
+      if (!this.form.chatLieuId) {
+        this.errors.chatLieuId = 'Chất liệu là bắt buộc.';
+        isValid = false;
+      }
+      if (!this.form.deGiayId) {
+        this.errors.deGiayId = 'Đế giày là bắt buộc.';
+        isValid = false;
+      }
+if (!this.form.kieuDangId) {
+        this.errors.kieuDangId = 'Kiểu dáng là bắt buộc.';
         isValid = false;
       }
       if (!this.form.duongDanAnh) {
@@ -158,163 +287,238 @@ export default {
 
         const formData = new FormData();
         formData.append('tenSanPham', this.form.tenSanPham);
+        formData.append('maCode', this.form.maCode);
         formData.append('moTa', this.form.moTa);
-        formData.append('trangThai', this.form.trangThai);
+        formData.append('thuongHieuId', this.form.thuongHieuId);
+        formData.append('chatLieuId', this.form.chatLieuId);
+        formData.append('deGiayId', this.form.deGiayId);
+        formData.append('kieuDangId', this.form.kieuDangId);
         if (this.form.duongDanAnh) {
           formData.append('duongDanAnh', this.form.duongDanAnh);
         }
+        formData.append('trangThai', this.form.trangThai);
+        formData.append('ngayCapNhat', this.form.ngayCapNhat);
+        formData.append('daXoa', this.form.daXoa);
 
-        // Debug FormData
-        for (let [key, value] of formData.entries()) {
-          console.log(key, value);
-        }
-
-        await sanPhamApi.themSanPham(formData);
+        await fetch('http://localhost:8080/san-pham/add', {
+          method: 'POST',
+          body: formData,
+        });
         toast.success('Thêm sản phẩm thành công!');
         this.$router.push({ name: 'SanPham' });
       } catch (err) {
-        const msg = err?.response?.data?.message || err?.message || 'Không xác định';
-        console.error('Lỗi khi thêm sản phẩm:', msg, err);
-        this.$message.error(`Không thể thêm sản phẩm: ${msg}`);
+        toast.error('Không thể thêm sản phẩm.');
       } finally {
         this.isSubmitting = false;
         this.isUploading = false;
       }
-    }
-  }
+    },
+  },
+  mounted() {
+    this.fetchThuongHieu();
+    this.fetchChatLieu();
+    this.fetchDeGiay();
+    this.fetchKieuDang();
+  },
 };
 </script>
-
-<style scoped>
+<style>
 .container {
-  padding: 16px;
-  max-width: 800px;
-  margin: 0 auto;
+  max-width: 1100px;
+  margin: 30px auto;
+  padding: 20px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
 }
+
+/* Header */
 .header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  align-items: center;
+  margin-bottom: 25px;
 }
+
+.header h2 {
+  font-size: 26px;
+  font-weight: 600;
+  color: #222;
+}
+
+.btn-back {
+  background: #f1f1f1;
+  color: #444;
+  border: 1px solid #ddd;
+  padding: 8px 14px;
+  font-size: 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-back:hover {
+  background: #e5e5e5;
+  color: #000;
+}
+
+/* Card */
 .form-card {
   background: #fff;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  padding: 30px;
 }
+
+/* Grid layout */
 .form-grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
 }
+
+/* Group input */
 .form-group {
   display: flex;
   flex-direction: column;
 }
-label {
+
+.form-group label {
   font-weight: 600;
-  margin-bottom: 8px;
-  color: #333;
-}
-input,
-select,
-textarea {
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  padding: 10px;
+  margin-bottom: 6px;
   font-size: 14px;
-  transition: border-color 0.3s;
+  color: #555;
 }
-input:focus,
-select:focus,
-textarea:focus {
-  border-color: #4f46e5;
-  outline: none;
-}
-.error {
-  border-color: #e53e3e;
-}
-.error-message {
-  color: #e53e3e;
-  font-size: 12px;
-  margin-top: 4px;
-}
-.image-upload-container {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 250px;
-  height: 250px;
-  border: 2px dashed #d9d9d9;
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 10px 12px;
+border: 1px solid #ccc;
   border-radius: 8px;
-  background: #fafafa;
-  cursor: pointer;
-  transition: border-color 0.3s;
+  font-size: 15px;
+  outline: none;
+  transition: 0.3s;
 }
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+}
+
+textarea {
+  resize: none;
+}
+
+/* Error */
+.error {
+  border-color: #e63946 !important;
+}
+
+.error-message {
+  margin-top: 4px;
+  font-size: 13px;
+  color: #e63946;
+}
+
+/* Upload ảnh */
+.image-upload-container {
+  border: 2px dashed #aaa;
+  border-radius: 10px;
+  text-align: center;
+  padding: 25px;
+  cursor: pointer;
+  position: relative;
+  background: #fafafa;
+  transition: 0.3s;
+}
+
 .image-upload-container:hover {
   border-color: #4f46e5;
+  background: #f9f9ff;
 }
+
 .image-placeholder {
-  color: #888;
-  font-size: 14px;
-  text-align: center;
+  color: #666;
+  font-size: 15px;
 }
+
 .image-preview {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 8px;
+  border-radius: 10px;
+  max-width: 100%;
+  height: auto;
 }
+
 .loading-overlay {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.6);
   display: flex;
-  align-items: center;
   justify-content: center;
-  color: #fff;
-  font-size: 24px;
+  align-items: center;
 }
+
+/* Actions */
 .actions {
+  margin-top: 30px;
   display: flex;
-  gap: 12px;
   justify-content: flex-end;
-  margin-top: 16px;
+  gap: 14px;
 }
+
+button {
+  font-size: 15px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: none;
+  font-weight: 500;
+  transition: 0.3s;
+}
+
+/* Primary */
 .btn-primary {
   background: #4f46e5;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 10px 16px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background 0.3s;
+  color: white;
 }
+
 .btn-primary:hover {
   background: #4338ca;
 }
-.btn-primary:disabled {
-  background: #a5b4fc;
-  cursor: not-allowed;
+
+/* Secondary */
+.btn-secondary {
+  background: #f3f4f6;
+  color: #333;
+  border: 1px solid #ddd;
 }
-.btn-secondary, .btn-back {
+
+.btn-secondary:hover {
   background: #e5e7eb;
-  color: #111827;
-  border: none;
-  border-radius: 6px;
-  padding: 10px 16px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background 0.3s;
 }
-.btn-secondary:hover, .btn-back:hover {
-  background: #d1d5db;
+
+/* Responsive */
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .actions button {
+    width: 100%;
+  }
 }
 </style>
