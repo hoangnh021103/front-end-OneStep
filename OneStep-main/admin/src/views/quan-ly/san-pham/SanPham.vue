@@ -155,16 +155,16 @@ deGiayList: [],
       }
     },
     getThuongHieuName(id) {
-const thuongHieu = this.thuongHieuList.find(item => item.id === id);
-      return thuongHieu ? thuongHieu.ten : 'N/A';
+      const thuongHieu = this.thuongHieuList.find(item => item.id === id);
+      return thuongHieu ? thuongHieu.ten : '';
     },
     getChatLieuName(id) {
       const chatLieu = this.chatLieuList.find(item => item.id === id);
-      return chatLieu ? chatLieu.ten : 'N/A';
+      return chatLieu ? chatLieu.ten : '';
     },
     getDeGiayName(id) {
       const deGiay = this.deGiayList.find(item => item.id === id);
-      return deGiay ? deGiay.ten : 'N/A';
+      return deGiay ? deGiay.ten : '';
     },
     getKieuDangName(id) {
       const kieuDang = this.kieuDangList.find(item => item.id === id);
@@ -201,7 +201,7 @@ const thuongHieu = this.thuongHieuList.find(item => item.id === id);
       }
     },
     viewProduct(maSanPham) {
-      this.$router.push({ name: 'XemSanPham', params: { id: maSanPham } });
+      this.$router.push({ name: 'SanPhamChiTiet', params: { id: maSanPham } });
     },
   },
   mounted() {
