@@ -69,9 +69,6 @@
                   <button class="action-btn delete" title="Xóa" @click="deleteDetail(index)">
                     <i class="fa fa-trash"></i>
                   </button>
-                  <button class="action-btn view" title="Xem" @click="viewDetail(detail.maChiTiet)">
-                    <i class="fa fa-eye"></i>
-                  </button>
                 </td>
               </tr>
             </tbody>

@@ -6,9 +6,9 @@
     <div v-else>
       <div class="header">
         <h2>Thêm sản phẩm chi tiết</h2>
-        <button class="btn-back" @click="$router.push({ name: 'ChiTietSanPham' })">
-          <i class="fa fa-arrow-left"></i> Quay lại danh sách
-        </button>
+      <button class="btn-back" @click="$router.push({ name: 'SanPham' })">
+        <i class="fa fa-arrow-left"></i> Quay lại danh sách
+      </button>
       </div>
       <div class="form-card">
         <div class="form-grid">
