@@ -42,8 +42,7 @@
                 <th>Màu sắc</th>
                 <th>Giá tiền</th>
                 <th>Số lượng tồn</th>
-                <th>Tiền giảm giá</th>
-                <th>Ảnh</th>
+
                 <th>Trạng thái</th>
                 <th>Hành động</th>
               </tr>
@@ -57,10 +56,7 @@
                 <td>{{ getMauSacName(detail.mauSacId) }}</td>
                 <td>{{ formatCurrency(detail.giaTien) }}</td>
                 <td>{{ detail.soLuongTon }}</td>
-                <td>{{ formatCurrency(detail.tienGiamGia) }}</td>
-                <td>
-                  <img :src="detail.duongDanAnh" alt="Ảnh SP" class="product-thumb" v-if="detail.duongDanAnh" />
-                </td>
+
                 <td>
                   <span :class="['status', detail.trangThai === 1 ? 'active' : 'inactive']">
                     {{ detail.trangThai === 1 ? 'Còn hàng' : 'Hết hàng' }}
@@ -94,8 +90,7 @@
           <p>Màu sắc: {{ getMauSacName(details[0].mauSacId) }}</p>
           <p>Giá tiền: {{ formatCurrency(details[0].giaTien) }}</p>
           <p>Số lượng tồn: {{ details[0].soLuongTon }}</p>
-          <p>Tiền giảm giá: {{ formatCurrency(details[0].tienGiamGia) }}</p>
-          <img :src="details[0].duongDanAnh" alt="Ảnh SP" class="product-thumb" v-if="details[0].duongDanAnh" />
+        
           <p>Trạng thái: {{ details[0].trangThai === 1 ? 'Còn hàng' : 'Hết hàng' }}</p>
         </div>
         <button class="btn-back" @click="$router.push({ name: 'SanPhamChiTiet', params: { id: details[0]?.sanPhamId } })">

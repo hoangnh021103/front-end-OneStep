@@ -49,7 +49,7 @@ const MainRoutes = {
     {
       name: 'ThemChiTietSanPham',
       path: '/quan-ly/san-pham/chi-tiet-san-pham/them',
-      component: () => import('@/views/quan-ly/san-pham/SanPhamChiTiet.vue'),
+      component: () => import('@/views/quan-ly/san-pham/ThemSanPhamChiTiet.vue'),
     },
     {
       name: 'MauSac',
@@ -106,6 +106,7 @@ const MainRoutes = {
       path: '/quan-ly/dot-giam-gia',
       component: () => import('@/views/quan-ly/dot-giam-gia/DotGiamGia.vue'),
     },
+   
   ],
 };
 
