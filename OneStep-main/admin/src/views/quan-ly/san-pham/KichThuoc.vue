@@ -12,8 +12,8 @@
         <input type="text" v-model="search" placeholder="Nhập tên kích thước" />
         <select v-model="status">
           <option value="">Tất cả trạng thái</option>
-          <option value="1">Hoạt động</option>
-          <option value="0">Ngừng</option>
+          <option value="1">Còn hàng</option>
+          <option value="0">Hết hàng</option>
         </select>
         <button @click="resetFilters" class="reset-btn">
           <i class="fa fa-undo"></i> Đặt lại
@@ -89,6 +89,11 @@
           v-model="newSize.ten"
           placeholder="Nhập tên kích thước"
         />
+        <label for="sizeStatusSelect">Trạng thái</label>
+        <select id="sizeStatusSelect" v-model="newSize.trangThai">
+          <option :value="1">Còn hàng</option>
+          <option :value="0">Hết hàng</option>
+        </select>
         <div class="modal-actions">
           <button @click="addSize" class="confirm-btn">
             <i class="fa fa-check"></i>
@@ -168,12 +173,30 @@ export default {
     closeModal() {
       this.showModal = false;
     },
-    saveSize() {
+    async saveSize() {
       if (!this.newSize.ten) {
         toast.error("Vui lòng nhập tên kích thước.");
         return;
       }
-      // Gọi API thêm/sửa ở đây nếu cần
+
+      try {
+        if (this.editIndex === null) {
+          // 🆕 Thêm mới
+          const res = await axios.post("http://localhost:8080/kich-co/add", this.newSize);
+          this.sizes.push(res.data);
+          toast.success("Thêm kích thước thành công!");
+        } else {
+          // ✏️ Cập nhật
+          const id = this.sizes[this.editIndex].id;
+          const res = await axios.put(`http://localhost:8080/kich-co/update/${id}`, this.newSize);
+          this.sizes.splice(this.editIndex, 1, res.data);
+          toast.success("Cập nhật kích thước thành công!");
+        }
+      } catch (err) {
+        console.error("Lỗi khi lưu kích thước:", err);
+        toast.error("Có lỗi xảy ra khi lưu kích thước!");
+      }
+
       this.closeModal();
     },
     addSize() {
@@ -184,11 +207,17 @@ export default {
       this.newSize = { ...this.sizes[index] };
       this.showModal = true;
     },
-    deleteSize(index) {
-      if (confirm("Xác nhận xoá kích thước này?")) {
-        // Gọi API xoá ở đây nếu cần
-        this.sizes.splice(index, 1);
-        toast.success("Xóa kích thước thành công!");
+    async deleteSize(index) {
+      const size = this.sizes[index];
+      if (confirm(`Xác nhận xoá kích thước "${size.ten}"?`)) {
+        try {
+          await axios.delete(`http://localhost:8080/kich-co/delete/${size.id}`);
+          this.sizes.splice(index, 1);
+          toast.success("Xóa kích thước thành công!");
+        } catch (err) {
+          console.error("Lỗi khi xóa kích thước:", err);
+          toast.error("Không thể xóa kích thước. Vui lòng thử lại!");
+        }
       }
     }
   },
