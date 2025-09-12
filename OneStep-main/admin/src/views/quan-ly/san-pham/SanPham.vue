@@ -187,7 +187,7 @@ deGiayList: [],
         try {
           const product = this.products[index];
           await fetch(`http://localhost:8080/san-pham/delete/${product.maSanPham}`, {
-            method: 'PUT',
+            method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ ...product, daXoa: 1 }),
           });
