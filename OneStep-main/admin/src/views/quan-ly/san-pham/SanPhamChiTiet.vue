@@ -28,12 +28,12 @@
               <i class="fa fa-arrow-left"></i> Quay lại danh sách
             </button>
           </div>
-          <button class="btn-add" @click="$router.push({ name: 'ThemChiTietSanPham' })">
+          <button class="btn-add" @click="$router.push({ name: 'ThemChiTietSanPham', params: { sanPhamId: $route.params.id } })">
             <i class="fa fa-plus"></i> Thêm chi tiết sản phẩm
           </button>
         </div>
         <div class="table-wrapper">
-          <table>
+          <table v-if="filteredDetails.length > 0">
             <thead>
               <tr>
                 <th>STT</th>
@@ -72,6 +72,9 @@
               </tr>
             </tbody>
           </table>
+          <div v-else class="no-data">
+            <p>Chưa có chi tiết sản phẩm nào. Vui lòng thêm chi tiết sản phẩm.</p>
+          </div>
         </div>
       </div>
     </template>
@@ -98,7 +101,7 @@
       <div class="form-section">
         <h2>Thêm chi tiết sản phẩm</h2>
         <!-- Thêm form để nhập dữ liệu -->
-        <button class="btn-back" @click="$router.push({ name: 'SanPhamChiTiet' })">
+        <button class="btn-back" @click="$router.push({ name: 'SanPhamChiTiet', params: { id: $route.params.sanPhamId } })">
           <i class="fa fa-arrow-left"></i> Quay lại
         </button>
       </div>
@@ -144,7 +147,6 @@ export default {
         currency: 'VND',
       }).format(value);
     },
-
     async fetchDetails() {
       try {
         const maSanPham = this.$route.params.id;
@@ -176,12 +178,17 @@ export default {
           this.details = [data];
         } else {
           this.details = [];
-          toast.warn('Dữ liệu trả về không đúng định dạng.');
         }
         if (maSanPham && this.sanPhamList.length > 0) {
-          this.sanPhamInfo = this.sanPhamList.find(sp => sp.maSanPham == maSanPham);
+          this.sanPhamInfo = this.sanPhamList.find(sp => sp.maSanPham == maSanPham) || null;
+          if (!this.sanPhamInfo) {
+            toast.warn('Không tìm thấy thông tin sản phẩm.');
+          }
         }
         console.log('Chi tiết sản phẩm:', this.details);
+        if (this.details.length === 0 && maSanPham) {
+          toast.info('Chưa có chi tiết sản phẩm nào cho sản phẩm này.');
+        }
       } catch (err) {
         console.error('Lỗi khi lấy danh sách chi tiết sản phẩm:', err);
         toast.error(`Không thể tải danh sách chi tiết sản phẩm: ${err.message}`);
@@ -190,7 +197,6 @@ export default {
         }
       }
     },
-
     async fetchDetailById(id) {
       try {
         const apiUrl = `http://localhost:8080/chi-tiet-san-pham/hien-thi/${id}`;
@@ -212,12 +218,11 @@ export default {
         if (err.message.includes('404') || err.message.includes('500')) {
           toast.error('Không tìm thấy chi tiết sản phẩm hoặc có lỗi từ server');
           setTimeout(() => {
-            this.$router.push({ name: 'SanPhamChiTiet' });
+            this.$router.push({ name: 'SanPhamChiTiet', params: { id: this.$route.params.id } });
           }, 2000);
         }
       }
     },
-
     async fetchSanPham() {
       try {
         const response = await fetch('http://localhost:8080/san-pham/hien-thi');
@@ -232,7 +237,6 @@ export default {
         toast.error(`Không thể tải danh sách sản phẩm: ${err.message}`);
       }
     },
-
     async fetchKichCo() {
       try {
         const response = await fetch('http://localhost:8080/kich-co/hien-thi');
@@ -247,7 +251,6 @@ export default {
         toast.error(`Không thể tải danh sách kích cỡ: ${err.message}`);
       }
     },
-
     async fetchMauSac() {
       try {
         const response = await fetch('http://localhost:8080/mau-sac/hien-thi');
@@ -262,7 +265,6 @@ export default {
         toast.error(`Không thể tải danh sách màu sắc: ${err.message}`);
       }
     },
-
     getSanPhamName(id) {
       if (!id) return 'N/A';
       const sp = this.sanPhamList.find(item => item.maSanPham === id);
@@ -278,13 +280,11 @@ export default {
       const ms = this.mauSacList.find(item => item.id === id);
       return ms ? ms.ten : 'N/A';
     },
-
     resetFilter() {
       this.search = '';
       this.status = '';
       this.fetchDetails();
     },
-
     editDetail(index) {
       const detail = this.details[index];
       this.$router.push({
@@ -292,31 +292,27 @@ export default {
         params: { id: detail.maChiTiet },
       });
     },
-
     async deleteDetail(index) {
       const detail = this.details[index];
       if (!confirm(`Xác nhận xóa chi tiết sản phẩm với mã ${detail.maChiTiet}?`)) {
         return;
       }
-
       try {
         console.log('Gửi yêu cầu xóa chi tiết sản phẩm với mã:', detail.maChiTiet);
         const response = await fetch(
           `http://localhost:8080/chi-tiet-san-pham/delete/${detail.maChiTiet}`,
           {
-            method: 'DELETE', // Sử dụng DELETE thay vì PUT
+            method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
           }
         );
-
         console.log('Response status:', response.status);
         if (!response.ok) {
           const errorData = await response.text();
           throw new Error(`Lỗi HTTP! Trạng thái: ${response.status}, Thông báo: ${errorData}`);
         }
-
         toast.success('Xóa chi tiết sản phẩm thành công!');
-        await this.fetchDetails(); // Làm mới danh sách sau khi xóa
+        await this.fetchDetails();
       } catch (err) {
         console.error('Lỗi khi xóa chi tiết sản phẩm:', err);
         toast.error(`Không thể xóa chi tiết sản phẩm: ${err.message}`);
@@ -327,7 +323,6 @@ export default {
         }
       }
     },
-
     viewDetail(maChiTiet) {
       this.$router.push({
         name: 'XemChiTietSanPham',
@@ -335,7 +330,6 @@ export default {
       });
     },
   },
-
   async mounted() {
     this.mode = this.$route.name;
     console.log('Route name:', this.mode);
@@ -386,6 +380,7 @@ export default {
     }
   },
 };
+
 </script>
 
 <style scoped>
@@ -502,5 +497,10 @@ td {
 .delete {
   background: #f44336;
   color: white;
+}
+.no-data {
+  text-align: center;
+  padding: 20px;
+  color: #666;
 }
 </style>
