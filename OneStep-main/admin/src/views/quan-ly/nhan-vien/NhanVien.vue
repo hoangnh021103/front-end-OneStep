@@ -269,17 +269,26 @@ export default {
       }
       
       try {
+        // Cập nhật ngày
+        this.modalData.ngayCapNhat = new Date().toISOString().split('T')[0];
+        
         if (this.editEmployee) {
           // Cập nhật nhân viên
-          await nhanVienApi.capNhatNhanVien(this.modalData.id, this.modalData);
+          const response = await nhanVienApi.capNhatNhanVien(this.modalData.id, this.modalData);
+          // Cập nhật mảng local
+          const index = this.employees.findIndex(emp => emp.id === this.modalData.id);
+          if (index !== -1) {
+            this.employees.splice(index, 1, response.data || this.modalData);
+          }
           toast.success('Cập nhật nhân viên thành công!');
         } else {
           // Thêm nhân viên mới
-          await nhanVienApi.themNhanVien(this.modalData);
+          const response = await nhanVienApi.themNhanVien(this.modalData);
+          // Thêm vào mảng local
+          this.employees.push(response.data || this.modalData);
           toast.success('Thêm nhân viên thành công!');
         }
         this.closeModal();
-        this.fetchEmployees(); // Tải lại danh sách
       } catch (err) {
         const msg = err?.response?.data?.message || err?.response?.data || err?.message || 'Không xác định';
         console.error('Lỗi khi lưu nhân viên:', msg, err);
@@ -288,11 +297,18 @@ export default {
     },
     
     async deleteEmployee(id) {
-      if (confirm("Xác nhận xoá nhân viên này?")) {
+      const employee = this.employees.find(emp => emp.id === id);
+      if (!employee) return;
+      
+      if (confirm(`Xác nhận xoá nhân viên "${employee.hoTen}"?`)) {
         try {
           await nhanVienApi.xoaNhanVien(id);
+          // Xóa nhân viên khỏi mảng local
+          const index = this.employees.findIndex(emp => emp.id === id);
+          if (index !== -1) {
+            this.employees.splice(index, 1);
+          }
           toast.success('Xóa nhân viên thành công!');
-          this.fetchEmployees(); // Refresh danh sách sau khi xóa
         } catch (err) {
           console.error('Lỗi khi xóa nhân viên:', err);
           toast.error('Không thể xóa nhân viên. Vui lòng thử lại sau.');

@@ -119,7 +119,8 @@ export default {
       showModal: false,
       newSize: {
         ten: "",
-        trangThai: 1
+        trangThai: 1,
+        ngayCapNhat: new Date().toISOString().split('T')[0]
       },
       editIndex: null
     };
@@ -137,9 +138,7 @@ export default {
   methods: {
     async fetchSizes() {
       try {
-        console.log("Đang gọi API kích thước...");
         const res = await axios.get("http://localhost:8080/kich-co/hien-thi");
-        console.log("Response từ API:", res.data);
         
         // Xử lý dữ liệu từ API
         if (Array.isArray(res.data)) {
@@ -148,12 +147,11 @@ export default {
           this.sizes = res.data.data;
         } else {
           this.sizes = [];
+          toast.warning("Không có dữ liệu kích thước nào.");
         }
-        
-        console.log("Dữ liệu kích thước đã load:", this.sizes);
       } catch (err) {
         console.error("Lỗi khi gọi API kích thước:", err);
-        toast.error("Không thể tải dữ liệu kích thước. Vui lòng kiểm tra kết nối API.");
+        toast.error(`Không thể tải dữ liệu kích thước: ${err.message || 'Lỗi kết nối API'}`);
         this.sizes = [];
       }
     },
@@ -167,7 +165,8 @@ export default {
       this.editIndex = null;
       this.newSize = {
         ten: "",
-        trangThai: 1
+        trangThai: 1,
+        ngayCapNhat: new Date().toISOString().split('T')[0]
       };
     },
     closeModal() {
@@ -178,23 +177,28 @@ export default {
         toast.error("Vui lòng nhập tên kích thước.");
         return;
       }
+      
+      // Thêm ngày cập nhật
+      this.newSize.ngayCapNhat = new Date().toISOString().split('T')[0];
 
       try {
         if (this.editIndex === null) {
           // 🆕 Thêm mới
           const res = await axios.post("http://localhost:8080/kich-co/add", this.newSize);
+          // Cập nhật mảng local với dữ liệu từ response
           this.sizes.push(res.data);
-          toast.success("Thêm kích thước thành công!");
+          toast.success(`Thêm kích thước "${this.newSize.ten}" thành công!`);
         } else {
           // ✏️ Cập nhật
           const id = this.sizes[this.editIndex].id;
           const res = await axios.put(`http://localhost:8080/kich-co/update/${id}`, this.newSize);
+          // Cập nhật mảng local với dữ liệu từ response
           this.sizes.splice(this.editIndex, 1, res.data);
-          toast.success("Cập nhật kích thước thành công!");
+          toast.success(`Cập nhật kích thước "${this.newSize.ten}" thành công!`);
         }
       } catch (err) {
         console.error("Lỗi khi lưu kích thước:", err);
-        toast.error("Có lỗi xảy ra khi lưu kích thước!");
+        toast.error(`Có lỗi xảy ra khi ${this.editIndex === null ? 'thêm' : 'cập nhật'} kích thước: ${err.message || 'Không xác định'}`);
       }
 
       this.closeModal();
@@ -209,14 +213,20 @@ export default {
     },
     async deleteSize(index) {
       const size = this.sizes[index];
-      if (confirm(`Xác nhận xoá kích thước "${size.ten}"?`)) {
+      if (!size) {
+        toast.error("Không tìm thấy kích thước!");
+        return;
+      }
+      
+      if (confirm(`Bạn có chắc chắn muốn xóa kích thước "${size.ten}" không?`)) {
         try {
           await axios.delete(`http://localhost:8080/kich-co/delete/${size.id}`);
+          // Xóa trực tiếp từ mảng local thay vì gọi lại API
           this.sizes.splice(index, 1);
-          toast.success("Xóa kích thước thành công!");
+          toast.success(`Đã xóa kích thước "${size.ten}" thành công!`);
         } catch (err) {
           console.error("Lỗi khi xóa kích thước:", err);
-          toast.error("Không thể xóa kích thước. Vui lòng thử lại!");
+          toast.error(`Không thể xóa kích thước "${size.ten}". Lỗi: ${err.message || 'Không xác định'}`);
         }
       }
     }
