@@ -1,3 +1,4 @@
+```vue
 <template>
   <div class="container">
     <template v-if="mode === 'SanPhamChiTiet'">
@@ -42,7 +43,6 @@
                 <th>Màu sắc</th>
                 <th>Giá tiền</th>
                 <th>Số lượng tồn</th>
-
                 <th>Trạng thái</th>
                 <th>Hành động</th>
               </tr>
@@ -56,7 +56,6 @@
                 <td>{{ getMauSacName(detail.mauSacId) }}</td>
                 <td>{{ formatCurrency(detail.giaTien) }}</td>
                 <td>{{ detail.soLuongTon }}</td>
-
                 <td>
                   <span :class="['status', detail.trangThai === 1 ? 'active' : 'inactive']">
                     {{ detail.trangThai === 1 ? 'Còn hàng' : 'Hết hàng' }}
@@ -87,7 +86,6 @@
           <p>Màu sắc: {{ getMauSacName(details[0].mauSacId) }}</p>
           <p>Giá tiền: {{ formatCurrency(details[0].giaTien) }}</p>
           <p>Số lượng tồn: {{ details[0].soLuongTon }}</p>
-        
           <p>Trạng thái: {{ details[0].trangThai === 1 ? 'Còn hàng' : 'Hết hàng' }}</p>
         </div>
         <button class="btn-back" @click="$router.push({ name: 'SanPhamChiTiet', params: { id: details[0]?.sanPhamId } })">
@@ -149,60 +147,44 @@ export default {
 
     async fetchDetails() {
       try {
-        // Sử dụng URL động dựa trên tham số hoặc mặc định
         const maSanPham = this.$route.params.id;
         console.log('Route params:', this.$route.params);
-        
-        // Sử dụng đường dẫn API chính xác
         let url = 'http://localhost:8080/chi-tiet-san-pham/hien-thi';
         if (maSanPham) {
           if (isNaN(maSanPham)) {
             toast.error('Mã sản phẩm không hợp lệ.');
             return;
           }
-          // Sửa đường dẫn API để đảm bảo đúng định dạng
           url = `http://localhost:8080/chi-tiet-san-pham/hien-thi-theo-san-pham/${maSanPham}`;
         }
-        
         console.log('Fetching from URL:', url);
         const response = await fetch(url, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
-        
-        // Kiểm tra và log response status
         console.log('Response status:', response.status);
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}, Status Text: ${response.statusText}`);
         }
-        
         const data = await response.json();
         console.log('Response data:', data);
-        
-        // Xử lý dữ liệu trả về
         if (Array.isArray(data)) {
           this.details = data;
         } else if (data.data && Array.isArray(data.data)) {
           this.details = data.data;
         } else if (data && typeof data === 'object') {
-          // Trường hợp trả về một đối tượng duy nhất
           this.details = [data];
         } else {
           this.details = [];
           toast.warn('Dữ liệu trả về không đúng định dạng.');
         }
-        
-        // Nếu có mã sản phẩm, lấy thông tin sản phẩm
         if (maSanPham && this.sanPhamList.length > 0) {
           this.sanPhamInfo = this.sanPhamList.find(sp => sp.maSanPham == maSanPham);
         }
-        
         console.log('Chi tiết sản phẩm:', this.details);
       } catch (err) {
         console.error('Lỗi khi lấy danh sách chi tiết sản phẩm:', err);
         toast.error(`Không thể tải danh sách chi tiết sản phẩm: ${err.message}`);
-        
-        // Xử lý lỗi 500 từ server
         if (err.message.includes('500')) {
           toast.error('Có lỗi từ server khi tải dữ liệu. Vui lòng thử lại sau.');
         }
@@ -211,28 +193,22 @@ export default {
 
     async fetchDetailById(id) {
       try {
-        // Sử dụng đường dẫn API chính xác
         const apiUrl = `http://localhost:8080/chi-tiet-san-pham/hien-thi/${id}`;
         console.log('Gọi API chi tiết sản phẩm với URL:', apiUrl);
-        
         const response = await fetch(apiUrl, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
-        
-        // Kiểm tra và log response status
         console.log('Response status:', response.status);
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}, Status Text: ${response.statusText}`);
         }
-        
         const data = await response.json();
         console.log('Chi tiết sản phẩm data:', data);
         this.details = [data];
       } catch (err) {
         console.error('Lỗi khi lấy chi tiết sản phẩm:', err);
         toast.error(`Không thể tải chi tiết sản phẩm: ${err.message}`);
-        // Chuyển về trang danh sách nếu không tìm thấy chi tiết
         if (err.message.includes('404') || err.message.includes('500')) {
           toast.error('Không tìm thấy chi tiết sản phẩm hoặc có lỗi từ server');
           setTimeout(() => {
@@ -318,22 +294,36 @@ export default {
     },
 
     async deleteDetail(index) {
-      if (confirm('Xác nhận xóa chi tiết sản phẩm này?')) {
-        try {
-          const detail = this.details[index];
-          await fetch(
-            `http://localhost:8080/chi-tiet-san-pham/delete/${detail.maChiTiet}`,
-            {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ ...detail, daXoa: 1 }),
-            }
-          );
-          toast.success('Xóa chi tiết sản phẩm thành công!');
-          this.fetchDetails();
-        } catch (err) {
-          console.error('Lỗi khi xóa chi tiết sản phẩm:', err);
-          toast.error('Không thể xóa chi tiết sản phẩm.');
+      const detail = this.details[index];
+      if (!confirm(`Xác nhận xóa chi tiết sản phẩm với mã ${detail.maChiTiet}?`)) {
+        return;
+      }
+
+      try {
+        console.log('Gửi yêu cầu xóa chi tiết sản phẩm với mã:', detail.maChiTiet);
+        const response = await fetch(
+          `http://localhost:8080/chi-tiet-san-pham/delete/${detail.maChiTiet}`,
+          {
+            method: 'DELETE', // Sử dụng DELETE thay vì PUT
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+          const errorData = await response.text();
+          throw new Error(`Lỗi HTTP! Trạng thái: ${response.status}, Thông báo: ${errorData}`);
+        }
+
+        toast.success('Xóa chi tiết sản phẩm thành công!');
+        await this.fetchDetails(); // Làm mới danh sách sau khi xóa
+      } catch (err) {
+        console.error('Lỗi khi xóa chi tiết sản phẩm:', err);
+        toast.error(`Không thể xóa chi tiết sản phẩm: ${err.message}`);
+        if (err.message.includes('404')) {
+          toast.error('Chi tiết sản phẩm không tồn tại.');
+        } else if (err.message.includes('500')) {
+          toast.error('Lỗi server khi xóa chi tiết sản phẩm. Vui lòng thử lại sau.');
         }
       }
     },
@@ -350,7 +340,6 @@ export default {
     this.mode = this.$route.name;
     console.log('Route name:', this.mode);
     try {
-      // Tải dữ liệu cơ bản trước
       console.log('Bắt đầu tải dữ liệu cơ bản...');
       await Promise.all([
         this.fetchSanPham().catch(err => {
@@ -367,16 +356,12 @@ export default {
           console.error('Lỗi khi tải danh sách màu sắc:', err);
           toast.error('Không thể tải danh sách màu sắc. Vui lòng thử lại sau.');
           return [];
-        })
+        }),
       ]);
-      
-      // Sau khi tải dữ liệu cơ bản, tải dữ liệu chi tiết theo mode
       console.log('Tải dữ liệu chi tiết theo mode:', this.mode);
       if (this.mode === 'ThemChiTietSanPham') {
-        // Logic cho thêm chi tiết sản phẩm - không cần tải chi tiết
         console.log('Mode ThemChiTietSanPham - không cần tải chi tiết');
       } else if (this.mode === 'SuaChiTietSanPham' || this.mode === 'XemChiTietSanPham') {
-        // Tải chi tiết theo ID
         const id = this.$route.params.id;
         console.log('Tải chi tiết theo ID:', id);
         if (id) {
@@ -389,7 +374,6 @@ export default {
           this.$router.push({ name: 'SanPhamChiTiet' });
         }
       } else {
-        // Tải danh sách chi tiết
         console.log('Tải danh sách chi tiết sản phẩm');
         await this.fetchDetails().catch(err => {
           console.error('Lỗi khi tải danh sách chi tiết sản phẩm:', err);
@@ -421,7 +405,8 @@ export default {
   gap: 15px;
   margin-top: 15px;
 }
-input, select {
+input,
+select {
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
@@ -438,7 +423,9 @@ input, select {
   justify-content: center;
   gap: 5px;
 }
-.product-section, .detail-section, .form-section {
+.product-section,
+.detail-section,
+.form-section {
   background: #fff;
   padding: 20px;
   border-radius: 8px;
@@ -450,7 +437,8 @@ input, select {
   align-items: center;
   margin-bottom: 20px;
 }
-.btn-add, .btn-back {
+.btn-add,
+.btn-back {
   background: #4caf50;
   color: white;
   border: none;
@@ -474,16 +462,11 @@ table {
 thead {
   background: #f5f5f5;
 }
-th, td {
+th,
+td {
   padding: 12px 15px;
   text-align: left;
   border-bottom: 1px solid #ddd;
-}
-.product-thumb {
-  width: 50px;
-  height: 50px;
-  object-fit: cover;
-  border-radius: 4px;
 }
 .status {
   padding: 5px 10px;
@@ -518,10 +501,6 @@ th, td {
 }
 .delete {
   background: #f44336;
-  color: white;
-}
-.view {
-  background: #ff9800;
   color: white;
 }
 </style>
