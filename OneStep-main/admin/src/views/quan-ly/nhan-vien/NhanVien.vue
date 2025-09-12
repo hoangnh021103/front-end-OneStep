@@ -58,9 +58,9 @@
             <td>{{ getRoleName(emp.vaiTroId) }}</td>
             <td>{{ formatDate(emp.ngayTao) }}</td>
             <td>{{ formatDate(emp.ngayCapNhat) }}</td>
-            <td>
-              <button class="action-btn edit" @click="openEditModal(emp)" title="Sửa">✏️</button>
-              <button class="action-btn delete" @click="deleteEmployee(emp.id)" title="Xóa">🗑</button>
+            <td class="actions">
+              <button class="action-btn edit" title="Sửa" @click="editColor(index)"><i class="fa fa-edit"></i></button>
+              <button class="action-btn delete" title="Xóa" @click="deleteColor(index)"><i class="fa fa-trash"></i></button>
             </td>
           </tr>
         </tbody>

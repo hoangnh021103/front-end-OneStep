@@ -1,4 +1,3 @@
-```vue
 <template>
   <div class="container">
     <template v-if="mode === 'SanPhamChiTiet'">
