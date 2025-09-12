@@ -19,14 +19,12 @@
                         <th>Sản phẩm</th>
                         <th>Voucher</th>
                         <th>Ngày cập nhật</th>
-                        <th>Người tạo</th>
-                        <th>Người cập nhật</th>
                         <th>Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr v-if="filteredDiscounts.length === 0">
-                        <td colspan="7" class="no-data">
+                        <td colspan="5" class="no-data">
                             <div class="empty-state">
                                 <div class="empty-icon"><i class="fa fa-percent"></i></div>
                                 <div class="empty-text">Chưa có đợt giảm giá nào</div>
@@ -39,8 +37,6 @@
                         <td>{{ discount.tenSanPham }}</td>
                         <td>{{ discount.tenVoucher }}</td>
                         <td>{{ formatDate(discount.ngayCapNhat) }}</td>
-                        <td>{{ discount.nguoiTao }}</td>
-                        <td>{{ discount.nguoiCapNhat }}</td>
                         <td class="action-buttons">
                             <button class="edit-btn" @click="openEditModal(discount)" title="Sửa">✏️</button>
                             <button class="delete-btn" @click="deleteDiscount(discount.id)" title="Xóa">🗑️</button>
@@ -100,6 +96,9 @@
 
 <script>
 import axios from "axios";
+import { toast } from "vue3-toastify";
+import "vue3-toastify/dist/index.css";
+
 export default {
   data() {
     return {
@@ -114,9 +113,7 @@ export default {
         tenSanPham: "",
         voucherId: 0,
         tenVoucher: "",
-        ngayCapNhat: "",
-        nguoiTao: "",
-        nguoiCapNhat: ""
+        ngayCapNhat: ""
       },
       currentPage: 1,
       pageSize: 5
@@ -147,7 +144,7 @@ export default {
         this.discounts = Array.isArray(res.data) ? res.data : res.data.data || [];
       } catch (err) {
         console.error("Lỗi khi tải dữ liệu đợt giảm giá:", err);
-        alert("Không thể tải dữ liệu đợt giảm giá. Vui lòng thử lại sau.");
+        toast.error("Không thể tải dữ liệu đợt giảm giá. Vui lòng thử lại sau.");
       } finally {
         this.isLoading = false;
       }
@@ -168,19 +165,19 @@ export default {
     async saveDiscount() {
       // Validation
       if (!this.form.sanPhamId || this.form.sanPhamId <= 0) {
-        alert("Vui lòng nhập ID sản phẩm hợp lệ.");
+        toast.warning("Vui lòng nhập ID sản phẩm hợp lệ.");
         return;
       }
       if (!this.form.tenSanPham.trim()) {
-        alert("Vui lòng nhập tên sản phẩm.");
+        toast.warning("Vui lòng nhập tên sản phẩm.");
         return;
       }
       if (!this.form.voucherId || this.form.voucherId <= 0) {
-        alert("Vui lòng nhập ID voucher hợp lệ.");
+        toast.warning("Vui lòng nhập ID voucher hợp lệ.");
         return;
       }
       if (!this.form.tenVoucher.trim()) {
-        alert("Vui lòng nhập tên voucher.");
+        toast.warning("Vui lòng nhập tên voucher.");
         return;
       }
 
@@ -188,20 +185,18 @@ export default {
         this.isLoading = true;
         
         if (this.editingId) {
-          // Cập nhật đợt giảm giá
           await axios.put(`http://localhost:8080/san-pham-khuyen-mai/update/${this.editingId}`, this.form);
-          alert("Cập nhật đợt giảm giá thành công!");
+          toast.success("Cập nhật đợt giảm giá thành công!");
         } else {
-          // Thêm mới đợt giảm giá
           await axios.post("http://localhost:8080/san-pham-khuyen-mai/add", this.form);
-          alert("Thêm đợt giảm giá thành công!");
+          toast.success("Thêm đợt giảm giá thành công!");
         }
         
         this.closeModal();
-        this.fetchDiscounts(); // Refresh danh sách
+        this.fetchDiscounts();
       } catch (error) {
         console.error("Lỗi khi lưu đợt giảm giá:", error);
-        alert("Có lỗi xảy ra khi lưu đợt giảm giá!");
+        toast.error("Có lỗi xảy ra khi lưu đợt giảm giá!");
       } finally {
         this.isLoading = false;
       }
@@ -216,23 +211,21 @@ export default {
         try {
           this.isLoading = true;
           await axios.delete(`http://localhost:8080/san-pham-khuyen-mai/delete/${id}`);
-          this.fetchDiscounts(); // Refresh danh sách sau khi xóa
-          alert("Xóa đợt giảm giá thành công!");
+          this.fetchDiscounts();
+          toast.success("Xóa đợt giảm giá thành công!");
         } catch (error) {
           console.error("Lỗi khi xóa đợt giảm giá:", error);
-          alert("Có lỗi xảy ra khi xóa đợt giảm giá!");
+          toast.error("Có lỗi xảy ra khi xóa đợt giảm giá!");
         } finally {
           this.isLoading = false;
         }
       }
     },
-    // Helper method để format ngày tháng
     formatDate(dateString) {
       if (!dateString) return '';
       const date = new Date(dateString);
       return date.toLocaleDateString('vi-VN');
     },
-    // Helper method để reset form
     resetForm() {
       this.form = {
         id: 0,
@@ -240,9 +233,7 @@ export default {
         tenSanPham: "",
         voucherId: 0,
         tenVoucher: "",
-        ngayCapNhat: "",
-        nguoiTao: "",
-        nguoiCapNhat: ""
+        ngayCapNhat: ""
       };
     }
   },

@@ -154,8 +154,8 @@ export default {
         const res = await axios.get("http://localhost:8080/voucher/hien-thi");
         this.vouchers = Array.isArray(res.data) ? res.data : res.data.data || [];
       } catch (err) {
-        toast.error("Lỗi khi tải dữ liệu phiếu giảm giá:", err);
-        toast.error("Không thể tải dữ liệu phiếu giảm giá. Vui lòng thử lại sau.");
+        console.error("Lỗi khi tải dữ liệu phiếu giảm giá:", err);
+        alert("Không thể tải dữ liệu phiếu giảm giá. Vui lòng thử lại sau.");
       } finally {
         this.isLoading = false;
       }
@@ -178,10 +178,10 @@ export default {
           this.isLoading = true;
           await axios.delete(`http://localhost:8080/voucher/delete/${id}`);
           this.fetchVouchers();
-          toast.success("Xóa phiếu giảm giá thành công!");
+          alert("Xóa phiếu giảm giá thành công!");
         } catch (error) {
-          toast.error("Lỗi khi xóa phiếu giảm giá:", error);
-          toast.error("Có lỗi xảy ra khi xóa phiếu giảm giá!");
+          console.error("Lỗi khi xóa phiếu giảm giá:", error);
+          alert("Có lỗi xảy ra khi xóa phiếu giảm giá!");
         } finally {
           this.isLoading = false;
         }
