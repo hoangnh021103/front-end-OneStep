@@ -264,7 +264,7 @@ export default {
       } catch (err) {
         const action = this.isEditing ? 'cập nhật' : 'thêm';
         toast(`Không thể ${action} phiếu giảm giá.`);
-        console.error(`Lỗi khi ${action} phiếu giảm giá:`, err);
+        toast.error(`Lỗi khi ${action} phiếu giảm giá:`, err);
       } finally {
         this.isSubmitting = false;
       }

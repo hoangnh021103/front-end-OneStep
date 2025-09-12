@@ -189,11 +189,11 @@ export default {
         
         if (this.editingId) {
           // Cập nhật đợt giảm giá
-          await axios.put(`http://localhost:8080/san-pham-khuyen-mai/cap-nhat/${this.editingId}`, this.form);
+          await axios.put(`http://localhost:8080/san-pham-khuyen-mai/update/${this.editingId}`, this.form);
           alert("Cập nhật đợt giảm giá thành công!");
         } else {
           // Thêm mới đợt giảm giá
-          await axios.post("http://localhost:8080/san-pham-khuyen-mai/them", this.form);
+          await axios.post("http://localhost:8080/san-pham-khuyen-mai/add", this.form);
           alert("Thêm đợt giảm giá thành công!");
         }
         
@@ -215,7 +215,7 @@ export default {
       if (confirm("Xác nhận xoá đợt giảm giá này?")) {
         try {
           this.isLoading = true;
-          await axios.delete(`http://localhost:8080/san-pham-khuyen-mai/xoa/${id}`);
+          await axios.delete(`http://localhost:8080/san-pham-khuyen-mai/delete/${id}`);
           this.fetchDiscounts(); // Refresh danh sách sau khi xóa
           alert("Xóa đợt giảm giá thành công!");
         } catch (error) {
