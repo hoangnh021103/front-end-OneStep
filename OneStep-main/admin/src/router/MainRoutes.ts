@@ -37,14 +37,9 @@ const MainRoutes = {
       component: () => import('@/views/quan-ly/san-pham/SanPhamChiTiet.vue'),
     },
     {
-      name: 'XemChiTietSanPham',
-      path: '/quan-ly/san-pham/chi-tiet-san-pham/:id',
-      component: () => import('@/views/quan-ly/san-pham/SanPhamChiTiet.vue'),
-    },
-    {
       name: 'SuaChiTietSanPham',
       path: '/quan-ly/san-pham/chi-tiet-san-pham/sua/:id',
-      component: () => import('@/views/quan-ly/san-pham/SanPhamChiTiet.vue'),
+      component: () => import('@/views/quan-ly/san-pham/ThemSanPhamChiTiet.vue'),
     },
     {
       name: 'ThemChiTietSanPham',

@@ -1,14 +1,13 @@
-```vue
 <template>
   <div class="container">
     <div v-if="!isDataLoaded && !error" class="loading">Đang tải dữ liệu...</div>
     <div v-else-if="error" class="error-message">{{ error }}</div>
     <div v-else>
       <div class="header">
-        <h2>Thêm sản phẩm chi tiết</h2>
-      <button class="btn-back" @click="$router.push({ name: 'SanPham' })">
-        <i class="fa fa-arrow-left"></i> Quay lại danh sách
-      </button>
+        <h2>{{ isEditing ? 'Chỉnh sửa sản phẩm chi tiết' : 'Thêm sản phẩm chi tiết' }}</h2>
+        <button class="btn-back" @click="$router.push({ name: 'SanPham' })">
+          <i class="fa fa-arrow-left"></i> Quay lại danh sách
+        </button>
       </div>
       <div class="form-card">
         <div class="form-grid">
@@ -81,11 +80,11 @@
             @click="handleSubmit"
             :disabled="isSubmitting || !isDataLoaded"
           >
-            <i class="fa fa-check"></i> {{ isSubmitting ? 'Đang lưu...' : 'Lưu' }}
+            <i class="fa fa-check"></i> {{ isSubmitting ? 'Đang lưu...' : (isEditing ? 'Cập nhật' : 'Lưu') }}
           </button>
           <button
             class="btn-secondary"
-            @click="$router.push({ name: 'ChiTietSanPham' })"
+            @click="$router.push({ name: 'SanPham' })"
             :disabled="isSubmitting"
           >
             <i class="fa fa-times"></i> Hủy
@@ -98,12 +97,14 @@
 
 <script>
 import { toast } from 'vue3-toastify';
+import axios from 'axios';
 
 export default {
   name: 'ThemChiTietSanPham',
   data() {
     return {
       form: {
+        id: null,
         maChiTiet: 0,
         sanPhamId: 0,
         kichCoId: 0,
@@ -114,6 +115,7 @@ export default {
       },
       isSubmitting: false,
       isDataLoaded: false,
+      isEditing: false,
       error: null,
       errors: {
         sanPhamId: '',
@@ -134,24 +136,18 @@ export default {
         const response = await fetch('http://localhost:8080/san-pham/hien-thi');
         if (!response.ok) throw new Error(`Lỗi HTTP! Trạng thái: ${response.status}`);
         const data = await response.json();
-        // Xử lý các cấu trúc phản hồi khác nhau
         this.sanPhamList = Array.isArray(data)
           ? data.map(item => ({
-              id: item.id || item.idSanPham || item.maSanPham, // Dùng fallback cho các tên trường khác nhau
-              tenSanPham: item.tenSanPham || item.ten || item.name, // Dùng fallback cho tên sản phẩm
+              id: item.id || item.idSanPham || item.maSanPham,
+              tenSanPham: item.tenSanPham || item.ten || item.name,
             }))
           : (data.data || []).map(item => ({
               id: item.id || item.idSanPham || item.maSanPham,
               tenSanPham: item.tenSanPham || item.ten || item.name,
             }));
-        console.log('Danh sách sản phẩm:', this.sanPhamList); // Gỡ lỗi: Kiểm tra danh sách sản phẩm
+        console.log('Danh sách sản phẩm:', this.sanPhamList);
         if (this.sanPhamList.length === 0) {
           throw new Error('Danh sách sản phẩm trống.');
-        }
-        // Đặt sanPhamId mặc định nếu danh sách không rỗng
-        if (this.sanPhamList.length > 0 && this.form.sanPhamId === 0) {
-          this.form.sanPhamId = this.sanPhamList[0].id;
-          console.log('Đã đặt sanPhamId mặc định:', this.form.sanPhamId);
         }
       } catch (err) {
         console.error('Lỗi lấy danh sách sản phẩm:', err);
@@ -167,7 +163,7 @@ export default {
         this.kichCoList = Array.isArray(data)
           ? data
           : data.data || [];
-        console.log('Danh sách kích cỡ:', this.kichCoList); // Gỡ lỗi: Kiểm tra kích cỡ
+        console.log('Danh sách kích cỡ:', this.kichCoList);
         if (this.kichCoList.length === 0) {
           throw new Error('Danh sách kích cỡ trống.');
         }
@@ -185,7 +181,7 @@ export default {
         this.mauSacList = Array.isArray(data)
           ? data
           : data.data || [];
-        console.log('Danh sách màu sắc:', this.mauSacList); // Gỡ lỗi: Kiểm tra màu sắc
+        console.log('Danh sách màu sắc:', this.mauSacList);
         if (this.mauSacList.length === 0) {
           throw new Error('Danh sách màu sắc trống.');
         }
@@ -195,9 +191,37 @@ export default {
         toast.error(this.error);
       }
     },
+    async fetchChiTietSanPham() {
+      const id = this.$route.params.id;
+      if (id) {
+        try {
+          this.isSubmitting = true;
+          const response = await axios.get(`http://localhost:8080/chi-tiet-san-pham/${id}`);
+          const chiTiet = response.data;
+          this.form = {
+            id: chiTiet.id,
+            maChiTiet: chiTiet.maChiTiet || 0,
+            sanPhamId: chiTiet.sanPhamId || 0,
+            kichCoId: chiTiet.kichCoId || 0,
+            mauSacId: chiTiet.mauSacId || 0,
+            giaTien: chiTiet.giaTien || 0,
+            soLuongTon: chiTiet.soLuongTon || 0,
+            trangThai: chiTiet.trangThai || 1,
+          };
+          this.isEditing = true;
+          toast.info('Đã tải thông tin sản phẩm chi tiết');
+        } catch (error) {
+          console.error('Lỗi khi tải thông tin sản phẩm chi tiết:', error);
+          this.error = 'Không thể tải thông tin sản phẩm chi tiết: ' + error.message;
+          toast.error(this.error);
+        } finally {
+          this.isSubmitting = false;
+        }
+      }
+    },
     onSanPhamChange() {
-      console.log('Đã chọn sanPhamId:', this.form.sanPhamId); // Gỡ lỗi: Kiểm tra sản phẩm được chọn
-      this.errors.sanPhamId = ''; // Xóa lỗi khi thay đổi
+      console.log('Đã chọn sanPhamId:', this.form.sanPhamId);
+      this.errors.sanPhamId = '';
     },
     validateForm() {
       this.errors = {
@@ -234,11 +258,11 @@ export default {
         this.errors.trangThai = 'Vui lòng chọn trạng thái hợp lệ.';
         isValid = false;
       }
-      console.log('Kết quả xác thực:', { isValid, errors: this.errors }); // Gỡ lỗi: Kiểm tra xác thực
+      console.log('Kết quả xác thực:', { isValid, errors: this.errors });
       return isValid;
     },
     async handleSubmit() {
-      console.log('Biểu mẫu trước khi gửi:', this.form); // Gỡ lỗi: Kiểm tra dữ liệu biểu mẫu
+      console.log('Biểu mẫu trước khi gửi:', this.form);
       if (!this.validateForm()) {
         toast.error('Vui lòng điền đầy đủ thông tin.');
         return;
@@ -249,41 +273,55 @@ export default {
 
         const formData = new FormData();
         formData.append('maChiTiet', this.form.maChiTiet);
-        formData.append('sanPhamId', Number(this.form.sanPhamId)); // Đảm bảo gửi dạng số
+        formData.append('sanPhamId', Number(this.form.sanPhamId));
         formData.append('kichCoId', Number(this.form.kichCoId));
         formData.append('mauSacId', Number(this.form.mauSacId));
         formData.append('giaTien', Number(this.form.giaTien));
         formData.append('soLuongTon', Number(this.form.soLuongTon));
         formData.append('trangThai', Number(this.form.trangThai));
 
-        // Gỡ lỗi: Log nội dung FormData
         for (let [key, value] of formData.entries()) {
           console.log(`FormData ${key}: ${value}`);
         }
 
-        const response = await fetch('http://localhost:8080/chi-tiet-san-pham/add', {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (!response.ok) {
-          const errorData = await response.text();
-          throw new Error(`Lỗi HTTP! Trạng thái: ${response.status}, Thông báo: ${errorData}`);
+        if (this.isEditing && this.form.id) {
+          // Cập nhật sản phẩm chi tiết
+          const response = await fetch(`http://localhost:8080/chi-tiet-san-pham/update/${this.form.id}`, {
+            method: 'PUT',
+            body: formData,
+          });
+          if (!response.ok) {
+            const errorData = await response.text();
+            throw new Error(`Lỗi HTTP! Trạng thái: ${response.status}, Thông báo: ${errorData}`);
+          }
+          toast.success('Cập nhật sản phẩm chi tiết thành công!');
+        } else {
+          // Thêm mới sản phẩm chi tiết
+          const response = await fetch('http://localhost:8080/chi-tiet-san-pham/add', {
+            method: 'POST',
+            body: formData,
+          });
+          if (!response.ok) {
+            const errorData = await response.text();
+            throw new Error(`Lỗi HTTP! Trạng thái: ${response.status}, Thông báo: ${errorData}`);
+          }
+          toast.success('Thêm sản phẩm chi tiết thành công!');
         }
 
-        toast.success('Thêm sản phẩm chi tiết thành công!');
         this.$router.push({ name: 'ChiTietSanPham' });
       } catch (err) {
-
+        const action = this.isEditing ? 'cập nhật' : 'thêm';
+        console.error(`Lỗi khi ${action} sản phẩm chi tiết:`, err);
+        toast.error(`Không thể ${action} sản phẩm chi tiết: ${err.message}`);
       } finally {
         this.isSubmitting = false;
       }
     },
     async loadData() {
       try {
-        await Promise.all([this.fetchSanPham(), this.fetchKichCo(), this.fetchMauSac()]);
+        await Promise.all([this.fetchSanPham(), this.fetchKichCo(), this.fetchMauSac(), this.fetchChiTietSanPham()]);
         this.isDataLoaded = this.sanPhamList.length > 0 && this.kichCoList.length > 0 && this.mauSacList.length > 0;
-        console.log('Dữ liệu đã tải:', this.isDataLoaded); // Gỡ lỗi: Kiểm tra trạng thái tải dữ liệu
+        console.log('Dữ liệu đã tải:', this.isDataLoaded);
       } catch (err) {
         this.error = 'Lỗi khi tải dữ liệu: ' + err.message;
         toast.error(this.error);
