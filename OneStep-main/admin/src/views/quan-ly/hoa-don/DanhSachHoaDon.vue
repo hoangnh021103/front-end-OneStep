@@ -41,7 +41,6 @@
                             <th>Tên Khách Hàng</th>
                             <th>SĐT Khách Hàng</th>
                             <th>Loại Đơn</th>
-                            <th>Mã Nhân Viên</th>
                             <th>Email</th>
                             <th>Tổng Tiền</th>
                             <th>Ngày Tạo</th>
@@ -51,7 +50,7 @@
                     </thead>
                     <tbody>
                         <tr v-if="tabInvoices.length === 0">
-                            <td colspan="11" class="no-data">
+                            <td colspan="10" class="no-data">
                                 <div class="empty-state">
                                     <div class="empty-icon"><i class="fa fa-file-invoice"></i></div>
                                     <div class="empty-text">Chưa có hóa đơn nào</div>
@@ -67,7 +66,6 @@
                             <td>
                                 <span class="type-badge">{{ formatType(inv.loaiDon) }}</span>
                             </td>
-                            <td>{{ inv.nhanVienId }}</td>
                             <td>{{ inv.email }}</td>
                             <td>{{ inv.tongTien }}</td>
                             <td>{{ formatDate(inv.ngayXacNhan) }}</td>
@@ -75,7 +73,6 @@
                                 <span :class="['status-badge', inv.statusClass]">{{ inv.statusLabel }}</span>
                             </td>
                             <td>
-                                <button class="action-btn" title="Xem chi tiết"><i class="fa fa-eye"></i></button>
                                 <button class="action-btn edit-btn" title="Chỉnh sửa" @click="editInvoice(idx)"><i class="fa fa-edit"></i></button>
                                 <button class="action-btn delete-btn" title="Xóa" @click="deleteInvoice(inv.id)"><i class="fa fa-trash"></i></button>
                             </td>
@@ -101,8 +98,6 @@
                             <option :value="0">OFFLINE</option>
                             <option :value="1">ONLINE</option>
                         </select>
-                        <label>Mã Nhân Viên</label>
-                        <input v-model="newInvoice.nhanVienId" placeholder="Nhập mã nhân viên" />
                         <label>Tổng Tiền</label>
                         <input v-model="newInvoice.tongTien" placeholder="Nhập tổng tiền" type="number" />
                         <label>Ngày Xác Nhận</label>
@@ -141,7 +136,6 @@ export default {
       showModal: false,
       newInvoice: {
         khachHangId: 0,
-        nhanVienId: 0,
         voucherId: 0,
         diaChiId: 0,
         soDienThoai: "",
@@ -244,7 +238,6 @@ export default {
       this.editIndex = null;
       this.newInvoice = {
         khachHangId: 0,
-        nhanVienId: 0,
         voucherId: 0,
         diaChiId: 0,
         soDienThoai: "",
