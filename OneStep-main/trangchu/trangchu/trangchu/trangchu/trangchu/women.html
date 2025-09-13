@@ -1,0 +1,615 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+	<title>Giày Dép - Mẫu Bootstrap 4 Miễn Phí bởi Colorlib</title>
+   <meta charset="utf-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link rel="stylesheet" href="css/custom-style.css">
+	<link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,500,600,700" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css?family=Rokkitt:100,300,400,700" rel="stylesheet">
+	
+	<!-- Animate.css -->
+	<link rel="stylesheet" href="css/animate.css">
+	<!-- Icomoon Icon Fonts-->
+	<link rel="stylesheet" href="css/icomoon.css">
+	<!-- Ion Icon Fonts-->
+	<link rel="stylesheet" href="css/ionicons.min.css">
+	<!-- Bootstrap  -->
+	<link rel="stylesheet" href="css/bootstrap.min.css">
+
+	<!-- Magnific Popup -->
+	<link rel="stylesheet" href="css/magnific-popup.css">
+
+	<!-- Flexslider  -->
+	<link rel="stylesheet" href="css/flexslider.css">
+
+	<!-- Owl Carousel -->
+	<link rel="stylesheet" href="css/owl.carousel.min.css">
+	<link rel="stylesheet" href="css/owl.theme.default.min.css">
+	
+	<!-- Date Picker -->
+	<link rel="stylesheet" href="css/bootstrap-datepicker.css">
+	<!-- Flaticons  -->
+	<link rel="stylesheet" href="fonts/flaticon/font/flaticon.css">
+
+	<!-- Theme style  -->
+	<link rel="stylesheet" href="css/style.css">
+
+	</head>
+	<body>
+		
+	<div class="colorlib-loader"></div>
+
+	<div id="page">
+		<nav class="colorlib-nav" role="navigation">
+			<div class="top-menu">
+				<div class="container">
+					<div class="row">
+						<div class="col-sm-7 col-md-9">
+							<div id="colorlib-logo"><a href="index.html">✨ Giày Dép Premium</a></div>
+						</div>
+						<div class="col-sm-5 col-md-3">
+							<form action="#" class="search-wrap">
+								<div class="form-group">
+									<input type="search" class="form-control search" placeholder="🔍 Tìm kiếm sản phẩm...">
+									<button class="btn btn-primary submit-search text-center" type="submit"><i
+											class="icon-search"></i></button>
+								</div>
+							</form>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-sm-12 text-left menu-1">
+							<ul>
+								<li class="active"><a href="index.html">🏠 Trang chủ</a></li>
+						
+								<li><a href="women.html">Tất cả sản phẩm</a></li>
+								<li><a href="about.html">ℹ️ Về chúng tôi</a></li>
+								<li><a href="contact.html">📞 Liên hệ</a></li>
+								<li class="cart"><a href="cart.html"><i class="icon-shopping-cart"></i> 🛒 Giỏ hàng <span id="cart-item-count">[0]</span></a>
+								</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+			</nav>
+
+		<div class="breadcrumbs">
+			<div class="container">
+				<div class="row">
+					<div class="col">
+						<p class="bread"><span><a href="index.html">Trang chủ</a></span> / <span>Tất cả sản phẩm</span></p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="page-header">
+			<div class="container">
+				<div class="row">
+					<div class="col-12 text-center">
+						<h1 class="page-title">TẤT CẢ SẢN PHẨM</h1>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="colorlib-product">
+			<div class="container">
+				<div class="row">
+					<div class="col-lg-3 col-xl-3">
+						<div class="filter-sidebar">
+							<h3 class="filter-title">Bộ lọc</h3>
+							
+							<div class="filter-section">
+								<div class="filter-header" onclick="toggleFilter('color')">
+									<h4>MÀU SẮC</h4>
+									<span class="filter-arrow">▼</span>
+								</div>
+								<div class="filter-content" id="color-filter">
+									<div class="color-options">
+										<button class="color-btn" data-color="white">Trắng</button>
+										<button class="color-btn" data-color="black">Đen</button>
+										<button class="color-btn" data-color="blue">Xanh</button>
+										<button class="color-btn" data-color="yellow">Vàng</button>
+										<button class="color-btn" data-color="red">Đỏ</button>
+									</div>
+								</div>
+							</div>
+
+							<div class="filter-section">
+								<div class="filter-header" onclick="toggleFilter('size')">
+									<h4>KÍCH THƯỚC SIZE</h4>
+									<span class="filter-arrow">▼</span>
+								</div>
+								<div class="filter-content" id="size-filter">
+									<div class="size-options">
+										<button class="size-btn" data-size="46">46</button>
+										<button class="size-btn" data-size="45">45</button>
+										<button class="size-btn" data-size="44">44</button>
+										<button class="size-btn" data-size="43">43</button>
+										<button class="size-btn" data-size="42">42</button>
+										<button class="size-btn" data-size="41">41</button>
+										<button class="size-btn" data-size="40">40</button>
+										<button class="size-btn" data-size="39">39</button>
+										<button class="size-btn" data-size="37">37</button>
+										<button class="size-btn" data-size="36">36</button>
+									</div>
+								</div>
+							</div>
+
+							<div class="filter-section">
+								<div class="filter-header" onclick="toggleFilter('price')">
+									<h4>KHOẢNG GIÁ</h4>
+									<span class="filter-arrow">▼</span>
+								</div>
+								<div class="filter-content" id="price-filter">
+									<div class="price-options">
+										<button class="price-btn" data-price="0-1000000">Dưới 1M</button>
+										<button class="price-btn" data-price="1000000-2500000">1M - 2.5M</button>
+										<button class="price-btn" data-price="2500000-4000000">2.5M - 4M</button>
+										<button class="price-btn" data-price="4000000-9999999">Trên 4M</button>
+										
+									</div>
+									<div class="price-range">
+										<div class="price-inputs">
+											<input type="number" id="min-price" placeholder="Giá tối thiểu" class="price-input">
+											<span class="price-separator">-</span>
+											<input type="number" id="max-price" placeholder="Giá tối đa" class="price-input">
+										</div>
+										<button class="apply-price-btn" onclick="applyCustomPrice()">Áp dụng</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="col-lg-9 col-xl-9">
+						<div class="products-grid">
+							<div class="loading">
+								<div class="loading-spinner"></div>
+								<p>Đang tải sản phẩm...</p>
+							</div>
+							<div class="row">
+								<!-- Products will be loaded here by JavaScript -->
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-12 text-center">
+								<div class="block-27">
+				               <ul>
+					               <li><a href="#"><i class="ion-ios-arrow-back"></i></a></li>
+				                  <li class="active"><span>1</span></li>
+				                  <li><a href="#">2</a></li>
+				                  <li><a href="#">3</a></li>
+				                  <li><a href="#">4</a></li>
+				                  <li><a href="#">5</a></li>
+				                  <li><a href="#"><i class="ion-ios-arrow-forward"></i></a></li>
+				               </ul>
+				            </div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="colorlib-partner">
+			<div class="container">
+				<div class="row">
+					<div class="col-sm-8 offset-sm-2 text-center colorlib-heading colorlib-heading-sm">
+						<h2>Đối tác tin cậy</h2>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col partner-col text-center">
+						<img src="images/brand-1.jpg" class="img-fluid" alt="Mẫu bootstrap 4 html4 miễn phí">
+					</div>
+					<div class="col partner-col text-center">
+						<img src="images/brand-2.jpg" class="img-fluid" alt="Mẫu bootstrap 4 html4 miễn phí">
+					</div>
+					<div class="col partner-col text-center">
+						<img src="images/brand-3.jpg" class="img-fluid" alt="Mẫu bootstrap 4 html4 miễn phí">
+					</div>
+					<div class="col partner-col text-center">
+						<img src="images/brand-4.jpg" class="img-fluid" alt="Mẫu bootstrap 4 html4 miễn phí">
+					</div>
+					<div class="col partner-col text-center">
+						<img src="images/brand-5.jpg" class="img-fluid" alt="Mẫu bootstrap 4 html4 miễn phí">
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<footer id="colorlib-footer" role="contentinfo">
+			<div class="container">
+				<div class="row row-pb-md">
+					<div class="col footer-col colorlib-widget">
+						<h4>Về Giày Dép</h4>
+						<p>Ngay cả những điểm mạnh nhất cũng không thể kiểm soát được những văn bản mù quáng, đó là một cuộc sống gần như không chính thống</p>
+						<p>
+							<ul class="colorlib-social-icons">
+								<li><a href="#"><i class="icon-twitter"></i></a></li>
+								<li><a href="#"><i class="icon-facebook"></i></a></li>
+								<li><a href="#"><i class="icon-linkedin"></i></a></li>
+								<li><a href="#"><i class="icon-dribbble"></i></a></li>
+							</ul>
+						</p>
+					</div>
+					<div class="col footer-col colorlib-widget">
+						<h4>Chăm sóc khách hàng</h4>
+						<p>
+							<ul class="colorlib-footer-links">
+								<li><a href="#">Liên hệ</a></li>
+								<li><a href="#">Đổi trả/Hoàn tiền</a></li>
+								<li><a href="#">Thẻ quà tặng</a></li>
+								<li><a href="#">Danh sách yêu thích</a></li>
+								<li><a href="#">Đặc biệt</a></li>
+								<li><a href="#">Dịch vụ khách hàng</a></li>
+								<li><a href="#">Sơ đồ trang</a></li>
+							</ul>
+						</p>
+					</div>
+					<div class="col footer-col colorlib-widget">
+						<h4>Thông tin</h4>
+						<p>
+							<ul class="colorlib-footer-links">
+								<li><a href="#">Về chúng tôi</a></li>
+								<li><a href="#">Thông tin giao hàng</a></li>
+								<li><a href="#">Chính sách bảo mật</a></li>
+								<li><a href="#">Hỗ trợ</a></li>
+								<li><a href="#">Theo dõi đơn hàng</a></li>
+							</ul>
+						</p>
+					</div>
+
+					<div class="col footer-col">
+						<h4>Tin tức</h4>
+						<ul class="colorlib-footer-links">
+							<li><a href="blog.html">Blog</a></li>
+							<li><a href="#">Báo chí</a></li>
+							<li><a href="#">Triển lãm</a></li>
+						</ul>
+					</div>
+
+					<div class="col footer-col">
+						<h4>Thông tin liên hệ</h4>
+						<ul class="colorlib-footer-links">
+							<li>🏢 74 đường cầu diễn, <br> Hà Nội</li>
+							<li><a href="tel://1234567920">+ 1235 2355 98</a></li>
+							<li><a href="mailto:info@yoursite.com">info@yoursite.com</a></li>
+							<li><a href="#">yoursite.com</a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+			<div class="copy">
+				<div class="row">
+					
+				</div>
+			</div>
+		</footer>
+	</div>
+
+	<div class="gototop js-top">
+		<a href="#" class="js-gotop"><i class="ion-ios-arrow-up"></i></a>
+	</div>
+	
+	<!-- jQuery -->
+	<script src="js/jquery.min.js"></script>
+   <!-- popper -->
+   <script src="js/popper.min.js"></script>
+   <!-- bootstrap 4.1 -->
+   <script src="js/bootstrap.min.js"></script>
+   <!-- jQuery easing -->
+   <script src="js/jquery.easing.1.3.js"></script>
+	<!-- Waypoints -->
+	<script src="js/jquery.waypoints.min.js"></script>
+	<!-- Flexslider -->
+	<script src="js/jquery.flexslider-min.js"></script>
+	<!-- Owl carousel -->
+	<script src="js/owl.carousel.min.js"></script>
+	<!-- Magnific Popup -->
+	<script src="js/jquery.magnific-popup.min.js"></script>
+	<script src="js/magnific-popup-options.js"></script>
+	<!-- Date Picker -->
+	<script src="js/bootstrap-datepicker.js"></script>
+	<!-- Stellar Parallax -->
+	<script src="js/jquery.stellar.min.js"></script>
+	<!-- Main -->
+	<script src="js/main.js"></script>
+  <script>
+// Product data for different pages
+const productData = {
+    1: [
+        { name: "Giày MLB Chunky Wide New York", price: 2290000, originalPrice: 2600000, image: "item-1.jpg", sale: true, colors: "Xem nhanh" },
+        { name: "Giày Nike Revolution 6", price: 2290000, originalPrice: 2600000, image: "item-2.jpg", sale: true, colors: "Đỏ, Vàng, Xanh" },
+        { name: "Giày Nike React Escape Run 2", price: 2290000, originalPrice: 2600000, image: "item-3.jpg", sale: true, colors: "Đỏ, Vàng, Xanh" },
+        { name: "Giày Vans Authentic", price: 2290000, originalPrice: 2600000, image: "item-4.jpg", sale: true, colors: "Đen, Trắng" },
+        { name: "Converse Run Star Motion", price: 2290000, originalPrice: 2600000, image: "item-5.jpg", sale: true, colors: "Đen, Trắng" }
+    ],
+    2: [
+        { name: "Giày Adidas Ultraboost 22", price: 2290000, originalPrice: 2600000, image: "item-6.jpg", sale: true, colors: "Xanh, Đen, Trắng" },
+        { name: "Giày Puma RS-X Reinvention", price: 2290000, originalPrice: 2600000, image: "item-7.jpg", sale: true, colors: "Đen, Xám, Trắng" },
+        { name: "Giày New Balance 574", price: 2290000, originalPrice: 2600000, image: "item-8.jpg", sale: true, colors: "Xanh Navy, Đen" },
+        { name: "Giày Reebok Classic Leather", price: 2290000, originalPrice: 2600000, image: "item-9.jpg", sale: true, colors: "Trắng, Đen" },
+        { name: "Giày Fila Disruptor 2", price: 2290000, originalPrice: 2600000, image: "item-10.jpg", sale: true, colors: "Trắng, Hồng, Đen" }
+    ],
+    3: [
+        { name: "Giày Asics Gel-Kayano 28", price: 2290000, originalPrice: 2600000, image: "item-11.jpg", sale: true, colors: "Đen, Xám, Xanh" },
+        { name: "Giày Under Armour Charged Assert 9", price: 2290000, originalPrice: 2600000, image: "item-12.jpg", sale: true, colors: "Đen, Trắng, Xám" },
+        { name: "Giày Jordan 1 Retro High", price: 2290000, originalPrice: 2600000, image: "item-13.jpg", sale: true, colors: "Đỏ, Đen, Trắng" },
+        { name: "Giày Yeezy Boost 350 V2", price: 2290000, originalPrice: 2600000, image: "item-14.jpg", sale: true, colors: "Trắng, Đen, Xám" },
+        { name: "Giày Balenciaga Triple S", price: 2290000, originalPrice: 2600000, image: "item-15.jpg", sale: true, colors: "Trắng, Đen, Xanh" }
+    ],
+    4: [
+        { name: "Giày Gucci Ace Sneaker", price: 2290000, originalPrice: 2600000, image: "item-16.jpg", sale: true, colors: "Trắng, Đen, Đỏ" },
+        { name: "Giày Louis Vuitton Archlight", price: 2290000, originalPrice: 2600000, image: "item-1.jpg", sale: true, colors: "Đen, Trắng" },
+        { name: "Giày Off-White x Nike Blazer", price: 2290000, originalPrice: 2600000, image: "item-2.jpg", sale: true, colors: "Trắng, Đen, Cam" },
+        { name: "Giày Travis Scott x Jordan 1", price: 2290000, originalPrice: 2600000, image: "item-3.jpg", sale: true, colors: "Nâu, Trắng, Đen" },
+        { name: "Giày Dior x Jordan 1", price: 2290000, originalPrice: 2600000, image: "item-4.jpg", sale: true, colors: "Xám, Trắng" }
+    ],
+    5: [
+        { name: "Giày Supreme x Nike SB Dunk", price: 2290000, originalPrice: 2600000, image: "item-5.jpg", sale: true, colors: "Đỏ, Trắng, Đen" },
+        { name: "Giày Kanye West x Adidas Yeezy", price: 2290000, originalPrice: 2600000, image: "item-6.jpg", sale: true, colors: "Trắng, Đen, Xám" },
+        { name: "Giày Virgil Abloh x Nike", price: 2290000, originalPrice: 2600000, image: "item-7.jpg", sale: true, colors: "Trắng, Đen, Xanh" },
+        { name: "Giày Fear of God x Nike", price: 2290000, originalPrice: 2600000, image: "item-8.jpg", sale: true, colors: "Đen, Trắng, Xám" },
+        { name: "Giày Fragment x Jordan 1", price: 2290000, originalPrice: 2600000, image: "item-9.jpg", sale: true, colors: "Xanh, Trắng, Đen" }
+    ]
+};
+
+let currentPage = 1;
+
+// Filter functionality
+function toggleFilter(filterType) {
+    const filterContent = document.getElementById(filterType + '-filter');
+    const arrow = document.querySelector(`[onclick="toggleFilter('${filterType}')"] .filter-arrow`);
+    
+    if (filterContent.style.display === 'none' || filterContent.style.display === '') {
+        filterContent.style.display = 'block';
+        arrow.textContent = '▲';
+    } else {
+        filterContent.style.display = 'none';
+        arrow.textContent = '▼';
+    }
+}
+
+// Color filter
+document.querySelectorAll('.color-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        // Remove active class from all color buttons
+        document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+        // Add active class to clicked button
+        this.classList.add('active');
+        
+        // Filter products based on color
+        const color = this.getAttribute('data-color');
+        filterProducts('color', color);
+    });
+});
+
+// Size filter
+document.querySelectorAll('.size-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        // Remove active class from all size buttons
+        document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+        // Add active class to clicked button
+        this.classList.add('active');
+        
+        // Filter products based on size
+        const size = this.getAttribute('data-size');
+        filterProducts('size', size);
+    });
+});
+
+// Price filter
+document.querySelectorAll('.price-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        // Remove active class from all price buttons
+        document.querySelectorAll('.price-btn').forEach(b => b.classList.remove('active'));
+        // Add active class to clicked button
+        this.classList.add('active');
+        
+        // Filter products based on price range
+        const priceRange = this.getAttribute('data-price');
+        filterProductsByPrice(priceRange);
+    });
+});
+
+// Product filtering function
+function filterProducts(filterType, value) {
+    const products = document.querySelectorAll('.product-card');
+    
+    products.forEach(function(product) {
+        // For demo purposes, we'll show/hide products randomly
+        // In a real application, you would filter based on actual product data
+        const shouldShow = Math.random() > 0.3; // 70% chance to show
+        
+        if (shouldShow) {
+            product.style.display = 'block';
+        } else {
+            product.style.display = 'none';
+        }
+    });
+}
+
+// Price filtering function
+function filterProductsByPrice(priceRange) {
+    const products = document.querySelectorAll('.product-card');
+    const [minPrice, maxPrice] = priceRange.split('-').map(Number);
+    
+    products.forEach(function(product) {
+        const priceElement = product.querySelector('.current-price');
+        if (priceElement) {
+            const priceText = priceElement.textContent.replace(/[^\d]/g, '');
+            const productPrice = parseInt(priceText);
+            
+            if (productPrice >= minPrice && productPrice <= maxPrice) {
+                product.style.display = 'block';
+            } else {
+                product.style.display = 'none';
+            }
+        }
+    });
+}
+
+// Custom price range function
+function applyCustomPrice() {
+    const minPrice = parseInt(document.getElementById('min-price').value) || 0;
+    const maxPrice = parseInt(document.getElementById('max-price').value) || 9999999;
+    
+    // Remove active class from all price buttons
+    document.querySelectorAll('.price-btn').forEach(b => b.classList.remove('active'));
+    
+    const products = document.querySelectorAll('.product-card');
+    
+    products.forEach(function(product) {
+        const priceElement = product.querySelector('.current-price');
+        if (priceElement) {
+            const priceText = priceElement.textContent.replace(/[^\d]/g, '');
+            const productPrice = parseInt(priceText);
+            
+            if (productPrice >= minPrice && productPrice <= maxPrice) {
+                product.style.display = 'block';
+            } else {
+                product.style.display = 'none';
+            }
+        }
+    });
+}
+
+// Load products for specific page
+function loadProducts(page) {
+    const productsGrid = document.querySelector('.products-grid .row');
+    const loading = document.querySelector('.loading');
+    
+    // Show loading
+    if (loading) loading.style.display = 'block';
+    
+    // Add transition class
+    productsGrid.classList.add('page-transition');
+    
+    setTimeout(() => {
+        const products = productData[page] || productData[1];
+        let html = '';
+        
+						products.slice(0, 4).forEach(product => {
+								html += `
+														<div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+															<a href="product-detail.html" class="product-card custom-product-card" style="display:block;background:#fff;border-radius:18px;box-shadow:0 2px 16px #0001;padding-bottom:18px;position:relative;overflow:hidden;cursor:pointer;text-decoration:none;" data-product='${JSON.stringify(product)}'>
+													<div style="position:relative;">
+														<img src="images/${product.image}" class="img-fluid" alt="${product.name}" style="width:100%;height:180px;object-fit:cover;border-top-left-radius:18px;border-top-right-radius:18px;">
+														<div style="position:absolute;top:10px;left:10px;display:flex;gap:6px;z-index:2;">
+															<span style="background:#f44336;color:#fff;font-weight:700;padding:2px 12px 2px 8px;border-radius:16px;font-size:14px;">★ SIÊU SALE ★</span>
+															${product.isExclusive ? '<span style="background:#ff9800;color:#fff;font-weight:700;padding:2px 12px 2px 8px;border-radius:16px;font-size:14px;">ĐỘC QUYỀN</span>' : ''}
+														</div>
+														<div style="position:absolute;top:10px;right:10px;display:flex;flex-direction:column;align-items:end;z-index:2;">
+															<span style="background:#3f51b5;color:#fff;font-weight:700;padding:2px 10px 2px 8px;border-radius:16px;font-size:14px;margin-bottom:4px;">✨ HÀNG MỚI VỀ ✨</span>
+															${product.discount ? `<span style="background:#f44336;color:#fff;font-weight:700;padding:2px 10px;border-radius:16px;font-size:14px;">-${product.discount}%</span>` : ''}
+														</div>
+													</div>
+													<div style="padding:18px 12px 0 12px;text-align:center;">
+														<div style="margin-bottom:8px;">
+															<span style="color:#ffc107;font-size:20px;">${'★'.repeat(5)}</span>
+														</div>
+														<div style="font-size:15px;letter-spacing:2px;color:#888;font-weight:600;">${product.brand || 'NIKE'}</div>
+														<div style="font-size:20px;font-weight:700;margin:8px 0 6px 0;text-transform:uppercase;line-height:1.3;">${product.name}</div>
+														<div style="font-size:22px;font-weight:700;color:#1de9b6;">${product.price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND', minimumFractionDigits: 0, maximumFractionDigits: 0 })}</div>
+														${product.originalPrice ? `<div style="font-size:15px;color:#8bc34a;text-decoration:line-through;">${product.originalPrice.toLocaleString('vi-VN', { style: 'currency', currency: 'VND', minimumFractionDigits: 0, maximumFractionDigits: 0 })}</div>` : ''}
+													</div>
+												</a>
+											</div>
+								`;
+						});
+        
+        productsGrid.innerHTML = html;
+        currentPage = page;
+        
+        // Update pagination active state
+        updatePagination(page);
+        
+        // Add click handlers to new products
+        addProductClickHandlers();
+        
+        // Remove transition class and add loaded class
+        productsGrid.classList.remove('page-transition');
+        productsGrid.classList.add('loaded');
+        
+        // Hide loading
+        if (loading) loading.style.display = 'none';
+        
+    }, 500);
+}
+
+// Update pagination active state
+function updatePagination(activePage) {
+    document.querySelectorAll('.block-27 ul li').forEach((li, index) => {
+        const span = li.querySelector('span');
+        const link = li.querySelector('a');
+        
+        if (span) {
+            li.classList.remove('active');
+            span.remove();
+            const newLink = document.createElement('a');
+            newLink.href = '#';
+            newLink.textContent = activePage;
+            newLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                loadProducts(activePage);
+            });
+            li.appendChild(newLink);
+        } else if (link && link.textContent.trim() === activePage.toString()) {
+            li.classList.add('active');
+            link.remove();
+            const newSpan = document.createElement('span');
+            newSpan.textContent = activePage;
+            li.appendChild(newSpan);
+        }
+    });
+}
+
+// Add click handlers to product cards
+function addProductClickHandlers() {
+	// Lấy đúng danh sách sản phẩm đang hiển thị trên trang hiện tại (theo phân trang)
+	// Lấy đúng danh sách sản phẩm đang render trên trang hiện tại (chỉ 4 sản phẩm hiển thị)
+	const page = window.currentPage || 1;
+	const products = (window.productData && window.productData[page]) ? window.productData[page].slice(0, 4) : [];
+	document.querySelectorAll('.product-card').forEach(function(card){
+		card.addEventListener('click', function(e){
+			e.preventDefault();
+			const productData = card.getAttribute('data-product');
+			if(productData) {
+				localStorage.setItem('selectedProduct', productData);
+				window.location.href = 'product-detail.html';
+			}
+		});
+	});
+}
+
+// Pagination click handlers
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize filters as expanded
+    document.getElementById('color-filter').style.display = 'block';
+    document.getElementById('size-filter').style.display = 'block';
+    document.getElementById('price-filter').style.display = 'block';
+    
+    // Add pagination click handlers
+    document.querySelectorAll('.block-27 ul li a').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const page = parseInt(this.textContent);
+            if (page && page !== currentPage) {
+                loadProducts(page);
+            }
+        });
+    });
+    
+    // Load initial products
+    loadProducts(1);
+});
+</script>
+<script src="js/cart-count.js"></script>
+
+</body>
+</html>
+
