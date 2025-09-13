@@ -155,21 +155,21 @@ export default {
     },
 
     async fetchSanPham() {
-      try {
-        const res = await fetch('http://localhost:8080/san-pham/hien-thi');
-        if (!res.ok) throw new Error(`status ${res.status}`);
-        const data = await res.json();
-        const list = Array.isArray(data) ? data : (data.data || []);
-        this.sanPhamList = list.map(item => ({
-          id: item.id || item.maSanPham || item.idSanPham,
-          tenSanPham: item.tenSanPham || item.ten || item.name
-        }));
-      } catch (err) {
-        console.error('fetchSanPham error:', err);
-        toast.error('Không tải được danh sách sản phẩm.');
-        this.sanPhamList = [];
-      }
-    },
+  try {
+    const res = await fetch('http://localhost:8080/san-pham/hien-thi');
+    if (!res.ok) throw new Error(`status ${res.status}`);
+    const data = await res.json();
+    const list = Array.isArray(data) ? data : (data.data || []);
+    this.sanPhamList = list.map(item => ({
+      id: item.maSanPham,   // 🔑 luôn lấy maSanPham
+      tenSanPham: item.tenSanPham
+    }));
+  } catch (err) {
+    console.error('fetchSanPham error:', err);
+    toast.error('Không tải được danh sách sản phẩm.');
+    this.sanPhamList = [];
+  }
+},
 
     async fetchVoucher() {
       try {
@@ -188,26 +188,33 @@ export default {
       }
     },
 
-    async fetchDiscounts() {
-      try {
-        const res = await fetch('http://localhost:8080/san-pham-khuyen-mai/hien-thi');
-        if (!res.ok) console.warn('discount fetch status', res.status);
-        const data = await res.json();
-        const list = Array.isArray(data) ? data : (data.data || []);
-        this.discounts = list.map(item => ({
-          id: item.id,
-          sanPhamId: item.sanPhamId || item.sanPham?.id,
-          voucherId: item.voucherId || item.voucher?.id,
-          tenSanPham: item.tenSanPham || item.sanPhamName || item.sanPham?.tenSanPham || item.sanPham?.ten,
-          tenVoucher: item.tenVoucher || item.voucherName || item.voucher?.ten || item.voucher?.tenVoucher,
-          ngayCapNhat: item.ngayCapNhat || item.updatedAt
-        }));
-      } catch (err) {
-        console.error('fetchDiscounts error', err);
-        toast.error('Không tải được danh sách đợt giảm giá.');
-        this.discounts = [];
-      }
-    },
+   async fetchDiscounts() {
+  try {
+    const res = await fetch("http://localhost:8080/san-pham-khuyen-mai/hien-thi");
+    if (!res.ok) {
+      console.warn("discount fetch status", res.status);
+    }
+    const data = await res.json();
+    const list = Array.isArray(data) ? data : (data.data || []);
+
+    this.discounts = list.map(item => ({
+      id: item.id,
+      maSanPham: item.maSanPham || item.sanPham?.maSanPham,   // ✅ chỉ dùng maSanPham
+      voucherId: item.voucherId || item.voucher?.id,
+      tenSanPham: item.tenSanPham 
+                  || item.sanPham?.tenSanPham 
+                  || item.sanPham?.ten,
+      tenVoucher: item.tenVoucher 
+                  || item.voucher?.tenVoucher 
+                  || item.voucher?.ten,
+      ngayCapNhat: item.ngayCapNhat || item.updatedAt
+    }));
+  } catch (err) {
+    console.error("fetchDiscounts error", err);
+    toast.error("Không tải được danh sách đợt giảm giá.");
+    this.discounts = [];
+  }
+},
 
     openAddModal() {
       this.editingId = null;
