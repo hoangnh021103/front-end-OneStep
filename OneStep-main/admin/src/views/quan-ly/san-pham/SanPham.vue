@@ -53,7 +53,7 @@
                 </span>
               </td>
               <td class="action-cell">
-                <button class="action-btn edit" title="Sửa" @click="editProduct(index)"><i class="fa fa-edit"></i></button>
+                <button class="action-btn edit" title="Sửa" @click="editProduct(product.maSanPham)"><i class="fa fa-edit"></i></button>
                 <button class="action-btn delete" title="Xóa" @click="deleteProduct(index)"><i class="fa fa-trash"></i></button>
                 <button class="action-btn view" title="Xem" @click="viewProduct(product.maSanPham)"><i class="fa fa-eye"></i></button>
               </td>
@@ -77,7 +77,7 @@ export default {
       status: '',
       thuongHieuList: [],
       chatLieuList: [],
-deGiayList: [],
+      deGiayList: [],
       kieuDangList: [],
       hangSanXuatList: [],
     };
@@ -179,8 +179,12 @@ deGiayList: [],
       this.status = '';
       this.fetchProducts();
     },
-    editProduct(index) {
-      toast.info('Chức năng chỉnh sửa đang được phát triển.');
+    editProduct(maSanPham) {
+      if (maSanPham) {
+        this.$router.push({ name: 'ThemSanPham', params: { id: maSanPham } });
+      } else {
+        toast.error('Không tìm thấy mã sản phẩm.');
+      }
     },
     async deleteProduct(index) {
       if (confirm('Xác nhận xóa sản phẩm này?')) {
@@ -214,3 +218,165 @@ deGiayList: [],
   },
 };
 </script>
+
+<style>
+.container {
+  max-width: 1200px;
+  margin: 30px auto;
+  padding: 20px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+}
+
+.filter-section {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.filter-section h2 {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+
+.filter-grid input,
+.filter-grid select {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.btn-reset {
+  background: #f3f4f6;
+  color: #333;
+  border: 1px solid #ddd;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-reset:hover {
+  background: #e5e7eb;
+}
+
+.product-section {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.header h2 {
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.btn-add {
+  background: #4f46e5;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-add:hover {
+  background: #4338ca;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+th {
+  background: #f9fafb;
+  font-weight: 600;
+}
+
+.product-thumb {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.status {
+  padding: 5px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+.status.active {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status.inactive {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.action-cell {
+  display: flex;
+  gap: 10px;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.action-btn.edit {
+  color: #4f46e5;
+}
+
+.action-btn.delete {
+  color: #e63946;
+}
+
+.action-btn.view {
+  color: #10b981;
+}
+
+@media (max-width: 768px) {
+  .filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 15px;
+  }
+}
+</style>

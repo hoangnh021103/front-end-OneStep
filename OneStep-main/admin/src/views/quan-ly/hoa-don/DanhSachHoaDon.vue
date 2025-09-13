@@ -15,7 +15,7 @@
             <div class="filter-box">
                 <div class="filter-title">Bộ lọc tìm kiếm</div>
                 <div class="filter-controls">
-                    <input v-model="search" placeholder="Nhập tên khách hàng, sđt, tên nhân viên..." />
+                    <input v-model="search" placeholder="Nhập tên khách hàng, sđt, mã đơn..." />
                     <input type="date" v-model="fromDate" />
                     <input type="date" v-model="toDate" />
                     <button @click="resetFilter"><i class="fa fa-undo"></i> Đặt lại bộ lọc</button>
@@ -37,12 +37,11 @@
                     <thead>
                         <tr>
                             <th>STT</th>
-                            <th>Mã Hóa Đơn</th>
+                            <th>Mã Đơn</th>
                             <th>Tên Khách Hàng</th>
-                            <th>SDT Khách Hàng</th>
-                            <th>Loại Hóa Đơn</th>
-                            <th>Mã Nhân Viên</th>
-                            <th>Tên Nhân Viên</th>
+                            <th>SĐT Khách Hàng</th>
+                            <th>Loại Đơn</th>
+                            <th>Email</th>
                             <th>Tổng Tiền</th>
                             <th>Ngày Tạo</th>
                             <th>Trạng thái</th>
@@ -51,7 +50,7 @@
                     </thead>
                     <tbody>
                         <tr v-if="tabInvoices.length === 0">
-                            <td colspan="11" class="no-data">
+                            <td colspan="10" class="no-data">
                                 <div class="empty-state">
                                     <div class="empty-icon"><i class="fa fa-file-invoice"></i></div>
                                     <div class="empty-text">Chưa có hóa đơn nào</div>
@@ -61,25 +60,63 @@
                         </tr>
                         <tr v-for="(inv, idx) in tabInvoices" :key="inv.id">
                             <td>{{ idx + 1 }}</td>
-                            <td>{{ inv.code }}</td>
-                            <td>{{ inv.customerName }}</td>
-                            <td>{{ inv.customerPhone }}</td>
+                            <td>{{ inv.maDon }}</td>
+                            <td>{{ inv.hoTen }}</td>
+                            <td>{{ inv.soDienThoai }}</td>
                             <td>
-                                <span class="type-badge">{{ inv.type }}</span>
+                                <span class="type-badge">{{ formatType(inv.loaiDon) }}</span>
                             </td>
-                            <td>{{ inv.staffCode }}</td>
-                            <td>{{ inv.staffName }}</td>
-                            <td>{{ inv.total }}</td>
-                            <td>{{ formatDate(inv.createdAt) }}</td>
+                            <td>{{ inv.email }}</td>
+                            <td>{{ inv.tongTien }}</td>
+                            <td>{{ formatDate(inv.ngayXacNhan) }}</td>
                             <td>
                                 <span :class="['status-badge', inv.statusClass]">{{ inv.statusLabel }}</span>
                             </td>
                             <td>
-                                <button class="action-btn" title="Xem chi tiết"><i class="fa fa-eye"></i></button>
+                                <button class="action-btn edit-btn" title="Chỉnh sửa" @click="editInvoice(idx)"><i class="fa fa-edit"></i></button>
+                                <button class="action-btn delete-btn" title="Xóa" @click="deleteInvoice(inv.id)"><i class="fa fa-trash"></i></button>
                             </td>
                         </tr>
                     </tbody>
                 </table>
+            </div>
+            <!-- Modal for Editing Invoice -->
+            <div v-if="showModal" class="modal-overlay">
+                <div class="modal-content">
+                    <h3>{{ editIndex !== null ? 'Chỉnh sửa hóa đơn' : 'Thêm hóa đơn' }}</h3>
+                    <div class="modal-form">
+                        <label>Mã Đơn</label>
+                        <input v-model="newInvoice.maDon" placeholder="Nhập mã đơn" />
+                        <label>Tên Khách Hàng</label>
+                        <input v-model="newInvoice.hoTen" placeholder="Nhập tên khách hàng" />
+                        <label>SĐT Khách Hàng</label>
+                        <input v-model="newInvoice.soDienThoai" placeholder="Nhập số điện thoại" />
+                        <label>Email</label>
+                        <input v-model="newInvoice.email" placeholder="Nhập email" />
+                        <label>Loại Đơn</label>
+                        <select v-model="newInvoice.loaiDon">
+                            <option :value="0">OFFLINE</option>
+                            <option :value="1">ONLINE</option>
+                        </select>
+                        <label>Tổng Tiền</label>
+                        <input v-model="newInvoice.tongTien" placeholder="Nhập tổng tiền" type="number" />
+                        <label>Ngày Xác Nhận</label>
+                        <input v-model="newInvoice.ngayXacNhan" type="date" />
+                        <label>Trạng Thái</label>
+                        <select v-model="newInvoice.status">
+                            <option value="pending">Chờ xác nhận</option>
+                            <option value="confirmed">Đã xác nhận</option>
+                            <option value="shipping">Chờ giao</option>
+                            <option value="delivering">Đang giao</option>
+                            <option value="done">Hoàn thành</option>
+                            <option value="cancel">Đã hủy</option>
+                        </select>
+                    </div>
+                    <div class="modal-actions">
+                        <button class="save-btn" @click="saveInvoice">Lưu</button>
+                        <button class="cancel-btn" @click="closeModal">Hủy</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -98,18 +135,23 @@ export default {
       tab: "all",
       showModal: false,
       newInvoice: {
-        code: "",
-        customerName: "",
-        customerPhone: "",
-        type: "OFFLINE",
-        staffCode: "",
-        staffName: "",
-        total: "",
-        createdAt: "",
-        status: "pending",
-        ngayCapNhat: "",
-        nguoiTao: "",
-        nguoiCapNhat: ""
+        khachHangId: 0,
+        voucherId: 0,
+        diaChiId: 0,
+        soDienThoai: "",
+        hoTen: "",
+        email: "",
+        tongTienGoc: 0,
+        tienGiam: 0,
+        tongTien: 0,
+        tienShip: 0,
+        ngayXacNhan: "",
+        ngayDuKien: "",
+        ngayNhan: "",
+        loaiDon: 0,
+        ghiChu: "",
+        maDon: "",
+        status: "pending"
       },
       editIndex: null
     };
@@ -120,18 +162,19 @@ export default {
       return this.invoices
         .filter(inv => {
           const matchSearch = this.search === '' ||
-            (inv.customerName && inv.customerName.toLowerCase().includes(keyword)) ||
-            (inv.customerPhone && inv.customerPhone.includes(keyword)) ||
-            (inv.staffName && inv.staffName.toLowerCase().includes(keyword)) ||
-            (inv.code && inv.code.toLowerCase().includes(keyword));
-          const matchFrom = !this.fromDate || inv.createdAt >= this.fromDate;
-          const matchTo = !this.toDate || inv.createdAt <= this.toDate;
+            (inv.hoTen && inv.hoTen.toLowerCase().includes(keyword)) ||
+            (inv.soDienThoai && inv.soDienThoai.includes(keyword)) ||
+            (inv.maDon && inv.maDon.toLowerCase().includes(keyword)) ||
+            (inv.email && inv.email.toLowerCase().includes(keyword));
+          const matchFrom = !this.fromDate || inv.ngayXacNhan >= this.fromDate;
+          const matchTo = !this.toDate || inv.ngayXacNhan <= this.toDate;
           return matchSearch && matchFrom && matchTo;
         })
         .map(inv => ({
           ...inv,
-          statusLabel: this.statusLabel(inv.status),
-          statusClass: inv.status
+          status: inv.status || 'pending', // Fallback to 'pending' if status is missing
+          statusLabel: this.statusLabel(inv.status || 'pending'),
+          statusClass: inv.status || 'pending'
         }));
     },
     tabInvoices() {
@@ -142,10 +185,23 @@ export default {
   methods: {
     async fetchInvoices() {
       try {
-        const res = await axios.get("http://localhost:8080/hoa-don/hien-thi");
+        const res = await axios.get("http://localhost:8080/don-hang/hien-thi");
         this.invoices = Array.isArray(res.data) ? res.data : res.data.data || [];
+        console.log('API Response:', this.invoices);
       } catch (err) {
-        console.error(err);
+        console.error('Error fetching invoices:', err);
+      }
+    },
+    async deleteInvoice(id) {
+      if (confirm("Xác nhận xóa hóa đơn này?")) {
+        try {
+          await axios.delete(`http://localhost:8080/don-hang/delete/${id}`);
+          this.invoices = this.invoices.filter(inv => inv.id !== id);
+          alert("Xóa hóa đơn thành công!");
+        } catch (err) {
+          console.error('Error deleting invoice:', err);
+          alert("Lỗi khi xóa hóa đơn!");
+        }
       }
     },
     resetFilter() {
@@ -171,56 +227,72 @@ export default {
         case "delivering": return "Đang giao";
         case "done": return "Hoàn thành";
         case "cancel": return "Đã hủy";
-        default: return "";
+        default: return "Không xác định";
       }
+    },
+    formatType(loaiDon) {
+      return loaiDon === 0 ? "OFFLINE" : "ONLINE";
     },
     openModal() {
       this.showModal = true;
       this.editIndex = null;
       this.newInvoice = {
-        code: "",
-        customerName: "",
-        customerPhone: "",
-        type: "OFFLINE",
-        staffCode: "",
-        staffName: "",
-        total: "",
-        createdAt: "",
-        status: "pending",
-        ngayCapNhat: "",
-        nguoiTao: "",
-        nguoiCapNhat: ""
+        khachHangId: 0,
+        voucherId: 0,
+        diaChiId: 0,
+        soDienThoai: "",
+        hoTen: "",
+        email: "",
+        tongTienGoc: 0,
+        tienGiam: 0,
+        tongTien: 0,
+        tienShip: 0,
+        ngayXacNhan: "",
+        ngayDuKien: "",
+        ngayNhan: "",
+        loaiDon: 0,
+        ghiChu: "",
+        maDon: "",
+        status: "pending"
       };
     },
     closeModal() {
       this.showModal = false;
     },
-    saveInvoice() {
-      if (!this.newInvoice.code) {
-        alert("Vui lòng nhập mã hóa đơn.");
+    async saveInvoice() {
+      if (!this.newInvoice.maDon) {
+        alert("Vui lòng nhập mã đơn.");
         return;
       }
-      if (!this.newInvoice.customerName) {
+      if (!this.newInvoice.hoTen) {
         alert("Vui lòng nhập tên khách hàng.");
         return;
       }
-      if (!this.newInvoice.customerPhone) {
+      if (!this.newInvoice.soDienThoai) {
         alert("Vui lòng nhập số điện thoại khách hàng.");
         return;
       }
-      // Gọi API thêm/sửa ở đây nếu cần
-      this.closeModal();
+      try {
+        if (this.editIndex !== null) {
+          // Update existing invoice
+          const updatedInvoice = { ...this.newInvoice };
+          await axios.put(`http://localhost:8080/don-hang/update/${updatedInvoice.id}`, updatedInvoice);
+          this.invoices[this.editIndex] = updatedInvoice;
+          alert("Cập nhật hóa đơn thành công!");
+        } else {
+          // Add new invoice (API call not implemented, placeholder for future)
+          alert("API thêm hóa đơn chưa được triển khai!");
+        }
+        this.closeModal();
+      } catch (err) {
+        console.error('Error saving invoice:', err);
+        alert("Lỗi khi lưu hóa đơn!");
+      }
     },
     editInvoice(index) {
       this.editIndex = index;
       this.newInvoice = { ...this.invoices[index] };
       this.showModal = true;
-    },
-    deleteInvoice(index) {
-      if (confirm("Xác nhận xoá hóa đơn này?")) {
-        // Gọi API xoá ở đây nếu cần
-        this.invoices.splice(index, 1);
-      }
     }
   },
   mounted() {
@@ -228,35 +300,3 @@ export default {
   }
 };
 </script>
-
-<style scoped>
-/* Empty state styles */
-.no-data {
-  text-align: center;
-  padding: 40px 20px;
-  color: #666;
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-
-.empty-icon {
-  font-size: 48px;
-  opacity: 0.5;
-}
-
-.empty-text {
-  font-size: 18px;
-  font-weight: 500;
-  color: #333;
-}
-
-.empty-subtext {
-  font-size: 14px;
-  color: #999;
-}
-</style>
