@@ -208,7 +208,8 @@ export default {
             soLuongTon: chiTiet.soLuongTon || 0,
             trangThai: chiTiet.trangThai || 1,
           };
-          this.isEditing = true;
+          this.isEditing = true; // Đảm bảo isEditing được đặt thành true khi sửa
+          console.log('Đang chỉnh sửa sản phẩm chi tiết, isEditing:', this.isEditing);
           toast.info('Đã tải thông tin sản phẩm chi tiết');
         } catch (error) {
           console.error('Lỗi khi tải thông tin sản phẩm chi tiết:', error);
@@ -217,6 +218,9 @@ export default {
         } finally {
           this.isSubmitting = false;
         }
+      } else {
+        this.isEditing = false; // Đảm bảo isEditing là false khi thêm mới
+        console.log('Thêm sản phẩm chi tiết mới, isEditing:', this.isEditing);
       }
     },
     onSanPhamChange() {
@@ -263,6 +267,7 @@ export default {
     },
     async handleSubmit() {
       console.log('Biểu mẫu trước khi gửi:', this.form);
+      console.log('Trạng thái isEditing:', this.isEditing);
       if (!this.validateForm()) {
         toast.error('Vui lòng điền đầy đủ thông tin.');
         return;
@@ -294,7 +299,7 @@ export default {
             const errorData = await response.text();
             throw new Error(`Lỗi HTTP! Trạng thái: ${response.status}, Thông báo: ${errorData}`);
           }
-          toast.success('Cập nhật sản phẩm chi tiết thành công!');
+          toast.success('Chỉnh sửa sản phẩm chi tiết thành công!');
         } else {
           // Thêm mới sản phẩm chi tiết
           const response = await fetch('http://localhost:8080/chi-tiet-san-pham/add', {
@@ -305,12 +310,14 @@ export default {
             const errorData = await response.text();
             throw new Error(`Lỗi HTTP! Trạng thái: ${response.status}, Thông báo: ${errorData}`);
           }
-          toast.success('Thêm sản phẩm chi tiết thành công!');
+          toast.success('thành công!');
         }
 
-        this.$router.push({ name: 'ChiTietSanPham' });
+        // Bỏ điều hướng để tránh lỗi "No match for..."
+        // Nếu muốn điều hướng, dùng route hợp lệ, ví dụ:
+        // this.$router.push({ name: 'SanPham' });
       } catch (err) {
-        const action = this.isEditing ? 'cập nhật' : 'thêm';
+        const action = this.isEditing ? 'chỉnh sửa' : 'thêm';
         console.error(`Lỗi khi ${action} sản phẩm chi tiết:`, err);
         toast.error(`Không thể ${action} sản phẩm chi tiết: ${err.message}`);
       } finally {
