@@ -155,21 +155,22 @@ export default {
     },
 
     async fetchSanPham() {
-  try {
-    const res = await fetch('http://localhost:8080/san-pham/hien-thi');
-    if (!res.ok) throw new Error(`status ${res.status}`);
-    const data = await res.json();
-    const list = Array.isArray(data) ? data : (data.data || []);
-    this.sanPhamList = list.map(item => ({
-      id: item.maSanPham,   // 🔑 luôn lấy maSanPham
-      tenSanPham: item.tenSanPham
-    }));
-  } catch (err) {
-    console.error('fetchSanPham error:', err);
-    toast.error('Không tải được danh sách sản phẩm.');
-    this.sanPhamList = [];
-  }
-},
+      try {
+        const res = await fetch('http://localhost:8080/san-pham/hien-thi');
+        if (!res.ok) throw new Error(`status ${res.status}`);
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : (data.data || []);
+        this.sanPhamList = list.map(item => ({
+          id: item.maSanPham,   // 🔑 luôn lấy maSanPham
+          tenSanPham: item.tenSanPham
+        }));
+        console.log('Danh sách sản phẩm:', this.sanPhamList); // Debug log
+      } catch (err) {
+        console.error('fetchSanPham error:', err);
+        toast.error('Không tải được danh sách sản phẩm.');
+        this.sanPhamList = [];
+      }
+    },
 
     async fetchVoucher() {
       try {
@@ -181,6 +182,7 @@ export default {
           id: item.id || item.ma || item.idVoucher,
           tenVoucher: item.ten || item.tenVoucher || item.name
         }));
+        console.log('Danh sách voucher:', this.voucherList); // Debug log
       } catch (err) {
         console.error('fetchVoucher error:', err);
         toast.error('Không tải được danh sách voucher.');
@@ -188,47 +190,81 @@ export default {
       }
     },
 
-   async fetchDiscounts() {
-  try {
-    const res = await fetch("http://localhost:8080/san-pham-khuyen-mai/hien-thi");
-    if (!res.ok) {
-      console.warn("discount fetch status", res.status);
-    }
-    const data = await res.json();
-    const list = Array.isArray(data) ? data : (data.data || []);
+    async fetchDiscounts() {
+      try {
+        const res = await fetch("http://localhost:8080/san-pham-khuyen-mai/hien-thi");
+        if (!res.ok) {
+          console.warn("discount fetch status", res.status);
+        }
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : (data.data || []);
 
-    this.discounts = list.map(item => ({
-      id: item.id,
-      maSanPham: item.maSanPham || item.sanPham?.maSanPham,   // ✅ chỉ dùng maSanPham
-      voucherId: item.voucherId || item.voucher?.id,
-      tenSanPham: item.tenSanPham 
-                  || item.sanPham?.tenSanPham 
-                  || item.sanPham?.ten,
-      tenVoucher: item.tenVoucher 
-                  || item.voucher?.tenVoucher 
-                  || item.voucher?.ten,
-      ngayCapNhat: item.ngayCapNhat || item.updatedAt
-    }));
-  } catch (err) {
-    console.error("fetchDiscounts error", err);
-    toast.error("Không tải được danh sách đợt giảm giá.");
-    this.discounts = [];
-  }
-},
+        this.discounts = list.map(item => ({
+          id: item.id,
+          // ✅ Lưu cả maSanPham và sanPhamId để xử lý đồng bộ
+          maSanPham: item.maSanPham || item.sanPham?.maSanPham,
+          sanPhamId: item.sanPhamId || item.maSanPham || item.sanPham?.maSanPham,
+          voucherId: item.voucherId || item.voucher?.id,
+          tenSanPham: item.tenSanPham 
+                      || item.sanPham?.tenSanPham 
+                      || item.sanPham?.ten,
+          tenVoucher: item.tenVoucher 
+                      || item.voucher?.tenVoucher 
+                      || item.voucher?.ten,
+          ngayCapNhat: item.ngayCapNhat || item.updatedAt
+        }));
+        
+        console.log('Danh sách discounts:', this.discounts); // Debug log
+      } catch (err) {
+        console.error("fetchDiscounts error", err);
+        toast.error("Không tải được danh sách đợt giảm giá.");
+        this.discounts = [];
+      }
+    },
 
     openAddModal() {
       this.editingId = null;
       this.form = { sanPhamId: 0, voucherId: 0 };
       this.showModal = true;
     },
+    
     openEditModal(discount) {
+      console.log('🚀 Opening edit modal for discount:', discount); // Debug log
+      console.log('📋 Current sanPhamList:', this.sanPhamList); // Debug log
+      console.log('🎫 Current voucherList:', this.voucherList); // Debug log
+      
       this.editingId = discount.id;
+      
+      // ✅ Thử nhiều cách lấy sanPhamId
+      const sanPhamId = discount.sanPhamId || discount.maSanPham || 0;
+      const voucherId = discount.voucherId || 0;
+      
+      console.log('🔧 Extracted IDs:', { sanPhamId, voucherId }); // Debug log
+      
       this.form = {
-        sanPhamId: discount.sanPhamId ?? 0,
-        voucherId: discount.voucherId ?? 0
+        sanPhamId: Number(sanPhamId),
+        voucherId: Number(voucherId)
       };
+      
+      console.log('📝 Final form data:', this.form); // Debug log
+      
+      // ✅ Kiểm tra xem ID có tồn tại trong danh sách không
+      const foundSanPham = this.sanPhamList.find(sp => sp.id === Number(sanPhamId));
+      const foundVoucher = this.voucherList.find(vc => vc.id === Number(voucherId));
+      
+      console.log('🔍 Found sanPham:', foundSanPham); // Debug log
+      console.log('🔍 Found voucher:', foundVoucher); // Debug log
+      
+      if (!foundSanPham) {
+        console.warn('⚠️ Sản phẩm không tìm thấy trong danh sách!');
+      }
+      if (!foundVoucher) {
+        console.warn('⚠️ Voucher không tìm thấy trong danh sách!');
+      }
+      
       this.showModal = true;
     },
+    
     closeModal() {
       this.showModal = false;
     },
@@ -244,6 +280,8 @@ export default {
           sanPhamId: Number(this.form.sanPhamId),
           voucherId: Number(this.form.voucherId),
         };
+
+        console.log('Saving with payload:', payload); // Debug log
 
         let url = '';
         let method = '';
@@ -283,6 +321,7 @@ export default {
       if (!confirm(`Xác nhận xóa đợt giảm giá cho "${discount.tenSanPham || 'sản phẩm'}" ?`)) return;
       this.deleteDiscount(discount.id);
     },
+    
     async deleteDiscount(id) {
       try {
         const res = await fetch(`http://localhost:8080/san-pham-khuyen-mai/delete/${id}`, { method: 'DELETE' });
