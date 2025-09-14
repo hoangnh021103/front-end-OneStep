@@ -91,7 +91,6 @@
             <option value="">Chọn giới tính</option>
             <option value="Nam">Nam</option>
             <option value="Nữ">Nữ</option>
-            <option value="Khác">Khác</option>
           </select>
           <input v-model="modalData.email" type="email" placeholder="Email" required />
           <input v-model="modalData.soDienThoai" placeholder="Số điện thoại" required />
@@ -113,7 +112,7 @@
 </template>
 
 <script>
-import { nhanVienApi } from '@/api/nhanVienApi';
+import axios from "axios";
 import { toast } from 'vue3-toastify';
 
 export default {
@@ -140,7 +139,7 @@ export default {
       pageSize: 10,
       roles: {
         1: "Quản lý",
-        2: "Nhân viên", 
+        2: "Nhân viên",
         3: "Thực tập sinh"
       }
     };
@@ -151,8 +150,8 @@ export default {
       return this.employees.filter(
         emp =>
           ((emp.hoTen && emp.hoTen.toLowerCase().includes(keyword)) ||
-          (emp.email && emp.email.toLowerCase().includes(keyword)) ||
-          (emp.soDienThoai && emp.soDienThoai.includes(keyword))) &&
+            (emp.email && emp.email.toLowerCase().includes(keyword)) ||
+            (emp.soDienThoai && emp.soDienThoai.includes(keyword))) &&
           (this.genderFilter === "" || emp.gioiTinh === this.genderFilter)
       );
     },
@@ -173,26 +172,34 @@ export default {
     }
   },
   methods: {
+    // 🟢 Lấy danh sách nhân viên
     async fetchEmployees() {
       try {
-        const data = await nhanVienApi.layDanhSachNhanVien();
-        this.employees = Array.isArray(data) ? data : data.data || [];
+        const res = await axios.get("http://localhost:8080/nhan-vien/hien-thi");
+        this.employees = Array.isArray(res.data) ? res.data : res.data.data || [];
       } catch (err) {
+        console.error("Lỗi khi tải nhân viên:", err);
         toast.error("Không thể tải danh sách nhân viên.");
         this.employees = [];
       }
     },
+
+    // 🟢 Reset bộ lọc
     resetFilter() {
       this.search = "";
       this.genderFilter = "";
       this.currentPage = 1;
       this.fetchEmployees();
     },
+
+    // 🟢 Đổi trang
     changePage(page) {
       if (page >= 1 && page <= this.totalPages) {
         this.currentPage = page;
       }
     },
+
+    // 🟢 Mở modal thêm nhân viên
     openAddModal() {
       this.showModal = true;
       this.editEmployee = null;
@@ -209,15 +216,21 @@ export default {
         ngayCapNhat: ""
       };
     },
+
+    // 🟢 Mở modal sửa nhân viên
     openEditModal(employee) {
       this.showModal = true;
       this.editEmployee = employee;
       this.modalData = { ...employee };
     },
+
+    // 🟢 Đóng modal
     closeModal() {
       this.showModal = false;
       this.editEmployee = null;
     },
+
+    // 🟢 Lưu (thêm/cập nhật) nhân viên
     async saveEmployee() {
       if (!this.modalData.hoTen || !this.modalData.email || !this.modalData.soDienThoai || !this.modalData.vaiTroId) {
         toast.error("Vui lòng nhập đầy đủ thông tin bắt buộc.");
@@ -225,42 +238,60 @@ export default {
       }
       try {
         this.modalData.ngayCapNhat = new Date().toISOString().split('T')[0];
+
         if (this.editEmployee) {
-          const response = await nhanVienApi.capNhatNhanVien(this.modalData.id, this.modalData);
+          // ✏️ Cập nhật
+          const res = await axios.put(
+            `http://localhost:8080/nhan-vien/update/${this.modalData.id}`,
+            this.modalData
+          );
           const index = this.employees.findIndex(emp => emp.id === this.modalData.id);
-          if (index !== -1) this.employees.splice(index, 1, response.data || this.modalData);
-          toast.success('Cập nhật nhân viên thành công!');
+          if (index !== -1) this.employees.splice(index, 1, res.data || this.modalData);
+          toast.success("Cập nhật nhân viên thành công!");
         } else {
-          const response = await nhanVienApi.themNhanVien(this.modalData);
-          this.employees.push(response.data || this.modalData);
-          toast.success('Thêm nhân viên thành công!');
+          // 🆕 Thêm mới
+          const res = await axios.post(
+            "http://localhost:8080/nhan-vien/add",
+            this.modalData
+          );
+          this.employees.push(res.data || this.modalData);
+          toast.success("Thêm nhân viên thành công!");
         }
+
         this.closeModal();
       } catch (err) {
+        console.error("Lỗi khi lưu nhân viên:", err);
         toast.error("Không thể lưu nhân viên.");
       }
     },
+
+    // 🟢 Xóa nhân viên
     async deleteEmployee(id) {
       const employee = this.employees.find(emp => emp.id === id);
       if (!employee) return;
       if (confirm(`Xác nhận xoá nhân viên "${employee.hoTen}"?`)) {
         try {
-          await nhanVienApi.xoaNhanVien(id);
+          await axios.delete(`http://localhost:8080/nhan-vien/delete/${id}`);
           const index = this.employees.findIndex(emp => emp.id === id);
           if (index !== -1) this.employees.splice(index, 1);
-          toast.success('Xóa nhân viên thành công!');
-        } catch {
-          toast.error('Không thể xóa nhân viên.');
+          toast.success("Xóa nhân viên thành công!");
+        } catch (err) {
+          console.error("Lỗi khi xóa nhân viên:", err);
+          toast.error("Không thể xóa nhân viên.");
         }
       }
     },
+
+    // 🟢 Đổi vai trò
     getRoleName(roleId) {
       return this.roles[roleId] || "Không xác định";
     },
+
+    // 🟢 Định dạng ngày
     formatDate(dateString) {
-      if (!dateString) return '';
+      if (!dateString) return "";
       const date = new Date(dateString);
-      return date.toLocaleDateString('vi-VN');
+      return date.toLocaleDateString("vi-VN");
     }
   },
   watch: {
@@ -276,3 +307,4 @@ export default {
   }
 };
 </script>
+
