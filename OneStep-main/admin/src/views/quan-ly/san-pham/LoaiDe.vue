@@ -3,7 +3,7 @@
     <!-- Tiêu đề -->
     <div class="page-header">
       <h2 class="page-title">Quản Lý Loại Đế</h2>
-      <p class="page-subtitle">Thêm, chỉnh sửa và tìm kiếm các loại đế giày</p>
+    
     </div>
 
     <!-- Bộ lọc -->

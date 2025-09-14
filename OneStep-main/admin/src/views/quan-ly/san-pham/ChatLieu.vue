@@ -3,7 +3,6 @@
     <!-- Tiêu đề -->
     <div class="page-header">
       <h2 class="page-title">Quản Lý Chất Liệu</h2>
-      <p class="page-subtitle">Thêm, tìm kiếm và quản lý các chất liệu sản phẩm</p>
     </div>
 
     <!-- Bộ lọc -->
