@@ -2,7 +2,6 @@
   <div class="employee-manager">
     <header>
       <h2>Quản lý nhân viên</h2>
-      
     </header>
     <section class="filter-section">
       <div class="filter-row">
@@ -59,8 +58,8 @@
             <td>{{ formatDate(emp.ngayTao) }}</td>
             <td>{{ formatDate(emp.ngayCapNhat) }}</td>
             <td class="actions">
-              <button class="action-btn edit" title="Sửa" @click="editColor(index)"><i class="fa fa-edit"></i></button>
-              <button class="action-btn delete" title="Xóa" @click="deleteColor(index)"><i class="fa fa-trash"></i></button>
+              <button class="action-btn edit" title="Sửa" @click="openEditModal(emp)"><i class="fa fa-edit"></i></button>
+              <button class="action-btn delete" title="Xóa" @click="deleteEmployee(emp.id)"><i class="fa fa-trash"></i></button>
             </td>
           </tr>
         </tbody>
@@ -96,9 +95,7 @@
           </select>
           <input v-model="modalData.email" type="email" placeholder="Email" required />
           <input v-model="modalData.soDienThoai" placeholder="Số điện thoại" required />
-          
           <input v-model="modalData.diaChi" placeholder="Địa chỉ" />
-          <input v-model="modalData.urlAnh" placeholder="URL ảnh (tùy chọn)" />
           <select v-model="modalData.vaiTroId">
             <option value="0">Chọn vai trò</option>
             <option value="1">Quản lý</option>
@@ -135,7 +132,6 @@ export default {
         email: "",
         soDienThoai: "",
         diaChi: "",
-        urlAnh: "",
         vaiTroId: 0,
         ngayTao: "",
         ngayCapNhat: ""
@@ -179,47 +175,24 @@ export default {
   methods: {
     async fetchEmployees() {
       try {
-        console.log("Đang gọi API nhân viên...");
         const data = await nhanVienApi.layDanhSachNhanVien();
-        console.log("Response từ API:", data);
-        
-        // Xử lý dữ liệu từ API
         this.employees = Array.isArray(data) ? data : data.data || [];
-        
-        console.log("Dữ liệu nhân viên đã load:", this.employees);
-        
       } catch (err) {
-        console.error("Lỗi khi gọi API nhân viên:", err);
         toast.error("Không thể tải danh sách nhân viên.");
         this.employees = [];
-        
-        let errorMessage = "Không thể tải dữ liệu nhân viên.";
-        
-        if (err.code === 'ECONNREFUSED') {
-          errorMessage = "Không thể kết nối đến server. Vui lòng kiểm tra xem server có đang chạy không.";
-        } else if (err.response?.status === 404) {
-          errorMessage = "API endpoint không tồn tại. Vui lòng kiểm tra đường dẫn API.";
-        } else if (err.response?.status === 500) {
-          errorMessage = "Lỗi server. Vui lòng thử lại sau.";
-        }
-        
-        alert(errorMessage);
       }
     },
-    
     resetFilter() {
       this.search = "";
       this.genderFilter = "";
       this.currentPage = 1;
       this.fetchEmployees();
     },
-    
     changePage(page) {
       if (page >= 1 && page <= this.totalPages) {
         this.currentPage = page;
       }
     },
-    
     openAddModal() {
       this.showModal = true;
       this.editEmployee = null;
@@ -231,103 +204,65 @@ export default {
         email: "",
         soDienThoai: "",
         diaChi: "",
-        urlAnh: "",
         vaiTroId: 0,
         ngayTao: "",
         ngayCapNhat: ""
       };
     },
-    
     openEditModal(employee) {
       this.showModal = true;
       this.editEmployee = employee;
       this.modalData = { ...employee };
     },
-    
     closeModal() {
       this.showModal = false;
       this.editEmployee = null;
     },
-    
     async saveEmployee() {
-      // Validation
-      if (!this.modalData.hoTen) {
-        toast.error("Vui lòng nhập họ và tên nhân viên.");
+      if (!this.modalData.hoTen || !this.modalData.email || !this.modalData.soDienThoai || !this.modalData.vaiTroId) {
+        toast.error("Vui lòng nhập đầy đủ thông tin bắt buộc.");
         return;
       }
-      if (!this.modalData.email) {
-        toast.error("Vui lòng nhập email nhân viên.");
-        return;
-      }
-      if (!this.modalData.soDienThoai) {
-        toast.error("Vui lòng nhập số điện thoại nhân viên.");
-        return;
-      }
-      if (!this.modalData.vaiTroId || this.modalData.vaiTroId === 0) {
-        toast.error("Vui lòng chọn vai trò cho nhân viên.");
-        return;
-      }
-      
       try {
-        // Cập nhật ngày
         this.modalData.ngayCapNhat = new Date().toISOString().split('T')[0];
-        
         if (this.editEmployee) {
-          // Cập nhật nhân viên
           const response = await nhanVienApi.capNhatNhanVien(this.modalData.id, this.modalData);
-          // Cập nhật mảng local
           const index = this.employees.findIndex(emp => emp.id === this.modalData.id);
-          if (index !== -1) {
-            this.employees.splice(index, 1, response.data || this.modalData);
-          }
+          if (index !== -1) this.employees.splice(index, 1, response.data || this.modalData);
           toast.success('Cập nhật nhân viên thành công!');
         } else {
-          // Thêm nhân viên mới
           const response = await nhanVienApi.themNhanVien(this.modalData);
-          // Thêm vào mảng local
           this.employees.push(response.data || this.modalData);
           toast.success('Thêm nhân viên thành công!');
         }
         this.closeModal();
       } catch (err) {
-        const msg = err?.response?.data?.message || err?.response?.data || err?.message || 'Không xác định';
-        console.error('Lỗi khi lưu nhân viên:', msg, err);
-        toast.error(`Không thể lưu nhân viên: ${msg}`);
+        toast.error("Không thể lưu nhân viên.");
       }
     },
-    
     async deleteEmployee(id) {
       const employee = this.employees.find(emp => emp.id === id);
       if (!employee) return;
-      
       if (confirm(`Xác nhận xoá nhân viên "${employee.hoTen}"?`)) {
         try {
           await nhanVienApi.xoaNhanVien(id);
-          // Xóa nhân viên khỏi mảng local
           const index = this.employees.findIndex(emp => emp.id === id);
-          if (index !== -1) {
-            this.employees.splice(index, 1);
-          }
+          if (index !== -1) this.employees.splice(index, 1);
           toast.success('Xóa nhân viên thành công!');
-        } catch (err) {
-          console.error('Lỗi khi xóa nhân viên:', err);
-          toast.error('Không thể xóa nhân viên. Vui lòng thử lại sau.');
+        } catch {
+          toast.error('Không thể xóa nhân viên.');
         }
       }
     },
-    
     getRoleName(roleId) {
       return this.roles[roleId] || "Không xác định";
     },
-    
-    // Helper method để format ngày tháng
     formatDate(dateString) {
       if (!dateString) return '';
       const date = new Date(dateString);
       return date.toLocaleDateString('vi-VN');
     }
   },
-  
   watch: {
     filteredEmployees() {
       if (this.currentPage > this.totalPages) this.currentPage = this.totalPages;
@@ -336,9 +271,7 @@ export default {
       this.currentPage = 1;
     }
   },
-  
   mounted() {
-    console.log("Component mounted, fetching employees...");
     this.fetchEmployees();
   }
 };
