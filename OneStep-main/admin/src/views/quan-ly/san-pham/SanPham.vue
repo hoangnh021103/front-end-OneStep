@@ -181,7 +181,7 @@ export default {
     },
     editProduct(maSanPham) {
       if (maSanPham) {
-        this.$router.push({ name: 'ThemSanPham', params: { id: maSanPham } });
+        this.$router.push({ name: 'SuaSanPham', params: { id: maSanPham } });
       } else {
         toast.error('Không tìm thấy mã sản phẩm.');
       }

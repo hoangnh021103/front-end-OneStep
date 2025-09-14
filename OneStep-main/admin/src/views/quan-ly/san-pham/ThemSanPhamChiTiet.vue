@@ -17,6 +17,7 @@
               v-model.number="form.sanPhamId"
               :class="{ 'error': errors.sanPhamId }"
               @change="onSanPhamChange"
+              
             >
               <option value="0" disabled>Chọn sản phẩm</option>
               <option v-for="sanPham in sanPhamList" :key="sanPham.id" :value="sanPham.id">

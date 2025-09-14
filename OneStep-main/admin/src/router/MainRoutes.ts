@@ -28,7 +28,12 @@ const MainRoutes = {
     },
     {
       name: 'ThemSanPham',
-      path: '/quan-ly/san-pham/san-pham/them',
+      path: '/quan-ly/san-pham/san-pham/them/',
+      component: () => import('@/views/quan-ly/san-pham/ThemSanPham.vue'),
+    },
+    {
+      name: 'SuaSanPham',
+      path: '/quan-ly/san-pham/san-pham/them/:id',
       component: () => import('@/views/quan-ly/san-pham/ThemSanPham.vue'),
     },
     {
@@ -101,7 +106,7 @@ const MainRoutes = {
       path: '/quan-ly/dot-giam-gia',
       component: () => import('@/views/quan-ly/dot-giam-gia/DotGiamGia.vue'),
     },
-   
+
   ],
 };
 

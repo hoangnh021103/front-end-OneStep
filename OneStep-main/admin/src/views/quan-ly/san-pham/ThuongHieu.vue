@@ -4,7 +4,6 @@
     <!-- Tiêu đề -->
     <div class="page-header">
       <h2 class="page-title">Quản lý Thương Hiệu</h2>
-      <p class="page-subtitle">Tạo, chỉnh sửa và quản lý thương hiệu sản phẩm</p>
     </div>
 
     <!-- Bộ lọc -->
