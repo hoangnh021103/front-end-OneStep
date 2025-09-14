@@ -3,6 +3,8 @@
     <header>
       <h2>Quản lý nhân viên</h2>
     </header>
+
+    <!-- Bộ lọc -->
     <section class="filter-section">
       <div class="filter-row">
         <input v-model="search" placeholder="Tìm kiếm họ tên, email hoặc số điện thoại..." />
@@ -15,11 +17,14 @@
         <button @click="resetFilter"><i class="fa fa-undo"></i> Đặt lại bộ lọc</button>
       </div>
     </section>
+
+    <!-- Danh sách -->
     <section class="employee-list-section">
       <div class="list-header">
         <span>Danh sách nhân viên</span>
         <button class="add-btn" @click="openAddModal"><i class="fa fa-plus"></i> Thêm mới nhân viên</button>
       </div>
+
       <table class="employee-table">
         <thead>
           <tr>
@@ -64,6 +69,8 @@
           </tr>
         </tbody>
       </table>
+
+      <!-- Phân trang -->
       <div class="pagination-center">
         <div class="pagination">
           <button :disabled="currentPage === 1" @click="changePage(currentPage-1)">‹</button>
@@ -80,6 +87,7 @@
         </div>
       </div>
     </section>
+
     <!-- Modal Thêm/Sửa -->
     <div v-if="showModal" class="modal-overlay">
       <div class="modal-content">
@@ -95,12 +103,15 @@
           <input v-model="modalData.email" type="email" placeholder="Email" required />
           <input v-model="modalData.soDienThoai" placeholder="Số điện thoại" required />
           <input v-model="modalData.diaChi" placeholder="Địa chỉ" />
-          <select v-model="modalData.vaiTroId">
-            <option value="0">Chọn vai trò</option>
-            <option value="1">Quản lý</option>
-            <option value="2">Nhân viên</option>
-            <option value="3">Thực tập sinh</option>
+
+          <!-- Vai trò -->
+          <select v-model="modalData.vaiTroId" required>
+            <option :value="0">-- Chọn vai trò --</option>
+            <option v-for="role in roleList" :key="role.id" :value="role.id">
+              {{ role.tenVaiTro }}
+            </option>
           </select>
+
           <div class="modal-actions">
             <button type="submit"><i class="fa fa-check"></i> Lưu</button>
             <button type="button" @click="closeModal"><i class="fa fa-times"></i> Hủy</button>
@@ -119,6 +130,7 @@ export default {
   data() {
     return {
       employees: [],
+      roleList: [],   // 🆕 Danh sách vai trò
       search: "",
       genderFilter: "",
       showModal: false,
@@ -136,12 +148,7 @@ export default {
         ngayCapNhat: ""
       },
       currentPage: 1,
-      pageSize: 10,
-      roles: {
-        1: "Quản lý",
-        2: "Nhân viên",
-        3: "Thực tập sinh"
-      }
+      pageSize: 10
     };
   },
   computed: {
@@ -172,7 +179,6 @@ export default {
     }
   },
   methods: {
-    // 🟢 Lấy danh sách nhân viên
     async fetchEmployees() {
       try {
         const res = await axios.get("http://localhost:8080/nhan-vien/hien-thi");
@@ -183,23 +189,31 @@ export default {
         this.employees = [];
       }
     },
-
-    // 🟢 Reset bộ lọc
+    async fetchRoles() {
+      try {
+        const res = await axios.get("http://localhost:8080/vai-tro/hien-thi");
+        const list = Array.isArray(res.data) ? res.data : res.data.data || [];
+        this.roleList = list.map(r => ({
+          id: r.id || r.maVaiTro,
+          tenVaiTro: r.tenVaiTro || r.name
+        }));
+      } catch (err) {
+        console.error("Lỗi khi tải vai trò:", err);
+        toast.error("Không thể tải danh sách vai trò.");
+        this.roleList = [];
+      }
+    },
     resetFilter() {
       this.search = "";
       this.genderFilter = "";
       this.currentPage = 1;
       this.fetchEmployees();
     },
-
-    // 🟢 Đổi trang
     changePage(page) {
       if (page >= 1 && page <= this.totalPages) {
         this.currentPage = page;
       }
     },
-
-    // 🟢 Mở modal thêm nhân viên
     openAddModal() {
       this.showModal = true;
       this.editEmployee = null;
@@ -216,21 +230,15 @@ export default {
         ngayCapNhat: ""
       };
     },
-
-    // 🟢 Mở modal sửa nhân viên
     openEditModal(employee) {
       this.showModal = true;
       this.editEmployee = employee;
       this.modalData = { ...employee };
     },
-
-    // 🟢 Đóng modal
     closeModal() {
       this.showModal = false;
       this.editEmployee = null;
     },
-
-    // 🟢 Lưu (thêm/cập nhật) nhân viên
     async saveEmployee() {
       if (!this.modalData.hoTen || !this.modalData.email || !this.modalData.soDienThoai || !this.modalData.vaiTroId) {
         toast.error("Vui lòng nhập đầy đủ thông tin bắt buộc.");
@@ -238,9 +246,7 @@ export default {
       }
       try {
         this.modalData.ngayCapNhat = new Date().toISOString().split('T')[0];
-
         if (this.editEmployee) {
-          // ✏️ Cập nhật
           const res = await axios.put(
             `http://localhost:8080/nhan-vien/update/${this.modalData.id}`,
             this.modalData
@@ -249,23 +255,16 @@ export default {
           if (index !== -1) this.employees.splice(index, 1, res.data || this.modalData);
           toast.success("Cập nhật nhân viên thành công!");
         } else {
-          // 🆕 Thêm mới
-          const res = await axios.post(
-            "http://localhost:8080/nhan-vien/add",
-            this.modalData
-          );
+          const res = await axios.post("http://localhost:8080/nhan-vien/add", this.modalData);
           this.employees.push(res.data || this.modalData);
           toast.success("Thêm nhân viên thành công!");
         }
-
         this.closeModal();
       } catch (err) {
         console.error("Lỗi khi lưu nhân viên:", err);
         toast.error("Không thể lưu nhân viên.");
       }
     },
-
-    // 🟢 Xóa nhân viên
     async deleteEmployee(id) {
       const employee = this.employees.find(emp => emp.id === id);
       if (!employee) return;
@@ -281,13 +280,10 @@ export default {
         }
       }
     },
-
-    // 🟢 Đổi vai trò
     getRoleName(roleId) {
-      return this.roles[roleId] || "Không xác định";
+      const role = this.roleList.find(r => r.id === roleId);
+      return role ? role.tenVaiTro : "Không xác định";
     },
-
-    // 🟢 Định dạng ngày
     formatDate(dateString) {
       if (!dateString) return "";
       const date = new Date(dateString);
@@ -303,8 +299,7 @@ export default {
     }
   },
   mounted() {
-    this.fetchEmployees();
+    Promise.all([this.fetchEmployees(), this.fetchRoles()]);
   }
 };
 </script>
-
