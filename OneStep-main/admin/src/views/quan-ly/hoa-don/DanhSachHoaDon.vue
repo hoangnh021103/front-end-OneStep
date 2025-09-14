@@ -18,7 +18,6 @@
           <input type="date" v-model="fromDate" />
           <input type="date" v-model="toDate" />
           <button @click="resetFilter"><i class="fa fa-undo"></i> Đặt lại bộ lọc</button>
-          <button class="add-btn" @click="openModal"><i class="fa fa-plus"></i> Thêm hóa đơn</button>
         </div>
       </div>
       <!-- Tabs -->
@@ -80,11 +79,11 @@
           </tbody>
         </table>
       </div>
-      <!-- Modal for Adding/Editing Invoice -->
+      <!-- Modal for Editing Invoice -->
       <div v-if="showModal" class="modal-overlay">
         <div class="form-card">
           <div class="header">
-            <h2>{{ editIndex !== null ? 'Chỉnh sửa hóa đơn' : 'Thêm hóa đơn' }}</h2>
+            <h2>Chỉnh sửa hóa đơn</h2>
             <button class="btn-back" @click="closeModal">
               <i class="fa fa-arrow-left"></i> Quay lại
             </button>
@@ -177,7 +176,7 @@
               @click="handleSubmit"
               :disabled="isSubmitting"
             >
-              <i class="fa fa-check"></i> {{ isSubmitting ? 'Đang lưu...' : (editIndex !== null ? 'Cập nhật' : 'Lưu') }}
+              <i class="fa fa-check"></i> {{ isSubmitting ? 'Đang lưu...' : 'Cập nhật' }}
             </button>
             <button
               class="btn-secondary"
@@ -318,39 +317,6 @@ export default {
     formatType(loaiDon) {
       return loaiDon === 0 ? "OFFLINE" : "ONLINE";
     },
-    openModal() {
-      this.showModal = true;
-      this.editIndex = null;
-      this.newInvoice = {
-        khachHangId: 0,
-        voucherId: 0,
-        diaChiId: 0,
-        soDienThoai: "",
-        hoTen: "",
-        email: "",
-        tongTienGoc: 0,
-        tienGiam: 0,
-        tongTien: 0,
-        tienShip: 0,
-        ngayXacNhan: "",
-        ngayDuKien: "",
-        ngayNhan: "",
-        loaiDon: 0,
-        ghiChu: "",
-        maDon: "",
-        status: "pending"
-      };
-      this.errors = {
-        maDon: "",
-        hoTen: "",
-        soDienThoai: "",
-        email: "",
-        loaiDon: "",
-        tongTien: "",
-        ngayXacNhan: "",
-        status: ""
-      };
-    },
     closeModal() {
       this.showModal = false;
       this.errors = {
@@ -413,24 +379,14 @@ export default {
 
       try {
         this.isSubmitting = true;
-        if (this.editIndex !== null) {
-          // Update existing invoice
-          const updatedInvoice = { ...this.newInvoice };
-          await axios.put(`http://localhost:8080/don-hang/update/${updatedInvoice.id}`, updatedInvoice);
-          this.invoices[this.editIndex] = updatedInvoice;
-          toast.success("Cập nhật hóa đơn thành công!");
-        } else {
-          // Add new invoice
-          const newInvoice = { ...this.newInvoice };
-          const response = await axios.post(`http://localhost:8080/don-hang/add`, newInvoice);
-          this.invoices.push(response.data);
-          toast.success("Thêm hóa đơn thành công!");
-        }
+        const updatedInvoice = { ...this.newInvoice };
+        await axios.put(`http://localhost:8080/don-hang/update/${updatedInvoice.id}`, updatedInvoice);
+        this.invoices[this.editIndex] = updatedInvoice;
+        toast.success("Cập nhật hóa đơn thành công!");
         this.closeModal();
       } catch (err) {
-        console.error('Error saving invoice:', err);
-        const action = this.editIndex !== null ? 'cập nhật' : 'thêm';
-        toast.error(`Lỗi khi ${action} hóa đơn!`);
+        console.error('Error updating invoice:', err);
+        toast.error("Lỗi khi cập nhật hóa đơn!");
       } finally {
         this.isSubmitting = false;
       }
@@ -458,29 +414,6 @@ export default {
 </script>
 
 <style scoped>
-.add-btn {
-  background-color: #4682B4;
-  color: white;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 15px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-.add-btn:hover {
-  background-color: #5A9BD4;
-  transform: translateY(-2px);
-}
-
-.add-btn i {
-  font-size: 16px;
-}
-
 .filter-controls {
   display: flex;
   gap: 12px;
