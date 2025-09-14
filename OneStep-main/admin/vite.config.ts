@@ -17,7 +17,7 @@ export default defineConfig({
       autoImport: true
     })
   ],
-  base: '/berry-vue/',
+  base: '',
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
