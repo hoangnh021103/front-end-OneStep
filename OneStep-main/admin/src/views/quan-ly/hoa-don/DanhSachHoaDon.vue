@@ -1,129 +1,202 @@
 <template>
-    <div class="main-layout">
-        <!-- Sidebar -->
-       
-        <!-- Main content -->
-        <div class="content">
-            <!-- Header -->
-            <header class="header">
-                <div></div>
-            </header>
-            <div class="page-title">
-                <h2>Quản lý hóa đơn</h2>
-            </div>
-            <!-- Filter -->
-            <div class="filter-box">
-                <div class="filter-title">Bộ lọc tìm kiếm</div>
-                <div class="filter-controls">
-                    <input v-model="search" placeholder="Nhập tên khách hàng, sđt, mã đơn..." />
-                    <input type="date" v-model="fromDate" />
-                    <input type="date" v-model="toDate" />
-                    <button @click="resetFilter"><i class="fa fa-undo"></i> Đặt lại bộ lọc</button>
-                </div>
-            </div>
-            <!-- Tabs -->
-            <div class="tab-section">
-                <span :class="['tab', {active: tab==='all'}]" @click="tab='all'">Tất cả <span class="tab-badge">{{ filteredInvoices.length }}</span></span>
-                <span :class="['tab', {active: tab==='pending'}]" @click="tab='pending'">Chờ xác nhận <span class="tab-badge">{{ countByStatus('pending') }}</span></span>
-                <span :class="['tab', {active: tab==='confirmed'}]" @click="tab='confirmed'">Đã xác nhận <span class="tab-badge">{{ countByStatus('confirmed') }}</span></span>
-                <span :class="['tab', {active: tab==='shipping'}]" @click="tab='shipping'">Chờ giao <span class="tab-badge">{{ countByStatus('shipping') }}</span></span>
-                <span :class="['tab', {active: tab==='delivering'}]" @click="tab='delivering'">Đang giao <span class="tab-badge">{{ countByStatus('delivering') }}</span></span>
-                <span :class="['tab', {active: tab==='done'}]" @click="tab='done'">Hoàn thành <span class="tab-badge">{{ countByStatus('done') }}</span></span>
-                <span :class="['tab', {active: tab==='cancel'}]" @click="tab='cancel'">Đã hủy <span class="tab-badge">{{ countByStatus('cancel') }}</span></span>
-            </div>
-            <!-- Table -->
-            <div class="table-section">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>STT</th>
-                            <th>Mã Đơn</th>
-                            <th>Tên Khách Hàng</th>
-                            <th>SĐT Khách Hàng</th>
-                            <th>Loại Đơn</th>
-                            <th>Email</th>
-                            <th>Tổng Tiền</th>
-                            <th>Ngày Tạo</th>
-                            <th>Trạng thái</th>
-                            <th>Hành Động</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-if="tabInvoices.length === 0">
-                            <td colspan="10" class="no-data">
-                                <div class="empty-state">
-                                    <div class="empty-icon"><i class="fa fa-file-invoice"></i></div>
-                                    <div class="empty-text">Chưa có hóa đơn nào</div>
-                                    <div class="empty-subtext">Dữ liệu hóa đơn sẽ hiển thị ở đây</div>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr v-for="(inv, idx) in tabInvoices" :key="inv.id">
-                            <td>{{ idx + 1 }}</td>
-                            <td>{{ inv.maDon }}</td>
-                            <td>{{ inv.hoTen }}</td>
-                            <td>{{ inv.soDienThoai }}</td>
-                            <td>
-                                <span class="type-badge">{{ formatType(inv.loaiDon) }}</span>
-                            </td>
-                            <td>{{ inv.email }}</td>
-                            <td>{{ inv.tongTien }}</td>
-                            <td>{{ formatDate(inv.ngayXacNhan) }}</td>
-                            <td>
-                                <span :class="['status-badge', inv.statusClass]">{{ inv.statusLabel }}</span>
-                            </td>
-                            <td>
-                                <button class="action-btn edit-btn" title="Chỉnh sửa" @click="editInvoice(idx)"><i class="fa fa-edit"></i></button>
-                                <button class="action-btn delete-btn" title="Xóa" @click="deleteInvoice(inv.id)"><i class="fa fa-trash"></i></button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <!-- Modal for Editing Invoice -->
-            <div v-if="showModal" class="modal-overlay">
-                <div class="modal-content">
-                    <h3>{{ editIndex !== null ? 'Chỉnh sửa hóa đơn' : 'Thêm hóa đơn' }}</h3>
-                    <div class="modal-form">
-                        <label>Mã Đơn</label>
-                        <input v-model="newInvoice.maDon" placeholder="Nhập mã đơn" />
-                        <label>Tên Khách Hàng</label>
-                        <input v-model="newInvoice.hoTen" placeholder="Nhập tên khách hàng" />
-                        <label>SĐT Khách Hàng</label>
-                        <input v-model="newInvoice.soDienThoai" placeholder="Nhập số điện thoại" />
-                        <label>Email</label>
-                        <input v-model="newInvoice.email" placeholder="Nhập email" />
-                        <label>Loại Đơn</label>
-                        <select v-model="newInvoice.loaiDon">
-                            <option :value="0">OFFLINE</option>
-                            <option :value="1">ONLINE</option>
-                        </select>
-                        <label>Tổng Tiền</label>
-                        <input v-model="newInvoice.tongTien" placeholder="Nhập tổng tiền" type="number" />
-                        <label>Ngày Xác Nhận</label>
-                        <input v-model="newInvoice.ngayXacNhan" type="date" />
-                        <label>Trạng Thái</label>
-                        <select v-model="newInvoice.status">
-                            <option value="pending">Chờ xác nhận</option>
-                            <option value="confirmed">Đã xác nhận</option>
-                            <option value="shipping">Chờ giao</option>
-                            <option value="delivering">Đang giao</option>
-                            <option value="done">Hoàn thành</option>
-                            <option value="cancel">Đã hủy</option>
-                        </select>
-                    </div>
-                    <div class="modal-actions">
-                        <button class="save-btn" @click="saveInvoice">Lưu</button>
-                        <button class="cancel-btn" @click="closeModal">Hủy</button>
-                    </div>
-                </div>
-            </div>
+  <div class="main-layout">
+    <!-- Sidebar -->
+    <!-- Main content -->
+    <div class="content">
+      <!-- Header -->
+      <header class="header">
+        <div></div>
+      </header>
+      <div class="page-title">
+        <h2>Quản lý hóa đơn</h2>
+      </div>
+      <!-- Filter -->
+      <div class="filter-box">
+        <div class="filter-title">Bộ lọc tìm kiếm</div>
+        <div class="filter-controls">
+          <input v-model="search" placeholder="Nhập tên khách hàng, sđt, mã đơn..." />
+          <input type="date" v-model="fromDate" />
+          <input type="date" v-model="toDate" />
+          <button @click="resetFilter"><i class="fa fa-undo"></i> Đặt lại bộ lọc</button>
+          <button class="add-btn" @click="openModal"><i class="fa fa-plus"></i> Thêm hóa đơn</button>
         </div>
+      </div>
+      <!-- Tabs -->
+      <div class="tab-section">
+        <span :class="['tab', {active: tab==='all'}]" @click="tab='all'">Tất cả <span class="tab-badge">{{ filteredInvoices.length }}</span></span>
+        <span :class="['tab', {active: tab==='pending'}]" @click="tab='pending'">Chờ xác nhận <span class="tab-badge">{{ countByStatus('pending') }}</span></span>
+        <span :class="['tab', {active: tab==='confirmed'}]" @click="tab='confirmed'">Đã xác nhận <span class="tab-badge">{{ countByStatus('confirmed') }}</span></span>
+        <span :class="['tab', {active: tab==='shipping'}]" @click="tab='shipping'">Chờ giao <span class="tab-badge">{{ countByStatus('shipping') }}</span></span>
+        <span :class="['tab', {active: tab==='delivering'}]" @click="tab='delivering'">Đang giao <span class="tab-badge">{{ countByStatus('delivering') }}</span></span>
+        <span :class="['tab', {active: tab==='done'}]" @click="tab='done'">Hoàn thành <span class="tab-badge">{{ countByStatus('done') }}</span></span>
+        <span :class="['tab', {active: tab==='cancel'}]" @click="tab='cancel'">Đã hủy <span class="tab-badge">{{ countByStatus('cancel') }}</span></span>
+      </div>
+      <!-- Table -->
+      <div class="table-section">
+        <table>
+          <thead>
+            <tr>
+              <th>STT</th>
+              <th>Mã Đơn</th>
+              <th>Tên Khách Hàng</th>
+              <th>SĐT Khách Hàng</th>
+              <th>Loại Đơn</th>
+              <th>Email</th>
+              <th>Tổng Tiền</th>
+              <th>Ngày Tạo</th>
+              <th>Trạng thái</th>
+              <th>Hành Động</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-if="tabInvoices.length === 0">
+              <td colspan="10" class="no-data">
+                <div class="empty-state">
+                  <div class="empty-icon"><i class="fa fa-file-invoice"></i></div>
+                  <div class="empty-text">Chưa có hóa đơn nào</div>
+                  <div class="empty-subtext">Dữ liệu hóa đơn sẽ hiển thị ở đây</div>
+                </div>
+              </td>
+            </tr>
+            <tr v-for="(inv, idx) in tabInvoices" :key="inv.id">
+              <td>{{ idx + 1 }}</td>
+              <td>{{ inv.maDon }}</td>
+              <td>{{ inv.hoTen }}</td>
+              <td>{{ inv.soDienThoai }}</td>
+              <td>
+                <span class="type-badge">{{ formatType(inv.loaiDon) }}</span>
+              </td>
+              <td>{{ inv.email }}</td>
+              <td>{{ inv.tongTien }}</td>
+              <td>{{ formatDate(inv.ngayXacNhan) }}</td>
+              <td>
+                <span :class="['status-badge', inv.statusClass]">{{ inv.statusLabel }}</span>
+              </td>
+              <td>
+                <button class="action-btn edit-btn" title="Chỉnh sửa" @click="editInvoice(idx)"><i class="fa fa-edit"></i></button>
+                <button class="action-btn delete-btn" title="Xóa" @click="deleteInvoice(inv.id)"><i class="fa fa-trash"></i></button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- Modal for Adding/Editing Invoice -->
+      <div v-if="showModal" class="modal-overlay">
+        <div class="form-card">
+          <div class="header">
+            <h2>{{ editIndex !== null ? 'Chỉnh sửa hóa đơn' : 'Thêm hóa đơn' }}</h2>
+            <button class="btn-back" @click="closeModal">
+              <i class="fa fa-arrow-left"></i> Quay lại
+            </button>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Mã Đơn *</label>
+              <input
+                v-model="newInvoice.maDon"
+                type="text"
+                placeholder="Nhập mã đơn"
+                :class="{ 'error': errors.maDon }"
+              />
+              <span class="error-message" v-if="errors.maDon">{{ errors.maDon }}</span>
+            </div>
+            <div class="form-group">
+              <label>Tên Khách Hàng *</label>
+              <input
+                v-model="newInvoice.hoTen"
+                type="text"
+                placeholder="Nhập tên khách hàng"
+                :class="{ 'error': errors.hoTen }"
+              />
+              <span class="error-message" v-if="errors.hoTen">{{ errors.hoTen }}</span>
+            </div>
+            <div class="form-group">
+              <label>SĐT Khách Hàng *</label>
+              <input
+                v-model="newInvoice.soDienThoai"
+                type="text"
+                placeholder="Nhập số điện thoại"
+                :class="{ 'error': errors.soDienThoai }"
+              />
+              <span class="error-message" v-if="errors.soDienThoai">{{ errors.soDienThoai }}</span>
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input
+                v-model="newInvoice.email"
+                type="text"
+                placeholder="Nhập email"
+                :class="{ 'error': errors.email }"
+              />
+              <span class="error-message" v-if="errors.email">{{ errors.email }}</span>
+            </div>
+            <div class="form-group">
+              <label>Loại Đơn *</label>
+              <select v-model="newInvoice.loaiDon" :class="{ 'error': errors.loaiDon }">
+                <option :value="0">OFFLINE</option>
+                <option :value="1">ONLINE</option>
+              </select>
+              <span class="error-message" v-if="errors.loaiDon">{{ errors.loaiDon }}</span>
+            </div>
+            <div class="form-group">
+              <label>Tổng Tiền *</label>
+              <input
+                v-model.number="newInvoice.tongTien"
+                type="number"
+                min="0"
+                placeholder="Nhập tổng tiền"
+                :class="{ 'error': errors.tongTien }"
+              />
+              <span class="error-message" v-if="errors.tongTien">{{ errors.tongTien }}</span>
+            </div>
+            <div class="form-group">
+              <label>Ngày Xác Nhận *</label>
+              <input
+                v-model="newInvoice.ngayXacNhan"
+                type="date"
+                :class="{ 'error': errors.ngayXacNhan }"
+              />
+              <span class="error-message" v-if="errors.ngayXacNhan">{{ errors.ngayXacNhan }}</span>
+            </div>
+            <div class="form-group">
+              <label>Trạng Thái *</label>
+              <select v-model="newInvoice.status" :class="{ 'error': errors.status }">
+                <option value="pending">Chờ xác nhận</option>
+                <option value="confirmed">Đã xác nhận</option>
+                <option value="shipping">Chờ giao</option>
+                <option value="delivering">Đang giao</option>
+                <option value="done">Hoàn thành</option>
+                <option value="cancel">Đã hủy</option>
+              </select>
+              <span class="error-message" v-if="errors.status">{{ errors.status }}</span>
+            </div>
+          </div>
+          <div class="actions">
+            <button
+              class="btn-primary"
+              @click="handleSubmit"
+              :disabled="isSubmitting"
+            >
+              <i class="fa fa-check"></i> {{ isSubmitting ? 'Đang lưu...' : (editIndex !== null ? 'Cập nhật' : 'Lưu') }}
+            </button>
+            <button
+              class="btn-secondary"
+              @click="closeModal"
+              :disabled="isSubmitting"
+            >
+              <i class="fa fa-times"></i> Hủy
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
 </template>
 
 <script>
 import axios from "axios";
+import { toast } from 'vue3-toastify';
+
 export default {
   data() {
     return {
@@ -134,6 +207,8 @@ export default {
       toDate: "",
       tab: "all",
       showModal: false,
+      isSubmitting: false,
+      editIndex: null,
       newInvoice: {
         khachHangId: 0,
         voucherId: 0,
@@ -153,7 +228,16 @@ export default {
         maDon: "",
         status: "pending"
       },
-      editIndex: null
+      errors: {
+        maDon: "",
+        hoTen: "",
+        soDienThoai: "",
+        email: "",
+        loaiDon: "",
+        tongTien: "",
+        ngayXacNhan: "",
+        status: ""
+      }
     };
   },
   computed: {
@@ -172,7 +256,7 @@ export default {
         })
         .map(inv => ({
           ...inv,
-          status: inv.status || 'pending', // Fallback to 'pending' if status is missing
+          status: inv.status || 'pending',
           statusLabel: this.statusLabel(inv.status || 'pending'),
           statusClass: inv.status || 'pending'
         }));
@@ -190,6 +274,7 @@ export default {
         console.log('API Response:', this.invoices);
       } catch (err) {
         console.error('Error fetching invoices:', err);
+        toast.error('Không thể tải danh sách hóa đơn');
       }
     },
     async deleteInvoice(id) {
@@ -197,10 +282,10 @@ export default {
         try {
           await axios.delete(`http://localhost:8080/don-hang/delete/${id}`);
           this.invoices = this.invoices.filter(inv => inv.id !== id);
-          alert("Xóa hóa đơn thành công!");
+          toast.success("Xóa hóa đơn thành công!");
         } catch (err) {
           console.error('Error deleting invoice:', err);
-          alert("Lỗi khi xóa hóa đơn!");
+          toast.error("Lỗi khi xóa hóa đơn!");
         }
       }
     },
@@ -255,43 +340,114 @@ export default {
         maDon: "",
         status: "pending"
       };
+      this.errors = {
+        maDon: "",
+        hoTen: "",
+        soDienThoai: "",
+        email: "",
+        loaiDon: "",
+        tongTien: "",
+        ngayXacNhan: "",
+        status: ""
+      };
     },
     closeModal() {
       this.showModal = false;
+      this.errors = {
+        maDon: "",
+        hoTen: "",
+        soDienThoai: "",
+        email: "",
+        loaiDon: "",
+        tongTien: "",
+        ngayXacNhan: "",
+        status: ""
+      };
     },
-    async saveInvoice() {
-      if (!this.newInvoice.maDon) {
-        alert("Vui lòng nhập mã đơn.");
-        return;
+    validateForm() {
+      this.errors = {
+        maDon: "",
+        hoTen: "",
+        soDienThoai: "",
+        email: "",
+        loaiDon: "",
+        tongTien: "",
+        ngayXacNhan: "",
+        status: ""
+      };
+      let isValid = true;
+
+      if (!this.newInvoice.maDon.trim()) {
+        this.errors.maDon = "Mã đơn là bắt buộc.";
+        isValid = false;
       }
-      if (!this.newInvoice.hoTen) {
-        alert("Vui lòng nhập tên khách hàng.");
-        return;
+      if (!this.newInvoice.hoTen.trim()) {
+        this.errors.hoTen = "Tên khách hàng là bắt buộc.";
+        isValid = false;
       }
-      if (!this.newInvoice.soDienThoai) {
-        alert("Vui lòng nhập số điện thoại khách hàng.");
-        return;
+      if (!this.newInvoice.soDienThoai.trim()) {
+        this.errors.soDienThoai = "Số điện thoại là bắt buộc.";
+        isValid = false;
       }
+      if (this.newInvoice.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.newInvoice.email)) {
+        this.errors.email = "Email không hợp lệ.";
+        isValid = false;
+      }
+      if (this.newInvoice.tongTien <= 0) {
+        this.errors.tongTien = "Tổng tiền phải lớn hơn 0.";
+        isValid = false;
+      }
+      if (!this.newInvoice.ngayXacNhan) {
+        this.errors.ngayXacNhan = "Ngày xác nhận là bắt buộc.";
+        isValid = false;
+      }
+      if (!this.newInvoice.status) {
+        this.errors.status = "Trạng thái là bắt buộc.";
+        isValid = false;
+      }
+
+      return isValid;
+    },
+    async handleSubmit() {
+      if (!this.validateForm()) return;
+
       try {
+        this.isSubmitting = true;
         if (this.editIndex !== null) {
           // Update existing invoice
           const updatedInvoice = { ...this.newInvoice };
           await axios.put(`http://localhost:8080/don-hang/update/${updatedInvoice.id}`, updatedInvoice);
           this.invoices[this.editIndex] = updatedInvoice;
-          alert("Cập nhật hóa đơn thành công!");
+          toast.success("Cập nhật hóa đơn thành công!");
         } else {
-          // Add new invoice (API call not implemented, placeholder for future)
-          alert("API thêm hóa đơn chưa được triển khai!");
+          // Add new invoice
+          const newInvoice = { ...this.newInvoice };
+          const response = await axios.post(`http://localhost:8080/don-hang/add`, newInvoice);
+          this.invoices.push(response.data);
+          toast.success("Thêm hóa đơn thành công!");
         }
         this.closeModal();
       } catch (err) {
         console.error('Error saving invoice:', err);
-        alert("Lỗi khi lưu hóa đơn!");
+        const action = this.editIndex !== null ? 'cập nhật' : 'thêm';
+        toast.error(`Lỗi khi ${action} hóa đơn!`);
+      } finally {
+        this.isSubmitting = false;
       }
     },
     editInvoice(index) {
       this.editIndex = index;
       this.newInvoice = { ...this.invoices[index] };
+      this.errors = {
+        maDon: "",
+        hoTen: "",
+        soDienThoai: "",
+        email: "",
+        loaiDon: "",
+        tongTien: "",
+        ngayXacNhan: "",
+        status: ""
+      };
       this.showModal = true;
     }
   },
@@ -300,3 +456,184 @@ export default {
   }
 };
 </script>
+
+<style scoped>
+.add-btn {
+  background-color: #4682B4;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.add-btn:hover {
+  background-color: #5A9BD4;
+}
+
+.add-btn i {
+  font-size: 16px;
+}
+
+.filter-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.form-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  padding: 30px;
+  max-width: 700px;
+  width: 100%;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.header h2 {
+  font-size: 26px;
+  font-weight: 600;
+  color: #222;
+}
+
+.btn-back {
+  background: #f1f1f1;
+  color: #444;
+  border: 1px solid #ddd;
+  padding: 8px 14px;
+  font-size: 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-back:hover {
+  background: #e5e5e5;
+  color: #000;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-weight: 600;
+  margin-bottom: 6px;
+  font-size: 14px;
+  color: #555;
+}
+
+.form-group input,
+.form-group select {
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 15px;
+  outline: none;
+  transition: 0.3s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+}
+
+.error {
+  border-color: #e63946 !important;
+}
+
+.error-message {
+  margin-top: 4px;
+  font-size: 13px;
+  color: #e63946;
+}
+
+.actions {
+  margin-top: 30px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+}
+
+button {
+  font-size: 15px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: none;
+  font-weight: 500;
+  transition: 0.3s;
+}
+
+.btn-primary {
+  background: #4f46e5;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #4338ca;
+}
+
+.btn-secondary {
+  background: #f3f4f6;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+.btn-secondary:hover {
+  background: #e5e7eb;
+}
+
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .actions button {
+    width: 100%;
+  }
+}
+</style>
