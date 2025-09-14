@@ -8,11 +8,11 @@ const mutations = {
     const existingItem = state.items.find(item => item.id === product.id)
     
     if (existingItem) {
-      existingItem.quantity += 1
+      existingItem.quantity += product.quantity || 1
     } else {
       state.items.push({
         ...product,
-        quantity: 1
+        quantity: product.quantity || 1
       })
     }
     

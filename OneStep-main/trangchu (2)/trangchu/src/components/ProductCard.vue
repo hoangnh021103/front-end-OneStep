@@ -23,9 +23,8 @@
           <button 
             class="btn btn-primary btn-sm me-2" 
             @click.stop="addToCart"
-            :disabled="isInCart"
           >
-            {{ isInCart ? 'Đã có trong giỏ' : 'Thêm vào giỏ' }}
+            Thêm vào giỏ hàng
           </button>
           <button 
             class="btn btn-outline-secondary btn-sm" 
@@ -58,14 +57,15 @@ export default {
     }
   },
   methods: {
-    ...mapActions('cart', ['addToCart']),
     
     goToProductDetail() {
+      // Chuyển đến trang chi tiết sản phẩm
       this.$router.push(`/product/${this.product.id}`)
     },
     
     addToCart() {
-      this.addToCart(this.product)
+      // Gọi action addToCart từ store với tham số là sản phẩm hiện tại
+      this.$store.dispatch('cart/addToCart', this.product)
       // Show success message
       this.$emit('product-added', this.product)
     },

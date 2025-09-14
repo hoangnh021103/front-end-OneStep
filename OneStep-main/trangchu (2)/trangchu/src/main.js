@@ -5,6 +5,7 @@ import store from './store'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import './assets/css/style.css'
 
+
 const app = createApp(App)
 
 app.use(store)

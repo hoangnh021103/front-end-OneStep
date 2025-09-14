@@ -61,9 +61,9 @@
                 <span v-if="product.originalPrice > product.price" class="original-price">
                   {{ formatPrice(product.originalPrice) }}
                 </span>
-                <span v-if="product.originalPrice > product.price" class="discount">
+                <div v-if="product.originalPrice > product.price" class="discount">
                   Tiết kiệm {{ formatPrice(product.originalPrice - product.price) }}
-                </span>
+                </div>
               </div>
               
               <div class="product-description">
@@ -116,12 +116,11 @@
               <!-- Action Buttons -->
               <div class="product-actions">
                 <button 
-                  @click="addToCart" 
+                  @click="addProductToCart" 
                   class="btn btn-primary btn-lg add-to-cart-btn"
-                  :disabled="isInCart"
-                >
+                >                  
                   <i class="icon-shopping-cart"></i>
-                  {{ isInCart ? 'Đã có trong giỏ' : 'Thêm vào giỏ hàng' }}
+                  Thêm vào giỏ hàng
                 </button>
                 
                 <button 
@@ -289,7 +288,7 @@ export default {
       }
     },
     
-    addToCart() {
+    addProductToCart() {
       const cartItem = {
         ...this.product,
         selectedColor: this.selectedColor,
@@ -299,6 +298,9 @@ export default {
       
       this.addToCart(cartItem)
       this.$toast?.success(`${this.product.name} đã được thêm vào giỏ hàng!`)
+      
+      // Chuyển hướng đến trang giỏ hàng sau khi thêm sản phẩm
+      this.$router.push('/cart')
     },
     
     toggleWishlist() {
@@ -356,7 +358,7 @@ export default {
 .main-image img {
   width: 100%;
   height: 400px;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .thumbnail-images {
@@ -381,6 +383,8 @@ export default {
 
 .product-info {
   padding-left: 30px;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .product-tags {
@@ -473,6 +477,9 @@ export default {
   border-radius: 15px;
   font-size: 0.9rem;
   font-weight: 600;
+  display: block;
+  margin-top: 10px;
+  width: fit-content;
 }
 
 .product-description {
@@ -669,6 +676,35 @@ export default {
   
   .product-actions {
     flex-direction: column;
+  }
+  
+  .add-to-cart-btn,
+  .wishlist-btn {
+    width: 100%;
+  }
+}
+/* Responsive styles */
+@media (max-width: 768px) {
+  .product-info {
+    padding-left: 0;
+    margin-top: 30px;
+  }
+  
+  .product-title {
+    font-size: 1.5rem;
+  }
+  
+  .current-price {
+    font-size: 2rem;
+  }
+  
+  .original-price {
+    font-size: 1.2rem;
+  }
+  
+  .product-actions {
+    flex-direction: column;
+    gap: 10px;
   }
   
   .add-to-cart-btn,

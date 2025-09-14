@@ -20,7 +20,21 @@
         <div class="row">
           <div class="col-sm-8 offset-sm-2 text-center colorlib-heading">
             <h2>🛍️ Tất cả sản phẩm</h2>
-            <p>Tìm kiếm đôi giày hoàn hảo cho bạn</p>
+            <p>Khám phá bộ sưu tập giày đa dạng với chất lượng cao và giá cả hợp lý</p>
+            <div class="product-stats">
+              <div class="stat-item">
+                <span class="stat-number">{{ allProducts.length }}</span>
+                <span class="stat-label">Sản phẩm</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-number">{{ uniqueBrands.length }}</span>
+                <span class="stat-label">Thương hiệu</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-number">{{ categories.length }}</span>
+                <span class="stat-label">Danh mục</span>
+              </div>
+            </div>
           </div>
         </div>
         
@@ -47,7 +61,7 @@
         <div class="row mb-3">
           <div class="col-12">
             <p class="products-count">
-              Hiển thị {{ filteredProducts.length }} sản phẩm
+              Hiển thị {{ filteredProducts.length }} / {{ allProducts.length }} sản phẩm
             </p>
           </div>
         </div>
@@ -126,7 +140,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters('products', ['filteredProducts']),
+    ...mapGetters('products', ['filteredProducts', 'allProducts']),
     ...mapGetters('filters', ['currentFilters']),
     
     sortedProducts() {
@@ -168,6 +182,16 @@ export default {
       }
       
       return pages
+    },
+    
+    uniqueBrands() {
+      const brands = [...new Set(this.allProducts.map(product => product.brand))]
+      return brands
+    },
+    
+    categories() {
+      const cats = [...new Set(this.allProducts.map(product => product.category))]
+      return cats.map(cat => cat === 'men' ? 'Nam' : cat === 'women' ? 'Nữ' : cat)
     }
   },
   watch: {
@@ -180,7 +204,10 @@ export default {
   },
   mounted() {
     this.handleRouteQuery()
-    this.filterProducts(this.currentFilters)
+    // Đảm bảo hiển thị tất cả sản phẩm khi load trang
+    if (this.filteredProducts.length === 0) {
+      this.filterProducts({})
+    }
   },
   methods: {
     ...mapActions('products', ['filterProducts']),
@@ -247,6 +274,36 @@ export default {
 
 .bread a:hover {
   text-decoration: underline;
+}
+
+.product-stats {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  margin-top: 30px;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 15px;
+  color: white;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-number {
+  display: block;
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 5px;
+}
+
+.stat-label {
+  font-size: 14px;
+  opacity: 0.9;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .sort-options {
@@ -337,6 +394,16 @@ export default {
   
   .sort-select {
     width: 100%;
+  }
+  
+  .product-stats {
+    flex-direction: column;
+    gap: 20px;
+    padding: 15px;
+  }
+  
+  .stat-number {
+    font-size: 2rem;
   }
 }
 </style>
