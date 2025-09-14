@@ -44,7 +44,7 @@
               <th>Email</th>
               <th>Tổng Tiền</th>
               <th>Ngày Tạo</th>
-              <th>Trạng thái</th>
+              <th>Trạng Thái</th>
               <th>Hành Động</th>
             </tr>
           </thead>
@@ -462,18 +462,19 @@ export default {
   background-color: #4682B4;
   color: white;
   border: none;
-  padding: 8px 12px;
-  border-radius: 4px;
+  padding: 10px 16px;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 15px;
   display: flex;
   align-items: center;
-  gap: 5px;
-  transition: background-color 0.3s ease;
+  gap: 8px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .add-btn:hover {
   background-color: #5A9BD4;
+  transform: translateY(-2px);
 }
 
 .add-btn i {
@@ -482,7 +483,7 @@ export default {
 
 .filter-controls {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   align-items: center;
 }
 
@@ -492,55 +493,81 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  min-height: 100vh;
+  padding: 40px 20px;
+  overflow-y: auto;
+  transition: opacity 0.3s ease;
+}
+
+.modal-overlay-enter-active, .modal-overlay-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.modal-overlay-enter-from, .modal-overlay-leave-to {
+  opacity: 0;
 }
 
 .form-card {
-  background: #fff;
+  background: #ffffff;
   border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  padding: 30px;
-  max-width: 700px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  padding: 32px;
+  max-width: 720px;
   width: 100%;
+  margin: auto;
+  min-height: 400px;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  transform: translateY(0);
+}
+
+.form-card-enter-active, .form-card-leave-active {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.form-card-enter-from, .form-card-leave-to {
+  transform: translateY(20px);
+  opacity: 0;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 25px;
+  margin-bottom: 28px;
 }
 
 .header h2 {
-  font-size: 26px;
-  font-weight: 600;
-  color: #222;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f2a44;
+  margin: 0;
 }
 
 .btn-back {
-  background: #f1f1f1;
-  color: #444;
-  border: 1px solid #ddd;
-  padding: 8px 14px;
-  font-size: 14px;
-  border-radius: 6px;
+  background: #f5f5f5;
+  color: #333;
+  border: 1px solid #e0e0e0;
+  padding: 10px 16px;
+  font-size: 15px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: 0.3s;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .btn-back:hover {
-  background: #e5e5e5;
-  color: #000;
+  background: #e0e0e0;
+  transform: translateY(-2px);
 }
 
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
+  gap: 28px;
 }
 
 .form-group {
@@ -550,25 +577,27 @@ export default {
 
 .form-group label {
   font-weight: 600;
-  margin-bottom: 6px;
-  font-size: 14px;
-  color: #555;
+  margin-bottom: 8px;
+  font-size: 15px;
+  color: #444;
 }
 
 .form-group input,
 .form-group select {
-  padding: 10px 12px;
-  border: 1px solid #ccc;
+  padding: 12px 14px;
+  border: 1px solid #d1d5db;
   border-radius: 8px;
-  font-size: 15px;
+  font-size: 16px;
   outline: none;
-  transition: 0.3s;
+  background: #fafafa;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .form-group input:focus,
 .form-group select:focus {
   border-color: #4f46e5;
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+  background: #ffffff;
 }
 
 .error {
@@ -576,26 +605,27 @@ export default {
 }
 
 .error-message {
-  margin-top: 4px;
-  font-size: 13px;
+  margin-top: 6px;
+  font-size: 14px;
   color: #e63946;
+  font-weight: 500;
 }
 
 .actions {
-  margin-top: 30px;
+  margin-top: 32px;
   display: flex;
   justify-content: flex-end;
-  gap: 14px;
+  gap: 16px;
 }
 
 button {
-  font-size: 15px;
-  padding: 10px 18px;
+  font-size: 16px;
+  padding: 12px 24px;
   border-radius: 8px;
   cursor: pointer;
   border: none;
-  font-weight: 500;
-  transition: 0.3s;
+  font-weight: 600;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .btn-primary {
@@ -605,26 +635,49 @@ button {
 
 .btn-primary:hover {
   background: #4338ca;
+  transform: translateY(-2px);
+}
+
+.btn-primary:disabled {
+  background: #a5b4fc;
+  cursor: not-allowed;
 }
 
 .btn-secondary {
   background: #f3f4f6;
   color: #333;
-  border: 1px solid #ddd;
+  border: 1px solid #d1d5db;
 }
 
 .btn-secondary:hover {
   background: #e5e7eb;
+  transform: translateY(-2px);
+}
+
+.btn-secondary:disabled {
+  background: #f3f4f6;
+  color: #999;
+  cursor: not-allowed;
 }
 
 @media (max-width: 768px) {
+  .modal-overlay {
+    padding: 20px 10px;
+  }
+
+  .form-card {
+    max-width: 95%;
+  }
+
   .form-grid {
     grid-template-columns: 1fr;
+    gap: 24px;
   }
 
   .header {
     flex-direction: column;
-    gap: 15px;
+    gap: 16px;
+    text-align: center;
   }
 
   .actions {
