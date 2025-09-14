@@ -13,32 +13,19 @@
         <div class="form-grid">
           <div class="form-group">
             <label>Tên sản phẩm *</label>
-            <input
-              v-model="form.tenSanPham"
-              type="text"
-              placeholder="Nhập tên sản phẩm"
-              :class="{ 'error': errors.tenSanPham }"
-            />
+            <input v-model="form.tenSanPham" type="text" placeholder="Nhập tên sản phẩm"
+              :class="{ 'error': errors.tenSanPham }" />
             <span class="error-message" v-if="errors.tenSanPham">{{ errors.tenSanPham }}</span>
           </div>
           <div class="form-group">
             <label>Mã code</label>
-            <input
-              v-model="form.maCode"
-              type="text"
-              placeholder="Nhập mã code"
-              :class="{ 'error': errors.maCode }"
-            />
+            <input v-model="form.maCode" type="text" placeholder="Nhập mã code" :class="{ 'error': errors.maCode }" />
             <span class="error-message" v-if="errors.maCode">{{ errors.maCode }}</span>
           </div>
           <div class="form-group">
             <label>Mô tả</label>
-            <textarea
-              v-model="form.moTa"
-              rows="4"
-              placeholder="Nhập mô tả"
-              :class="{ 'error': errors.moTa }"
-            ></textarea>
+            <textarea v-model="form.moTa" rows="4" placeholder="Nhập mô tả"
+              :class="{ 'error': errors.moTa }"></textarea>
             <span class="error-message" v-if="errors.moTa">{{ errors.moTa }}</span>
           </div>
           <div class="form-group">
@@ -83,27 +70,13 @@
           </div>
           <div class="form-group">
             <label>Ảnh đại diện *</label>
-            <div
-              class="image-upload-container"
-              @click="$refs.fileInput.click()"
-              :class="{ 'uploading': isUploading }"
-            >
-              <input
-                ref="fileInput"
-                type="file"
-                accept="image/*"
-                style="display: none;"
-                @change="handleImageUpload"
-              />
+            <div class="image-upload-container" @click="$refs.fileInput.click()" :class="{ 'uploading': isUploading }">
+              <input ref="fileInput" type="file" accept="image/*" style="display: none;" @change="handleImageUpload" />
               <div v-if="!imageUrl" class="image-placeholder">
                 Chọn ảnh đại diện
               </div>
-              <img
-                v-else
-                :src="imageUrl"
-                class="image-preview"
-                style="width: 250px; height: 250px; object-fit: cover; border-radius: 8px;"
-              />
+              <img v-else :src="imageUrl" class="image-preview"
+                style="width: 250px; height: 250px; object-fit: cover; border-radius: 8px;" />
               <div v-if="isUploading" class="loading-overlay">
                 <i class="fa fa-spinner fa-spin"></i>
               </div>
@@ -120,18 +93,10 @@
           </div>
         </div>
         <div class="actions">
-          <button
-            class="btn-primary"
-            @click="handleSubmit"
-            :disabled="isSubmitting || !isDataLoaded"
-          >
+          <button class="btn-primary" @click="handleSubmit" :disabled="isSubmitting || !isDataLoaded">
             <i class="fa fa-check"></i> {{ isSubmitting ? 'Đang lưu...' : (isEditing ? 'Cập nhật' : 'Lưu') }}
           </button>
-          <button
-            class="btn-secondary"
-            @click="$router.push({ name: 'SanPham' })"
-            :disabled="isSubmitting"
-          >
+          <button class="btn-secondary" @click="$router.push({ name: 'SanPham' })" :disabled="isSubmitting">
             <i class="fa fa-times"></i> Hủy
           </button>
         </div>
@@ -245,6 +210,7 @@ export default {
     async fetchSanPham() {
       const id = this.$route.params.id;
       if (id) {
+        console.log('Chỉnh sửa sản phẩm với ID:', id);
         try {
           this.isSubmitting = true;
           const response = await axios.get(`http://localhost:8080/san-pham/${id}`);
