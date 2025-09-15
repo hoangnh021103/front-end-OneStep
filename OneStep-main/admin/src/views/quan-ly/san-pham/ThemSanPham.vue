@@ -248,10 +248,6 @@ export default {
       const maxSize = 5 * 1024 * 1024; // 5MB
       const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
 
-      if (!allowedTypes.includes(file.type)) {
-        this.errors.duongDanAnh = 'Chỉ hỗ trợ định dạng JPG, PNG, GIF.';
-        return;
-      }
 
       if (file.size > maxSize) {
         this.errors.duongDanAnh = 'Kích thước ảnh không được vượt quá 5MB.';
