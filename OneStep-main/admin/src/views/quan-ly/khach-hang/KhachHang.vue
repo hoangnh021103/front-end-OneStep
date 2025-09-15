@@ -8,11 +8,6 @@
     <section class="filter-section">
       <div class="filter-row">
         <input v-model="search" placeholder="Nhập tên/email/số điện thoại để tìm kiếm..." />
-        <select v-model="status">
-          <option value="">Chọn trạng thái</option>
-          <option value="1">Hoạt động</option>
-          <option value="0">Ngừng</option>
-        </select>
         <button @click="resetFilter"><i class="fa fa-undo"></i> Đặt lại bộ lọc</button>
       </div>
     </section>
@@ -33,7 +28,6 @@
             <th>Số điện thoại</th>
             <th>Ngày sinh</th>
             <th>Giới tính</th>
-            <th>Trạng thái</th>
             <th>Hành động</th>
           </tr>
         </thead>
@@ -45,11 +39,6 @@
             <td>{{ cus.soDienThoai }}</td>
             <td>{{ formatDate(cus.ngaySinh) }}</td>
             <td>{{ cus.gioiTinh }}</td>
-            <td>
-              <span :class="['status-badge', cus.trangThai === 1 ? 'active' : 'inactive']">
-                {{ cus.trangThai === 1 ? 'Hoạt động' : 'Ngừng' }}
-              </span>
-            </td>
             <td>
               <button class="action-btn edit" title="Sửa" @click="editCustomer(idx)"><i class="fa fa-edit"></i></button>
               <button class="action-btn delete" title="Xóa" @click="deleteCustomer(idx)"><i class="fa fa-trash"></i></button>
@@ -91,7 +80,7 @@
           </div>
           <div class="form-group">
             <label>Số điện thoại</label>
-            <input v-model="newCustomer.soDienThoai" placeholder="Số điện thoại khách hàng" required />
+            <input v-model="newCustomer.soDienThoai" type="tel" pattern="[0-9]{9,11}" placeholder="Số điện thoại khách hàng" required />
           </div>
           <div class="form-group">
             <label>Ngày sinh</label>
@@ -105,13 +94,6 @@
               <option value="Nữ">Nữ</option>
             </select>
           </div>
-          <div class="form-group">
-            <label>Trạng thái</label>
-            <select v-model="newCustomer.trangThai">
-              <option :value="1">Hoạt động</option>
-              <option :value="0">Ngừng</option>
-            </select>
-          </div>
           <div class="modal-actions">
             <button type="submit"><i class="fa fa-check"></i> Lưu</button>
             <button type="button" @click="closeModal"><i class="fa fa-times"></i> Hủy</button>
@@ -122,7 +104,6 @@
   </div>
 </template>
 
-
 <script>
 import axios from "axios";
 import { toast } from 'vue3-toastify';
@@ -132,7 +113,6 @@ export default {
     return {
       customers: [],
       search: "",
-      status: "", // lọc theo trạng thái
       showModal: false,
       newCustomer: {
         id: 0,
@@ -141,7 +121,6 @@ export default {
         gioiTinh: "",
         email: "",
         soDienThoai: "",
-        trangThai: 1, // mặc định Hoạt động
         ngayCapNhat: ""
       },
       editIndex: null,
@@ -156,8 +135,7 @@ export default {
         c =>
           ((c.hoTen && c.hoTen.toLowerCase().includes(keyword)) ||
             (c.email && c.email.toLowerCase().includes(keyword)) ||
-            (c.soDienThoai && c.soDienThoai.includes(keyword))) &&
-          (this.status === "" || String(c.trangThai) === this.status)
+            (c.soDienThoai && String(c.soDienThoai).includes(keyword)))
       );
     },
     totalPages() {
@@ -179,15 +157,9 @@ export default {
   methods: {
     async fetchCustomers() {
       try {
-        console.log("Đang gọi API khách hàng...");
         const res = await axios.get("http://localhost:8080/khach-hang/hien-thi");
-        console.log("Response từ API:", res.data);
-
         this.customers = Array.isArray(res.data) ? res.data : res.data.data || [];
-
-        console.log("Dữ liệu khách hàng đã load:", this.customers);
       } catch (err) {
-        console.error("Lỗi khi gọi API khách hàng:", err);
         let errorMessage = "Không thể tải dữ liệu khách hàng.";
         if (err.code === 'ECONNREFUSED') {
           errorMessage = "Không thể kết nối đến server. Vui lòng kiểm tra server.";
@@ -202,7 +174,6 @@ export default {
     },
     resetFilter() {
       this.search = "";
-      this.status = "";
       this.currentPage = 1;
       this.fetchCustomers();
     },
@@ -221,7 +192,6 @@ export default {
         gioiTinh: "",
         email: "",
         soDienThoai: "",
-        trangThai: 1,
         ngayCapNhat: ""
       };
     },
@@ -242,16 +212,15 @@ export default {
         return;
       }
 
-      try {
-        this.newCustomer.ngayCapNhat = new Date().toISOString().split('T')[0];
+      this.newCustomer.soDienThoai = String(this.newCustomer.soDienThoai).trim();
+      this.newCustomer.ngayCapNhat = new Date().toISOString().split('T')[0];
 
+      try {
         if (this.editIndex === null) {
-          // Thêm mới khách hàng
           const response = await axios.post("http://localhost:8080/khach-hang/add", this.newCustomer);
           this.customers.push(response.data);
           toast.success("Thêm khách hàng thành công!");
         } else {
-          // Cập nhật khách hàng
           const response = await axios.put(
             `http://localhost:8080/khach-hang/update/${this.newCustomer.id}`,
             this.newCustomer
@@ -311,10 +280,7 @@ export default {
     }
   },
   mounted() {
-    console.log("Component mounted, fetching customers...");
     this.fetchCustomers();
   }
 };
 </script>
-
-
