@@ -4,7 +4,6 @@
       <h2>Quản lý nhân viên</h2>
     </header>
 
-    <!-- Bộ lọc -->
     <section class="filter-section">
       <div class="filter-row">
         <input v-model="search" placeholder="Tìm kiếm họ tên, email hoặc số điện thoại..." />
@@ -12,13 +11,11 @@
           <option value="">Chọn giới tính</option>
           <option value="Nam">Nam</option>
           <option value="Nữ">Nữ</option>
-          <option value="Khác">Khác</option>
         </select>
         <button @click="resetFilter"><i class="fa fa-undo"></i> Đặt lại bộ lọc</button>
       </div>
     </section>
 
-    <!-- Danh sách -->
     <section class="employee-list-section">
       <div class="list-header">
         <span>Danh sách nhân viên</span>
@@ -59,7 +56,7 @@
             <td>{{ emp.email }}</td>
             <td>{{ emp.soDienThoai }}</td>
             <td>{{ emp.diaChi }}</td>
-            <td>{{ getRoleName(emp.vaiTroId) }}</td>
+            <td>{{ getRoleName(emp.vaiTro) }}</td>
             <td>{{ formatDate(emp.ngayTao) }}</td>
             <td>{{ formatDate(emp.ngayCapNhat) }}</td>
             <td class="actions">
@@ -70,7 +67,6 @@
         </tbody>
       </table>
 
-      <!-- Phân trang -->
       <div class="pagination-center">
         <div class="pagination">
           <button :disabled="currentPage === 1" @click="changePage(currentPage-1)">‹</button>
@@ -88,7 +84,6 @@
       </div>
     </section>
 
-    <!-- Modal Thêm/Sửa -->
     <div v-if="showModal" class="modal-overlay">
       <div class="modal-content">
         <h3>{{ editEmployee ? 'Sửa nhân viên' : 'Thêm nhân viên' }}</h3>
@@ -104,9 +99,8 @@
           <input v-model="modalData.soDienThoai" placeholder="Số điện thoại" required />
           <input v-model="modalData.diaChi" placeholder="Địa chỉ" />
 
-          <!-- Vai trò -->
           <select v-model="modalData.vaiTroId" required>
-            <option :value="0">-- Chọn vai trò --</option>
+            <option value="">-- Chọn vai trò --</option>
             <option v-for="role in roleList" :key="role.id" :value="role.id">
               {{ role.tenVaiTro }}
             </option>
@@ -130,7 +124,7 @@ export default {
   data() {
     return {
       employees: [],
-      roleList: [],   // 🆕 Danh sách vai trò
+      roleList: [],
       search: "",
       genderFilter: "",
       showModal: false,
@@ -143,7 +137,7 @@ export default {
         email: "",
         soDienThoai: "",
         diaChi: "",
-        vaiTroId: 0,
+        vaiTroId: "", // Sử dụng vaiTroId thay vì vaiTro object
         ngayTao: "",
         ngayCapNhat: ""
       },
@@ -192,11 +186,7 @@ export default {
     async fetchRoles() {
       try {
         const res = await axios.get("http://localhost:8080/vai-tro/hien-thi");
-        const list = Array.isArray(res.data) ? res.data : res.data.data || [];
-        this.roleList = list.map(r => ({
-          id: r.id || r.maVaiTro,
-          tenVaiTro: r.tenVaiTro || r.name
-        }));
+        this.roleList = Array.isArray(res.data) ? res.data : res.data.data || [];
       } catch (err) {
         console.error("Lỗi khi tải vai trò:", err);
         toast.error("Không thể tải danh sách vai trò.");
@@ -225,7 +215,7 @@ export default {
         email: "",
         soDienThoai: "",
         diaChi: "",
-        vaiTroId: 0,
+        vaiTroId: "",
         ngayTao: "",
         ngayCapNhat: ""
       };
@@ -234,6 +224,20 @@ export default {
       this.showModal = true;
       this.editEmployee = employee;
       this.modalData = { ...employee };
+      
+      // Xử lý ngày sinh
+      if (this.modalData.ngaySinh) {
+        const date = new Date(this.modalData.ngaySinh);
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        this.modalData.ngaySinh = `${year}-${month}-${day}`;
+      }
+      
+      // Xử lý vai trò - lấy ID của vai trò
+      if (this.modalData.vaiTro && this.modalData.vaiTro.id) {
+        this.modalData.vaiTroId = this.modalData.vaiTro.id;
+      }
     },
     closeModal() {
       this.showModal = false;
@@ -244,22 +248,32 @@ export default {
         toast.error("Vui lòng nhập đầy đủ thông tin bắt buộc.");
         return;
       }
+      
       try {
-        this.modalData.ngayCapNhat = new Date().toISOString().split('T')[0];
+        // Tìm vai trò object từ ID
+        const selectedRole = this.roleList.find(role => role.id == this.modalData.vaiTroId);
+        
+        // Chuẩn bị data để gửi
+        const dataToSend = {
+          ...this.modalData,
+          vaiTro: selectedRole, // Gửi object vai trò thay vì chỉ ID
+          ngayCapNhat: new Date().toISOString().split('T')[0]
+        };
+        
         if (this.editEmployee) {
-          const res = await axios.put(
+          await axios.put(
             `http://localhost:8080/nhan-vien/update/${this.modalData.id}`,
-            this.modalData
+            dataToSend
           );
-          const index = this.employees.findIndex(emp => emp.id === this.modalData.id);
-          if (index !== -1) this.employees.splice(index, 1, res.data || this.modalData);
           toast.success("Cập nhật nhân viên thành công!");
         } else {
-          const res = await axios.post("http://localhost:8080/nhan-vien/add", this.modalData);
-          this.employees.push(res.data || this.modalData);
+          dataToSend.ngayTao = new Date().toISOString().split('T')[0];
+          await axios.post("http://localhost:8080/nhan-vien/add", dataToSend);
           toast.success("Thêm nhân viên thành công!");
         }
+        
         this.closeModal();
+        await this.fetchEmployees();
       } catch (err) {
         console.error("Lỗi khi lưu nhân viên:", err);
         toast.error("Không thể lưu nhân viên.");
@@ -280,9 +294,16 @@ export default {
         }
       }
     },
-    getRoleName(roleId) {
-      const role = this.roleList.find(r => r.id === roleId);
-      return role ? role.tenVaiTro : "Không xác định";
+    getRoleName(role) {
+      // Xử lý cả trường hợp role là object hoặc string
+      if (!role) return "Không xác định";
+      if (typeof role === 'object' && role.tenVaiTro) {
+        return role.tenVaiTro;
+      }
+      if (typeof role === 'string') {
+        return role;
+      }
+      return "Không xác định";
     },
     formatDate(dateString) {
       if (!dateString) return "";
