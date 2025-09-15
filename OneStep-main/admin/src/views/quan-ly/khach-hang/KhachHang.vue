@@ -41,7 +41,7 @@
             <td>{{ cus.gioiTinh }}</td>
             <td>
               <button class="action-btn edit" title="Sửa" @click="editCustomer(idx)"><i class="fa fa-edit"></i></button>
-              <button class="action-btn delete" title="Xóa" @click="deleteCustomer(idx)"><i class="fa fa-trash"></i></button>
+              <button class="action-btn delete" title="Xóa" @click="deleteCustomer(cus.id)"><i class="fa fa-trash"></i></button>
             </td>
           </tr>
         </tbody>
@@ -67,20 +67,28 @@
 
     <!-- Modal Thêm/Sửa -->
     <div v-if="showModal" class="modal-overlay">
-      <div class="modal-content">
-        <h3>{{ editIndex !== null ? 'Sửa khách hàng' : 'Thêm khách hàng' }}</h3>
-        <form @submit.prevent="saveCustomer">
+      <div class="form-card">
+        <div class="header">
+          <h2>{{ editIndex !== null ? 'Sửa khách hàng' : 'Thêm khách hàng' }}</h2>
+          <button class="btn-back" @click="closeModal">
+            <i class="fa fa-arrow-left"></i> Quay lại
+          </button>
+        </div>
+        <div class="form-grid">
           <div class="form-group">
-            <label>Họ và tên</label>
-            <input v-model="newCustomer.hoTen" placeholder="Họ và tên khách hàng" required />
+            <label>Họ và tên *</label>
+            <input v-model="newCustomer.hoTen" type="text" placeholder="Nhập họ tên" :class="{error: errors.hoTen}" />
+            <span v-if="errors.hoTen" class="error-message">{{ errors.hoTen }}</span>
           </div>
           <div class="form-group">
-            <label>Email</label>
-            <input v-model="newCustomer.email" type="email" placeholder="Email khách hàng" required />
+            <label>Email *</label>
+            <input v-model="newCustomer.email" type="email" placeholder="Nhập email" :class="{error: errors.email}" />
+            <span v-if="errors.email" class="error-message">{{ errors.email }}</span>
           </div>
           <div class="form-group">
-            <label>Số điện thoại</label>
-            <input v-model="newCustomer.soDienThoai" type="tel" pattern="[0-9]{9,11}" placeholder="Số điện thoại khách hàng" required />
+            <label>Số điện thoại *</label>
+            <input v-model="newCustomer.soDienThoai" type="text" placeholder="Nhập số điện thoại" :class="{error: errors.soDienThoai}" />
+            <span v-if="errors.soDienThoai" class="error-message">{{ errors.soDienThoai }}</span>
           </div>
           <div class="form-group">
             <label>Ngày sinh</label>
@@ -94,11 +102,15 @@
               <option value="Nữ">Nữ</option>
             </select>
           </div>
-          <div class="modal-actions">
-            <button type="submit"><i class="fa fa-check"></i> Lưu</button>
-            <button type="button" @click="closeModal"><i class="fa fa-times"></i> Hủy</button>
-          </div>
-        </form>
+        </div>
+        <div class="actions">
+          <button class="btn-primary" @click="saveCustomer" :disabled="isSubmitting">
+            <i class="fa fa-check"></i> {{ isSubmitting ? 'Đang lưu...' : 'Lưu' }}
+          </button>
+          <button class="btn-secondary" @click="closeModal" :disabled="isSubmitting">
+            <i class="fa fa-times"></i> Hủy
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -106,7 +118,7 @@
 
 <script>
 import axios from "axios";
-import { toast } from 'vue3-toastify';
+import { toast } from "vue3-toastify";
 
 export default {
   data() {
@@ -114,6 +126,8 @@ export default {
       customers: [],
       search: "",
       showModal: false,
+      editIndex: null,
+      isSubmitting: false,
       newCustomer: {
         id: 0,
         hoTen: "",
@@ -123,7 +137,11 @@ export default {
         soDienThoai: "",
         ngayCapNhat: ""
       },
-      editIndex: null,
+      errors: {
+        hoTen: "",
+        email: "",
+        soDienThoai: ""
+      },
       currentPage: 1,
       pageSize: 5
     };
@@ -131,11 +149,10 @@ export default {
   computed: {
     filteredCustomers() {
       const keyword = this.search.toLowerCase();
-      return this.customers.filter(
-        c =>
-          ((c.hoTen && c.hoTen.toLowerCase().includes(keyword)) ||
-            (c.email && c.email.toLowerCase().includes(keyword)) ||
-            (c.soDienThoai && String(c.soDienThoai).includes(keyword)))
+      return this.customers.filter(c =>
+        (c.hoTen && c.hoTen.toLowerCase().includes(keyword)) ||
+        (c.email && c.email.toLowerCase().includes(keyword)) ||
+        (c.soDienThoai && String(c.soDienThoai).includes(keyword))
       );
     },
     totalPages() {
@@ -146,12 +163,10 @@ export default {
       return this.filteredCustomers.slice(start, start + this.pageSize);
     },
     visiblePages() {
-      let pages = [];
       let start = Math.max(1, this.currentPage - 2);
       let end = Math.min(this.totalPages, start + 4);
       if (end - start < 4) start = Math.max(1, end - 4);
-      for (let i = start; i <= end; i++) pages.push(i);
-      return pages;
+      return Array.from({ length: end - start + 1 }, (_, i) => start + i);
     }
   },
   methods: {
@@ -160,123 +175,83 @@ export default {
         const res = await axios.get("http://localhost:8080/khach-hang/hien-thi");
         this.customers = Array.isArray(res.data) ? res.data : res.data.data || [];
       } catch (err) {
-        let errorMessage = "Không thể tải dữ liệu khách hàng.";
-        if (err.code === 'ECONNREFUSED') {
-          errorMessage = "Không thể kết nối đến server. Vui lòng kiểm tra server.";
-        } else if (err.response?.status === 404) {
-          errorMessage = "API endpoint không tồn tại.";
-        } else if (err.response?.status === 500) {
-          errorMessage = "Lỗi server. Vui lòng thử lại sau.";
-        }
-        toast.error(errorMessage);
-        this.customers = [];
+        toast.error("Không thể tải dữ liệu khách hàng.");
       }
     },
     resetFilter() {
       this.search = "";
-      this.currentPage = 1;
       this.fetchCustomers();
     },
-    changePage(page) {
-      if (page >= 1 && page <= this.totalPages) {
-        this.currentPage = page;
+    formatDate(date) {
+      if (!date) return "";
+      return new Date(date).toLocaleDateString("vi-VN");
+    },
+    validateForm() {
+      this.errors = { hoTen: "", email: "", soDienThoai: "" };
+      let valid = true;
+      if (!this.newCustomer.hoTen.trim()) {
+        this.errors.hoTen = "Tên khách hàng là bắt buộc.";
+        valid = false;
+      }
+      if (!this.newCustomer.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.newCustomer.email)) {
+        this.errors.email = "Email không hợp lệ.";
+        valid = false;
+      }
+      if (!this.newCustomer.soDienThoai.trim()) {
+        this.errors.soDienThoai = "Số điện thoại là bắt buộc.";
+        valid = false;
+      }
+      return valid;
+    },
+    async saveCustomer() {
+      if (!this.validateForm()) return;
+      try {
+        this.isSubmitting = true;
+        if (this.editIndex !== null) {
+          await axios.put(`http://localhost:8080/khach-hang/update/${this.newCustomer.id}`, this.newCustomer);
+          this.customers[this.editIndex] = { ...this.newCustomer };
+          toast.success("Cập nhật khách hàng thành công!");
+        } else {
+          const res = await axios.post("http://localhost:8080/khach-hang/add", this.newCustomer);
+          this.customers.push(res.data);
+          toast.success("Thêm khách hàng thành công!");
+        }
+        this.closeModal();
+      } catch (err) {
+        toast.error("Lỗi khi lưu khách hàng!");
+      } finally {
+        this.isSubmitting = false;
       }
     },
-    openModal() {
+    editCustomer(index) {
+      this.editIndex = index;
+      this.newCustomer = { ...this.customers[index] };
       this.showModal = true;
+    },
+    openAddModal() {
       this.editIndex = null;
       this.newCustomer = {
-        id: 0,
-        hoTen: "",
-        ngaySinh: "",
-        gioiTinh: "",
-        email: "",
-        soDienThoai: "",
-        ngayCapNhat: ""
+        id: 0, hoTen: "", ngaySinh: "", gioiTinh: "", email: "", soDienThoai: "", ngayCapNhat: ""
       };
+      this.showModal = true;
+    },
+    async deleteCustomer(id) {
+      if (confirm("Xác nhận xóa khách hàng này?")) {
+        try {
+          await axios.delete(`http://localhost:8080/khach-hang/delete/${id}`);
+          this.customers = this.customers.filter(c => c.id !== id);
+          toast.success("Xóa khách hàng thành công!");
+        } catch (err) {
+          toast.error("Lỗi khi xóa khách hàng!");
+        }
+      }
     },
     closeModal() {
       this.showModal = false;
+      this.errors = { hoTen: "", email: "", soDienThoai: "" };
     },
-    async saveCustomer() {
-      if (!this.newCustomer.hoTen) {
-        toast.error("Vui lòng nhập họ và tên khách hàng.");
-        return;
-      }
-      if (!this.newCustomer.email) {
-        toast.error("Vui lòng nhập email khách hàng.");
-        return;
-      }
-      if (!this.newCustomer.soDienThoai) {
-        toast.error("Vui lòng nhập số điện thoại khách hàng.");
-        return;
-      }
-
-      this.newCustomer.soDienThoai = String(this.newCustomer.soDienThoai).trim();
-      this.newCustomer.ngayCapNhat = new Date().toISOString().split('T')[0];
-
-      try {
-        if (this.editIndex === null) {
-          const response = await axios.post("http://localhost:8080/khach-hang/add", this.newCustomer);
-          this.customers.push(response.data);
-          toast.success("Thêm khách hàng thành công!");
-        } else {
-          const response = await axios.put(
-            `http://localhost:8080/khach-hang/update/${this.newCustomer.id}`,
-            this.newCustomer
-          );
-          const index = this.customers.findIndex(c => c.id === this.newCustomer.id);
-          if (index !== -1) {
-            this.customers.splice(index, 1, response.data);
-          }
-          toast.success("Cập nhật khách hàng thành công!");
-        }
-        this.closeModal();
-      } catch (error) {
-        console.error("Lỗi khi lưu khách hàng:", error);
-        toast.error("Có lỗi xảy ra khi lưu thông tin khách hàng!");
-      }
-    },
-    editCustomer(idx) {
-      const customer = this.pagedCustomers[idx];
-      this.editIndex = customer.id;
-      this.newCustomer = { ...customer };
-      this.showModal = true;
-    },
-    async deleteCustomer(idx) {
-      const customer = this.pagedCustomers[idx];
-      if (confirm(`Xác nhận xoá khách hàng "${customer.hoTen}"?`)) {
-        try {
-          await axios.delete(`http://localhost:8080/khach-hang/delete/${customer.id}`);
-          const index = this.customers.findIndex(c => c.id === customer.id);
-          if (index !== -1) {
-            this.customers.splice(index, 1);
-          }
-          toast.success("Xóa khách hàng thành công!");
-        } catch (error) {
-          console.error("Lỗi khi xóa khách hàng:", error);
-          toast.error("Có lỗi xảy ra khi xóa khách hàng!");
-        }
-      }
-    },
-    openAddModal() {
-      this.openModal();
-    },
-    openEditModal(idx) {
-      this.editCustomer(idx);
-    },
-    formatDate(dateString) {
-      if (!dateString) return "";
-      const date = new Date(dateString);
-      return date.toLocaleDateString("vi-VN");
-    }
-  },
-  watch: {
-    filteredCustomers() {
-      if (this.currentPage > this.totalPages) this.currentPage = this.totalPages;
-    },
-    pageSize() {
-      this.currentPage = 1;
+    changePage(p) {
+      if (p >= 1 && p <= this.totalPages) this.currentPage = p;
     }
   },
   mounted() {
@@ -284,3 +259,30 @@ export default {
   }
 };
 </script>
+
+<style scoped>
+/* Giữ nguyên style của modal hóa đơn cho đồng bộ */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 1000; padding: 40px 20px;
+}
+.form-card {
+  background: #fff; border-radius: 12px; padding: 32px; max-width: 600px; width: 100%;
+}
+.form-grid {
+  display: grid; grid-template-columns: repeat(2,1fr); gap: 24px;
+}
+.form-group { display: flex; flex-direction: column; }
+.form-group label { font-weight: 600; margin-bottom: 6px; }
+.form-group input, .form-group select {
+  padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px;
+}
+.error { border-color: #e63946 !important; }
+.error-message { color: #e63946; font-size: 13px; margin-top: 4px; }
+.actions { margin-top: 24px; display: flex; justify-content: flex-end; gap: 12px; }
+.btn-primary { background: #4f46e5; color: #fff; padding: 10px 20px; border-radius: 6px; }
+.btn-secondary { background: #f3f4f6; border: 1px solid #d1d5db; padding: 10px 20px; border-radius: 6px; }
+</style>
