@@ -106,7 +106,11 @@ const MainRoutes = {
       path: '/quan-ly/dot-giam-gia',
       component: () => import('@/views/quan-ly/dot-giam-gia/DotGiamGia.vue'),
     },
-
+    {
+      name: 'ThanhToan',
+      path: '/quan-ly/thanh-toan',
+      component: () => import('@/views/quan-ly/thanh-toan/ThanhToan.vue'),
+    },
   ],
 };
 
