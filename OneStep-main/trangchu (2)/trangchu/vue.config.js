@@ -6,7 +6,7 @@ module.exports = defineConfig({
   outputDir: 'dist',
   assetsDir: 'assets',
   devServer: {
-    port: 5174,
+    port: 8080,
     open: true
   }
 })
