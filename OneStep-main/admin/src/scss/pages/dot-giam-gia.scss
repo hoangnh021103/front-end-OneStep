@@ -1,0 +1,189 @@
+// Variables for colors and spacing
+$primary-blue: #2563eb;
+$light-blue: #4ade80;
+$red: #dc2626;
+$pink: #f87171;
+$dark-gray: #222;
+$light-gray: #ccc;
+$border-color: #ddd;
+$background-white: #fff;
+$shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+$padding-default: 20px;
+$padding-small: 6px 10px;
+$padding-btn: 6px 14px;
+$padding-status: 4px 8px;
+
+$border-radius-default: 12px;
+$border-radius-small: 6px;
+$border-radius-tiny: 4px;
+
+$font-size-small: 0.9rem;
+$font-size-tiny: 0.8rem;
+$font-size-icon: 1rem;
+
+// Mixins for common styles
+@mixin button-base($bg-color) {
+  background: $bg-color;
+  color: $background-white;
+  border: none;
+  padding: $padding-btn;
+  border-radius: $border-radius-small;
+  cursor: pointer;
+}
+
+@mixin input-select-base {
+  padding: $padding-small;
+  border: 1px solid $light-gray;
+  border-radius: $border-radius-tiny;
+}
+
+@mixin status-base($bg-color) {
+  padding: $padding-status;
+  border-radius: $border-radius-small;
+  font-size: $font-size-tiny;
+  color: $background-white;
+  background-color: $bg-color;
+}
+
+.discount-container {
+  background: $background-white;
+  padding: $padding-default;
+  border-radius: $border-radius-default;
+  box-shadow: $shadow;
+  margin-top: 30px;
+
+  .header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+
+    .filters {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+
+      .search-input,
+      .status-select {
+        @include input-select-base;
+      }
+    }
+
+    .reset-btn {
+      @include button-base($dark-gray);
+    }
+    .add-btn {
+      @include button-base($primary-blue);
+      padding: 8px 14px;
+      font-weight: 600;
+    }
+  }
+
+  .table-wrapper {
+    margin-top: 10px;
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: $font-size-small;
+
+      th, td {
+        border: 1px solid $border-color;
+        padding: 8px 10px;
+        text-align: left;
+      }
+    }
+  }
+
+  .status {
+    @include status-base(transparent); // Base status style
+
+    &.active {
+      background-color: $light-blue;
+    }
+    &.inactive {
+      background-color: $pink;
+    }
+  }
+
+  .action-buttons {
+    button {
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: $font-size-icon;
+      margin-right: 4px;
+    }
+
+    .edit-btn {
+      color: $primary-blue;
+    }
+    .delete-btn {
+      color: $red;
+    }
+  }
+
+  .pagination {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 10px;
+
+    .page {
+      padding: 4px 8px;
+      border: 1px solid $border-color;
+      cursor: pointer;
+      &.active {
+        background: $primary-blue;
+        color: $background-white;
+      }
+    }
+
+    select {
+      margin-left: auto;
+      padding: 4px;
+    }
+  }
+}
+
+// Modal styles
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .modal {
+    background: $background-white;
+    padding: $padding-default;
+    border-radius: 8px;
+    width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    input, select {
+      padding: 6px;
+      border: 1px solid $light-gray;
+      border-radius: $border-radius-tiny;
+      width: 100%;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+
+      .save-btn {
+        @include button-base($primary-blue);
+      }
+      .cancel-btn {
+        @include button-base($light-gray);
+      }
+    }
+  }
+}
