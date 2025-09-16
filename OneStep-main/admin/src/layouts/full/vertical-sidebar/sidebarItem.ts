@@ -28,10 +28,10 @@ export interface menu {
 }
 
 const sidebarItem: menu[] = [
-  { header: 'Bảng Điều Khiển' },
+  { header: 'Thống Kê' },
   {
-    title: 'Mặc Định',
-    icon: DashboardIcon,
+    title: 'Quản Lý Thống Kê',
+   
     to: '/dashboard/default'
   },
   // Nhóm Quản Lý mới thêm vào

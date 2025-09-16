@@ -104,7 +104,7 @@ const lineChart1 = {
         <v-row>
           <v-col cols="12" sm="9">
             <span class="text-subtitle-2 text-disabled font-weight-bold">Thống Kê Bán Giày Thể Thao</span>
-            <h3 class="text-h3 mt-1">$45,250.00</h3>
+            <h3 class="text-h3 mt-1">45,250.00 vnđ</h3>
           </v-col>
           <v-col cols="12" sm="3">
             <v-select
