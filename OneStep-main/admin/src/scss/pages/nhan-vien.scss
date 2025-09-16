@@ -172,9 +172,42 @@
   .modal-content {
     background: #fff;
     border-radius: 10px;
-    padding: 28px 32px;
-    min-width: 320px;
+    padding: 0; /* bỏ padding cũ để chia header/body rõ ràng */
+    min-width: 420px;
     box-shadow: 0 2px 16px rgba(0,0,0,0.15);
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f3f4f6;
+      padding: 14px 20px;
+      border-radius: 10px 10px 0 0;
+
+      h2 {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #111827;
+      }
+
+      .btn-back {
+        background: #fff;
+        border: 1px solid #d1d5db;
+        padding: 6px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.95rem;
+        font-weight: 500;
+      }
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
 
     input, select {
       display: block;
@@ -190,6 +223,7 @@
       display: flex;
       justify-content: flex-end;
       gap: 10px;
+      padding: 12px 20px 20px;
 
       button {
         padding: 7px 18px;

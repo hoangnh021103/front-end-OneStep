@@ -73,57 +73,84 @@
     </section>
 
     <!-- Modal thêm/sửa -->
-    <div v-if="showModal" class="modal-overlay">
-      <div class="form-card">
-        <div class="header">
-          <h2>{{ editIndex !== null ? 'Sửa nhân viên' : 'Thêm nhân viên' }}</h2>
-          <button class="btn-back" @click="closeModal">
-            <i class="fa fa-arrow-left"></i> Quay lại
-          </button>
+   <div v-if="showModal" class="modal-overlay">
+  <div class="modal-content">
+    <!-- Header -->
+    <div class="modal-header">
+      <h2>{{ editIndex !== null ? 'Sửa nhân viên' : 'Thêm nhân viên' }}</h2>
+      <button class="btn-back" @click="closeModal">
+        <i class="fa fa-arrow-left"></i> Quay lại
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Họ tên *</label>
+          <input
+            v-model="newEmployee.hoTen"
+            type="text"
+            placeholder="Nhập họ tên"
+            :class="{error: errors.hoTen}"
+          />
+          <span v-if="errors.hoTen" class="error-message">{{ errors.hoTen }}</span>
         </div>
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Họ tên *</label>
-            <input v-model="newEmployee.hoTen" type="text" placeholder="Nhập họ tên" :class="{error: errors.hoTen}" />
-            <span v-if="errors.hoTen" class="error-message">{{ errors.hoTen }}</span>
-          </div>
-          <div class="form-group">
-            <label>Email *</label>
-            <input v-model="newEmployee.email" type="email" placeholder="Nhập email" :class="{error: errors.email}" />
-            <span v-if="errors.email" class="error-message">{{ errors.email }}</span>
-          </div>
-          <div class="form-group">
-            <label>Số điện thoại *</label>
-            <input v-model="newEmployee.soDienThoai" type="text" placeholder="Nhập số điện thoại" :class="{error: errors.soDienThoai}" />
-            <span v-if="errors.soDienThoai" class="error-message">{{ errors.soDienThoai }}</span>
-          </div>
-          <div class="form-group">
-            <label>Giới tính</label>
-            <select v-model="newEmployee.gioiTinh">
-              <option value="">Chọn giới tính</option>
-              <option value="Nam">Nam</option>
-              <option value="Nữ">Nữ</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Vai trò *</label>
-            <select v-model="newEmployee.vaiTroId" :class="{error: errors.vaiTro}">
-              <option value="">Chọn vai trò</option>
-              <option v-for="role in roleList" :key="role.id" :value="role.id">{{ role.tenVaiTro }}</option>
-            </select>
-            <span v-if="errors.vaiTro" class="error-message">{{ errors.vaiTro }}</span>
-          </div>
+
+        <div class="form-group">
+          <label>Email *</label>
+          <input
+            v-model="newEmployee.email"
+            type="email"
+            placeholder="Nhập email"
+            :class="{error: errors.email}"
+          />
+          <span v-if="errors.email" class="error-message">{{ errors.email }}</span>
         </div>
-        <div class="actions">
-          <button class="btn-primary" @click="saveEmployee" :disabled="isSubmitting">
-            <i class="fa fa-check"></i> {{ isSubmitting ? 'Đang lưu...' : 'Lưu' }}
-          </button>
-          <button class="btn-secondary" @click="closeModal" :disabled="isSubmitting">
-            <i class="fa fa-times"></i> Hủy
-          </button>
+
+        <div class="form-group">
+          <label>Số điện thoại *</label>
+          <input
+            v-model="newEmployee.soDienThoai"
+            type="text"
+            placeholder="Nhập số điện thoại"
+            :class="{error: errors.soDienThoai}"
+          />
+          <span v-if="errors.soDienThoai" class="error-message">{{ errors.soDienThoai }}</span>
+        </div>
+
+        <div class="form-group">
+          <label>Giới tính</label>
+          <select v-model="newEmployee.gioiTinh">
+            <option value="">Chọn giới tính</option>
+            <option value="Nam">Nam</option>
+            <option value="Nữ">Nữ</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Vai trò *</label>
+          <select v-model="newEmployee.vaiTroId" :class="{error: errors.vaiTro}">
+            <option value="">Chọn vai trò</option>
+            <option v-for="role in roleList" :key="role.id" :value="role.id">{{ role.tenVaiTro }}</option>
+          </select>
+          <span v-if="errors.vaiTro" class="error-message">{{ errors.vaiTro }}</span>
         </div>
       </div>
     </div>
+
+    <!-- Actions -->
+    <div class="modal-actions">
+      <button class="btn-primary" @click="saveEmployee" :disabled="isSubmitting">
+        <i class="fa fa-check"></i> {{ isSubmitting ? 'Đang lưu...' : 'Lưu' }}
+      </button>
+      <button class="btn-secondary" @click="closeModal" :disabled="isSubmitting">
+        <i class="fa fa-times"></i> Hủy
+      </button>
+    </div>
+  </div>
+</div>
+
   </div>
 </template>
 
