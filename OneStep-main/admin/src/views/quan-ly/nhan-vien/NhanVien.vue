@@ -73,84 +73,83 @@
     </section>
 
     <!-- Modal thêm/sửa -->
-   <div v-if="showModal" class="modal-overlay">
-  <div class="modal-content">
-    <!-- Header -->
-    <div class="modal-header">
-      <h2>{{ editIndex !== null ? 'Sửa nhân viên' : 'Thêm nhân viên' }}</h2>
-      <button class="btn-back" @click="closeModal">
-        <i class="fa fa-arrow-left"></i> Quay lại
-      </button>
-    </div>
-
-    <!-- Body -->
-    <div class="modal-body">
-      <div class="form-grid">
-        <div class="form-group">
-          <label>Họ tên *</label>
-          <input
-            v-model="newEmployee.hoTen"
-            type="text"
-            placeholder="Nhập họ tên"
-            :class="{error: errors.hoTen}"
-          />
-          <span v-if="errors.hoTen" class="error-message">{{ errors.hoTen }}</span>
+    <div v-if="showModal" class="modal-overlay">
+      <div class="modal-content">
+        <!-- Header -->
+        <div class="modal-header">
+          <h2>{{ editIndex !== null ? 'Sửa nhân viên' : 'Thêm nhân viên' }}</h2>
+          <button class="btn-back" @click="closeModal">
+            <i class="fa fa-arrow-left"></i> Quay lại
+          </button>
         </div>
 
-        <div class="form-group">
-          <label>Email *</label>
-          <input
-            v-model="newEmployee.email"
-            type="email"
-            placeholder="Nhập email"
-            :class="{error: errors.email}"
-          />
-          <span v-if="errors.email" class="error-message">{{ errors.email }}</span>
+        <!-- Body -->
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Họ tên *</label>
+              <input
+                v-model="newEmployee.hoTen"
+                type="text"
+                placeholder="Nhập họ tên"
+                :class="{error: errors.hoTen}"
+              />
+              <span v-if="errors.hoTen" class="error-message">{{ errors.hoTen }}</span>
+            </div>
+
+            <div class="form-group">
+              <label>Email *</label>
+              <input
+                v-model="newEmployee.email"
+                type="email"
+                placeholder="Nhập email"
+                :class="{error: errors.email}"
+              />
+              <span v-if="errors.email" class="error-message">{{ errors.email }}</span>
+            </div>
+
+            <div class="form-group">
+              <label>Số điện thoại *</label>
+              <input
+                v-model="newEmployee.soDienThoai"
+                type="text"
+                placeholder="Nhập số điện thoại"
+                :class="{error: errors.soDienThoai}"
+              />
+              <span v-if="errors.soDienThoai" class="error-message">{{ errors.soDienThoai }}</span>
+            </div>
+
+            <div class="form-group">
+              <label>Giới tính</label>
+              <select v-model="newEmployee.gioiTinh">
+                <option value="">Chọn giới tính</option>
+                <option value="Nam">Nam</option>
+                <option value="Nữ">Nữ</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Vai trò *</label>
+              <select v-model="newEmployee.vaiTroId" :class="{error: errors.vaiTro}">
+                <option value="">Chọn vai trò</option>
+                <option v-for="role in roleList" :key="role.id" :value="role.id">{{ role.tenVaiTro }}</option>
+              </select>
+              <span v-if="errors.vaiTro" class="error-message">{{ errors.vaiTro }}</span>
+            </div>
+          </div>
         </div>
 
-        <div class="form-group">
-          <label>Số điện thoại *</label>
-          <input
-            v-model="newEmployee.soDienThoai"
-            type="text"
-            placeholder="Nhập số điện thoại"
-            :class="{error: errors.soDienThoai}"
-          />
-          <span v-if="errors.soDienThoai" class="error-message">{{ errors.soDienThoai }}</span>
-        </div>
-
-        <div class="form-group">
-          <label>Giới tính</label>
-          <select v-model="newEmployee.gioiTinh">
-            <option value="">Chọn giới tính</option>
-            <option value="Nam">Nam</option>
-            <option value="Nữ">Nữ</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>Vai trò *</label>
-          <select v-model="newEmployee.vaiTroId" :class="{error: errors.vaiTro}">
-            <option value="">Chọn vai trò</option>
-            <option v-for="role in roleList" :key="role.id" :value="role.id">{{ role.tenVaiTro }}</option>
-          </select>
-          <span v-if="errors.vaiTro" class="error-message">{{ errors.vaiTro }}</span>
+        <!-- Actions -->
+        <div class="modal-actions">
+          <button class="btn-primary" @click="saveEmployee" :disabled="isSubmitting">
+            <i class="fa fa-check"></i> {{ isSubmitting ? 'Đang lưu...' : 'Lưu' }}
+          </button>
+          <button class="btn-secondary" @click="closeModal" :disabled="isSubmitting">
+            <i class="fa fa-times"></i> Hủy
+          </button>
         </div>
       </div>
     </div>
-
-    <!-- Actions -->
-    <div class="modal-actions">
-      <button class="btn-primary" @click="saveEmployee" :disabled="isSubmitting">
-        <i class="fa fa-check"></i> {{ isSubmitting ? 'Đang lưu...' : 'Lưu' }}
-      </button>
-      <button class="btn-secondary" @click="closeModal" :disabled="isSubmitting">
-        <i class="fa fa-times"></i> Hủy
-      </button>
-    </div>
-  </div>
-</div>
-
   </div>
 </template>
 
@@ -175,7 +174,6 @@ export default {
         soDienThoai: "",
         gioiTinh: "",
         vaiTroId: null,
-        vaiTro: null,
         ngayTao: ""
       },
       errors: { hoTen: "", email: "", soDienThoai: "", vaiTro: "" },
@@ -234,7 +232,7 @@ export default {
       return new Date(date).toLocaleDateString("vi-VN");
     },
     getRoleName(role) {
-      return role?.tenVaiTro || "Không xác định";
+      return role || "Không xác định";
     },
     validateForm() {
       this.errors = { hoTen: "", email: "", soDienThoai: "", vaiTro: "" };
@@ -251,12 +249,17 @@ export default {
       if (!this.validateForm()) return;
       try {
         this.isSubmitting = true;
-        const selectedRole = this.roleList.find(r => r.id == this.newEmployee.vaiTroId);
-        const dataToSend = { ...this.newEmployee, vaiTro: selectedRole };
+        const dataToSend = {
+          hoTen: this.newEmployee.hoTen,
+          email: this.newEmployee.email,
+          soDienThoai: this.newEmployee.soDienThoai,
+          gioiTinh: this.newEmployee.gioiTinh,
+          vaiTroId: this.newEmployee.vaiTroId
+        };
 
         if (this.editIndex !== null) {
-          await axios.put(`http://localhost:8080/nhan-vien/update/${this.newEmployee.id}`, dataToSend);
-          this.employees[this.editIndex] = { ...dataToSend };
+          const res = await axios.put(`http://localhost:8080/nhan-vien/update/${this.newEmployee.id}`, dataToSend);
+          this.employees[this.editIndex] = res.data;
           toast.success("Cập nhật nhân viên thành công!");
         } else {
           const res = await axios.post("http://localhost:8080/nhan-vien/add", dataToSend);
@@ -272,14 +275,19 @@ export default {
       this.editIndex = index;
       const emp = this.employees[index];
       this.newEmployee = {
-        ...emp,
-        vaiTroId: emp.vaiTro?.id || null
+        id: emp.id,
+        hoTen: emp.hoTen,
+        email: emp.email,
+        soDienThoai: emp.soDienThoai,
+        gioiTinh: emp.gioiTinh,
+        vaiTroId: this.roleList.find(r => r.tenVaiTro === emp.vaiTro)?.id || null,
+        ngayTao: emp.ngayTao
       };
       this.showModal = true;
     },
     openAddModal() {
       this.editIndex = null;
-      this.newEmployee = { id:0, hoTen:"", email:"", soDienThoai:"", gioiTinh:"", vaiTroId:null, vaiTro:null, ngayTao:"" };
+      this.newEmployee = { id:0, hoTen:"", email:"", soDienThoai:"", gioiTinh:"", vaiTroId:null, ngayTao:"" };
       this.showModal = true;
     },
     async deleteEmployee(id) {
