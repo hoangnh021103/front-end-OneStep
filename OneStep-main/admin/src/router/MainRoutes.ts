@@ -17,6 +17,11 @@ const MainRoutes = {
       component: () => import('@/views/bang-dieu-khien/default/DefaultDashboard.vue'),
     },
     {
+      name: 'BanHang',
+      path: '/quan-ly/ban-hang',
+      component: () => import('@/views/quan-ly/ban-hang/BanHang.vue'),
+    },
+    {
       name: 'QuanLyHoaDon',
       path: '/quan-ly/hoa-don',
       component: () => import('@/views/quan-ly/hoa-don/DanhSachHoaDon.vue'),
@@ -106,7 +111,11 @@ const MainRoutes = {
       path: '/quan-ly/dot-giam-gia',
       component: () => import('@/views/quan-ly/dot-giam-gia/DotGiamGia.vue'),
     },
-
+    {
+      name: 'ThanhToan',
+      path: '/quan-ly/thanh-toan',
+      component: () => import('@/views/quan-ly/thanh-toan/ThanhToan.vue'),
+    },
   ],
 };
 

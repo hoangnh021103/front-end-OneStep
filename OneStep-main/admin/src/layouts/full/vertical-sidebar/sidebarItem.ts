@@ -28,10 +28,10 @@ export interface menu {
 }
 
 const sidebarItem: menu[] = [
-  { header: 'Bảng Điều Khiển' },
+  { header: 'Thống Kê' },
   {
-    title: 'Mặc Định',
-    icon: DashboardIcon,
+    title: 'Quản Lý Thống Kê',
+   
     to: '/dashboard/default'
   },
   // Nhóm Quản Lý mới thêm vào
@@ -102,6 +102,10 @@ const sidebarItem: menu[] = [
     title: 'Quản lý phiếu giảm giá',
     icon: CircleIcon,
     to: '/quan-ly/phieu-giam-gia'
+  },
+  { title: ' thanh toán',
+    icon: CircleIcon,
+    to: '/quan-ly/thanh-toan'
   },
 
   // {
