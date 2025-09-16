@@ -1,0 +1,30 @@
+@import './variables';
+@import 'vuetify/styles/main.sass';
+@import './override';
+@import './layout/container';
+@import './layout/sidebar';
+@import './layout/topbar';
+
+@import './components/VButtons';
+@import './components/VCard';
+@import './components/VField';
+@import './components/VInput';
+@import './components/VNavigationDrawer';
+@import './components/VShadow';
+@import './components/VTextField';
+@import './components/VTabs';
+
+@import './pages/dashboards';
+@import './pages/khach-hang';
+@import './pages/nhan-vien';
+@import './pages/phieu-giam-gia';
+@import './pages/chat-lieu';
+@import './pages/kich-thuoc';
+@import './pages/mau-sac';
+@import './pages/san-pham';
+@import './pages/thuong-hieu';
+@import './pages/dot-giam-gia';
+@import './pages/hoa-don';
+@import './pages/thu-vien-anh';
+
+@import 'vue3-perfect-scrollbar/style.css';
