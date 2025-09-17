@@ -59,16 +59,6 @@
             <span class="error-message" v-if="errors.deGiayId">{{ errors.deGiayId }}</span>
           </div>
           <div class="form-group">
-            <label>Kiểu dáng *</label>
-            <select v-model="form.kieuDangId" :class="{ 'error': errors.kieuDangId }">
-              <option value="0" disabled>Chọn kiểu dáng</option>
-              <option v-for="kieuDang in kieuDangList" :key="kieuDang.id" :value="kieuDang.id">
-                {{ kieuDang.ten }}
-              </option>
-            </select>
-            <span class="error-message" v-if="errors.kieuDangId">{{ errors.kieuDangId }}</span>
-          </div>
-          <div class="form-group">
             <label>Ảnh đại diện *</label>
             <div class="image-upload-container" @click="$refs.fileInput.click()" :class="{ 'uploading': isUploading }">
               <input ref="fileInput" type="file" accept="image/*" style="display: none;" @change="handleImageUpload" />
@@ -121,7 +111,6 @@ export default {
         thuongHieuId: 0,
         chatLieuId: 0,
         deGiayId: 0,
-        kieuDangId: 0,
         duongDanAnh: null,
         trangThai: 1,
         ngayCapNhat: new Date().toISOString().split('T')[0],
@@ -141,14 +130,12 @@ export default {
         thuongHieuId: '',
         chatLieuId: '',
         deGiayId: '',
-        kieuDangId: '',
         duongDanAnh: '',
         trangThai: '',
       },
       thuongHieuList: [],
       chatLieuList: [],
       deGiayList: [],
-      kieuDangList: [],
     };
   },
   methods: {
@@ -194,20 +181,6 @@ export default {
         toast.error(this.error);
       }
     },
-    async fetchKieuDang() {
-      try {
-        const response = await fetch('http://localhost:8080/kieu-dang/hien-thi');
-        const data = await response.json();
-        this.kieuDangList = Array.isArray(data) ? data : data.data || [];
-        if (this.kieuDangList.length === 0) {
-          throw new Error('Danh sách kiểu dáng trống.');
-        }
-      } catch (err) {
-        console.error('Lỗi khi lấy danh sách kiểu dáng:', err);
-        this.error = 'Không thể tải danh sách kiểu dáng: ' + err.message;
-        toast.error(this.error);
-      }
-    },
     async fetchSanPham() {
       const id = this.$route.params.id;
       if (id) {
@@ -225,7 +198,6 @@ export default {
             thuongHieuId: sanPham.thuongHieuId || 0,
             chatLieuId: sanPham.chatLieuId || 0,
             deGiayId: sanPham.deGiayId || 0,
-            kieuDangId: sanPham.kieuDangId || 0,
             duongDanAnh: null, // Không set file vào form
             trangThai: sanPham.trangThai || 1,
             ngayCapNhat: sanPham.ngayCapNhat || new Date().toISOString().split('T')[0],
@@ -279,7 +251,6 @@ export default {
         thuongHieuId: '',
         chatLieuId: '',
         deGiayId: '',
-        kieuDangId: '',
         duongDanAnh: '',
         trangThai: '',
       };
@@ -302,11 +273,6 @@ export default {
 
       if (!this.form.deGiayId || this.form.deGiayId === 0 || this.form.deGiayId === '0') {
         this.errors.deGiayId = 'Đế giày là bắt buộc.';
-        isValid = false;
-      }
-
-      if (!this.form.kieuDangId || this.form.kieuDangId === 0 || this.form.kieuDangId === '0') {
-        this.errors.kieuDangId = 'Kiểu dáng là bắt buộc.';
         isValid = false;
       }
 
@@ -356,7 +322,6 @@ export default {
         formData.append('thuongHieuId', Number(this.form.thuongHieuId).toString());
         formData.append('chatLieuId', Number(this.form.chatLieuId).toString());
         formData.append('deGiayId', Number(this.form.deGiayId).toString());
-        formData.append('kieuDangId', Number(this.form.kieuDangId).toString());
         
         // SỬA: Xử lý ảnh - chỉ append khi có ảnh mới được chọn
         if (this.form.duongDanAnh && this.form.duongDanAnh instanceof File) {
@@ -412,14 +377,12 @@ export default {
           this.fetchThuongHieu(),
           this.fetchChatLieu(),
           this.fetchDeGiay(),
-          this.fetchKieuDang(),
           this.fetchSanPham(),
         ]);
         this.isDataLoaded =
           this.thuongHieuList.length > 0 &&
           this.chatLieuList.length > 0 &&
-          this.deGiayList.length > 0 &&
-          this.kieuDangList.length > 0;
+          this.deGiayList.length > 0;
       } catch (err) {
         this.error = 'Lỗi khi tải dữ liệu: ' + err.message;
         toast.error(this.error);
