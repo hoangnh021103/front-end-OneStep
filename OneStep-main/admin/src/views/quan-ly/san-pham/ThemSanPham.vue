@@ -58,7 +58,6 @@
             </select>
             <span class="error-message" v-if="errors.deGiayId">{{ errors.deGiayId }}</span>
           </div>
-          <!-- SỬA: Thêm select cho KieuDang (thiếu trong mã gốc, nhưng DTO backend yêu cầu) -->
           <div class="form-group">
             <label>Kiểu dáng *</label>
             <select v-model="form.kieuDangId" :class="{ 'error': errors.kieuDangId }">
@@ -122,13 +121,14 @@ export default {
         thuongHieuId: 0,
         chatLieuId: 0,
         deGiayId: 0,
-        kieuDangId: 0,  // SỬA: Thêm kieuDangId
+        kieuDangId: 0,
         duongDanAnh: null,
         trangThai: 1,
         ngayCapNhat: new Date().toISOString().split('T')[0],
         daXoa: 0,
       },
       imageUrl: null,
+      originalImageUrl: null, // Lưu URL ảnh gốc khi edit
       isSubmitting: false,
       isUploading: false,
       isEditing: false,
@@ -141,14 +141,14 @@ export default {
         thuongHieuId: '',
         chatLieuId: '',
         deGiayId: '',
-        kieuDangId: '',  // SỬA: Thêm lỗi cho kieuDangId
+        kieuDangId: '',
         duongDanAnh: '',
         trangThai: '',
       },
       thuongHieuList: [],
       chatLieuList: [],
       deGiayList: [],
-      kieuDangList: [],  // SỬA: Thêm kieuDangList
+      kieuDangList: [],
     };
   },
   methods: {
@@ -194,10 +194,9 @@ export default {
         toast.error(this.error);
       }
     },
-    // SỬA: Thêm fetchKieuDang để lấy danh sách KieuDang
     async fetchKieuDang() {
       try {
-        const response = await fetch('http://localhost:8080/kieu-dang/hien-thi');  // Giả sử endpoint là /kieu-dang/hien-thi, thay đổi nếu khác
+        const response = await fetch('http://localhost:8080/kieu-dang/hien-thi');
         const data = await response.json();
         this.kieuDangList = Array.isArray(data) ? data : data.data || [];
         if (this.kieuDangList.length === 0) {
@@ -217,6 +216,7 @@ export default {
           this.isSubmitting = true;
           const response = await axios.get(`http://localhost:8080/san-pham/${id}`);
           const sanPham = response.data;
+          
           this.form = {
             maSanPham: sanPham.maSanPham || sanPham.id,
             tenSanPham: sanPham.tenSanPham || '',
@@ -225,14 +225,18 @@ export default {
             thuongHieuId: sanPham.thuongHieuId || 0,
             chatLieuId: sanPham.chatLieuId || 0,
             deGiayId: sanPham.deGiayId || 0,
-            kieuDangId: sanPham.kieuDangId || 0,  // SỬA: Thêm kieuDangId
-            duongDanAnh: null,
+            kieuDangId: sanPham.kieuDangId || 0,
+            duongDanAnh: null, // Không set file vào form
             trangThai: sanPham.trangThai || 1,
             ngayCapNhat: sanPham.ngayCapNhat || new Date().toISOString().split('T')[0],
             daXoa: sanPham.daXoa || 0,
           };
-          this.imageUrl = sanPham.duongDanAnh || null;
+          
+          // Lưu URL ảnh gốc và hiển thị
+          this.originalImageUrl = sanPham.duongDanAnh || null;
+          this.imageUrl = this.originalImageUrl;
           this.isEditing = true;
+          
           toast.info('Đã tải thông tin sản phẩm');
         } catch (err) {
           console.error('Lỗi khi tải thông tin sản phẩm:', err);
@@ -257,14 +261,11 @@ export default {
         this.errors.duongDanAnh = 'Kích thước ảnh không được vượt quá 5MB.';
         return;
       }
-
-    
-
       this.isUploading = true;
       const reader = new FileReader();
       reader.onload = (e) => {
-        this.imageUrl = e.target.result;
-        this.form.duongDanAnh = file;
+        this.imageUrl = e.target.result; // Hiển thị ảnh mới
+        this.form.duongDanAnh = file; // Lưu file mới
         this.errors.duongDanAnh = '';
         this.isUploading = false;
       };
@@ -278,41 +279,59 @@ export default {
         thuongHieuId: '',
         chatLieuId: '',
         deGiayId: '',
-        kieuDangId: '',  // SỬA: Thêm kiểm tra kieuDangId
+        kieuDangId: '',
         duongDanAnh: '',
         trangThai: '',
       };
       let isValid = true;
 
-      if (!this.form.tenSanPham.trim()) {
+      if (!this.form.tenSanPham || !this.form.tenSanPham.trim()) {
         this.errors.tenSanPham = 'Tên sản phẩm là bắt buộc.';
         isValid = false;
       }
-      if (!this.form.thuongHieuId || this.form.thuongHieuId === 0) {
+
+      if (!this.form.thuongHieuId || this.form.thuongHieuId === 0 || this.form.thuongHieuId === '0') {
         this.errors.thuongHieuId = 'Thương hiệu là bắt buộc.';
         isValid = false;
       }
-      if (!this.form.chatLieuId || this.form.chatLieuId === 0) {
+
+      if (!this.form.chatLieuId || this.form.chatLieuId === 0 || this.form.chatLieuId === '0') {
         this.errors.chatLieuId = 'Chất liệu là bắt buộc.';
         isValid = false;
       }
-      if (!this.form.deGiayId || this.form.deGiayId === 0) {
+
+      if (!this.form.deGiayId || this.form.deGiayId === 0 || this.form.deGiayId === '0') {
         this.errors.deGiayId = 'Đế giày là bắt buộc.';
         isValid = false;
       }
-      // SỬA: Thêm kiểm tra kieuDangId
-      if (!this.form.kieuDangId || this.form.kieuDangId === 0) {
+
+      if (!this.form.kieuDangId || this.form.kieuDangId === 0 || this.form.kieuDangId === '0') {
         this.errors.kieuDangId = 'Kiểu dáng là bắt buộc.';
         isValid = false;
       }
-      if (!this.form.duongDanAnh && !this.isEditing) {
-        this.errors.duongDanAnh = 'Ảnh đại diện là bắt buộc.';
-        isValid = false;
+
+      // Kiểm tra ảnh
+      if (!this.isEditing) {
+        // Thêm mới: bắt buộc phải có ảnh
+        if (!this.form.duongDanAnh) {
+          this.errors.duongDanAnh = 'Ảnh đại diện là bắt buộc.';
+          isValid = false;
+        }
+      } else {
+        // Chỉnh sửa: phải có ảnh cũ hoặc ảnh mới
+        if (!this.originalImageUrl && !this.form.duongDanAnh) {
+          this.errors.duongDanAnh = 'Ảnh đại diện là bắt buộc.';
+          isValid = false;
+        }
       }
-      if (this.form.trangThai !== 0 && this.form.trangThai !== 1) {
+
+      // SỬA: Validation trạng thái - chấp nhận cả 0 và 1
+      const trangThai = Number(this.form.trangThai);
+      if (trangThai !== 0 && trangThai !== 1) {
         this.errors.trangThai = 'Vui lòng chọn trạng thái hợp lệ.';
         isValid = false;
       }
+
       return isValid;
     },
     async handleSubmit() {
@@ -326,11 +345,10 @@ export default {
         this.isUploading = true;
 
         const formData = new FormData();
-        // SỬA: Không tạo maSanPham bằng Date.now() cho add mới. Chỉ append khi editing
+        
         if (this.isEditing && this.form.maSanPham) {
           formData.append('maSanPham', this.form.maSanPham.toString());
         }
-        // Không append maSanPham cho add mới, backend tự sinh
 
         formData.append('tenSanPham', this.form.tenSanPham);
         formData.append('maCode', this.form.maCode);
@@ -338,44 +356,45 @@ export default {
         formData.append('thuongHieuId', Number(this.form.thuongHieuId).toString());
         formData.append('chatLieuId', Number(this.form.chatLieuId).toString());
         formData.append('deGiayId', Number(this.form.deGiayId).toString());
-        // SỬA: Thêm append kieuDangId
         formData.append('kieuDangId', Number(this.form.kieuDangId).toString());
-        if (this.form.duongDanAnh) {
+        
+        // SỬA: Xử lý ảnh - chỉ append khi có ảnh mới được chọn
+        if (this.form.duongDanAnh && this.form.duongDanAnh instanceof File) {
           formData.append('duongDanAnh', this.form.duongDanAnh);
         }
+        
         formData.append('trangThai', Number(this.form.trangThai).toString());
         formData.append('ngayCapNhat', this.form.ngayCapNhat);
         formData.append('daXoa', Number(this.form.daXoa).toString());
 
-        // SỬA: Thêm debug log FormData
         console.log('FormData keys:', Array.from(formData.keys()));
         for (let [key, value] of formData.entries()) {
           if (key !== 'duongDanAnh') {
             console.log(`${key}: ${value}`);
           } else {
-            console.log(`${key}: File được chọn (không log nội dung)`);
+            console.log(`${key}: File được chọn`);
           }
         }
 
         let response;
         if (this.isEditing && this.form.maSanPham) {
-          // Cập nhật sản phẩm
           response = await fetch(`http://localhost:8080/san-pham/update/${this.form.maSanPham}`, {
             method: 'PUT',
             body: formData,
           });
         } else {
-          // Thêm mới sản phẩm
           response = await fetch('http://localhost:8080/san-pham/add', {
             method: 'POST',
             body: formData,
           });
         }
+        
         if (!response.ok) {
           const errorData = await response.text();
           console.error('Lỗi response:', errorData);
           throw new Error(`Lỗi HTTP! Trạng thái: ${response.status}, Thông báo: ${errorData}`);
         }
+        
         toast.success(this.isEditing ? 'Cập nhật sản phẩm thành công!' : 'Thêm sản phẩm thành công!');
         this.$router.push({ name: 'SanPham' });
       } catch (err) {
@@ -389,19 +408,18 @@ export default {
     },
     async loadData() {
       try {
-        // SỬA: Thêm fetchKieuDang vào Promise.all
         await Promise.all([
           this.fetchThuongHieu(),
           this.fetchChatLieu(),
           this.fetchDeGiay(),
-          this.fetchKieuDang(),  // SỬA: Thêm fetchKieuDang
+          this.fetchKieuDang(),
           this.fetchSanPham(),
         ]);
         this.isDataLoaded =
           this.thuongHieuList.length > 0 &&
           this.chatLieuList.length > 0 &&
           this.deGiayList.length > 0 &&
-          this.kieuDangList.length > 0;  // SỬA: Thêm kiểm tra kieuDangList
+          this.kieuDangList.length > 0;
       } catch (err) {
         this.error = 'Lỗi khi tải dữ liệu: ' + err.message;
         toast.error(this.error);
