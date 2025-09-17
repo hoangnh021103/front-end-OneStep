@@ -1,4 +1,3 @@
-```vue
 <template>
   <div class="container">
     <div v-if="!isDataLoaded && !error" class="loading">Đang tải dữ liệu...</div>
@@ -59,6 +58,17 @@
             </select>
             <span class="error-message" v-if="errors.deGiayId">{{ errors.deGiayId }}</span>
           </div>
+          <!-- SỬA: Thêm select cho KieuDang (thiếu trong mã gốc, nhưng DTO backend yêu cầu) -->
+          <div class="form-group">
+            <label>Kiểu dáng *</label>
+            <select v-model="form.kieuDangId" :class="{ 'error': errors.kieuDangId }">
+              <option value="0" disabled>Chọn kiểu dáng</option>
+              <option v-for="kieuDang in kieuDangList" :key="kieuDang.id" :value="kieuDang.id">
+                {{ kieuDang.ten }}
+              </option>
+            </select>
+            <span class="error-message" v-if="errors.kieuDangId">{{ errors.kieuDangId }}</span>
+          </div>
           <div class="form-group">
             <label>Ảnh đại diện *</label>
             <div class="image-upload-container" @click="$refs.fileInput.click()" :class="{ 'uploading': isUploading }">
@@ -112,6 +122,7 @@ export default {
         thuongHieuId: 0,
         chatLieuId: 0,
         deGiayId: 0,
+        kieuDangId: 0,  // SỬA: Thêm kieuDangId
         duongDanAnh: null,
         trangThai: 1,
         ngayCapNhat: new Date().toISOString().split('T')[0],
@@ -130,12 +141,14 @@ export default {
         thuongHieuId: '',
         chatLieuId: '',
         deGiayId: '',
+        kieuDangId: '',  // SỬA: Thêm lỗi cho kieuDangId
         duongDanAnh: '',
         trangThai: '',
       },
       thuongHieuList: [],
       chatLieuList: [],
       deGiayList: [],
+      kieuDangList: [],  // SỬA: Thêm kieuDangList
     };
   },
   methods: {
@@ -181,6 +194,21 @@ export default {
         toast.error(this.error);
       }
     },
+    // SỬA: Thêm fetchKieuDang để lấy danh sách KieuDang
+    async fetchKieuDang() {
+      try {
+        const response = await fetch('http://localhost:8080/kieu-dang/hien-thi');  // Giả sử endpoint là /kieu-dang/hien-thi, thay đổi nếu khác
+        const data = await response.json();
+        this.kieuDangList = Array.isArray(data) ? data : data.data || [];
+        if (this.kieuDangList.length === 0) {
+          throw new Error('Danh sách kiểu dáng trống.');
+        }
+      } catch (err) {
+        console.error('Lỗi khi lấy danh sách kiểu dáng:', err);
+        this.error = 'Không thể tải danh sách kiểu dáng: ' + err.message;
+        toast.error(this.error);
+      }
+    },
     async fetchSanPham() {
       const id = this.$route.params.id;
       if (id) {
@@ -197,6 +225,7 @@ export default {
             thuongHieuId: sanPham.thuongHieuId || 0,
             chatLieuId: sanPham.chatLieuId || 0,
             deGiayId: sanPham.deGiayId || 0,
+            kieuDangId: sanPham.kieuDangId || 0,  // SỬA: Thêm kieuDangId
             duongDanAnh: null,
             trangThai: sanPham.trangThai || 1,
             ngayCapNhat: sanPham.ngayCapNhat || new Date().toISOString().split('T')[0],
@@ -252,6 +281,7 @@ export default {
         thuongHieuId: '',
         chatLieuId: '',
         deGiayId: '',
+        kieuDangId: '',  // SỬA: Thêm kiểm tra kieuDangId
         duongDanAnh: '',
         trangThai: '',
       };
@@ -271,6 +301,11 @@ export default {
       }
       if (!this.form.deGiayId || this.form.deGiayId === 0) {
         this.errors.deGiayId = 'Đế giày là bắt buộc.';
+        isValid = false;
+      }
+      // SỬA: Thêm kiểm tra kieuDangId
+      if (!this.form.kieuDangId || this.form.kieuDangId === 0) {
+        this.errors.kieuDangId = 'Kiểu dáng là bắt buộc.';
         isValid = false;
       }
       if (!this.form.duongDanAnh && !this.isEditing) {
@@ -294,16 +329,20 @@ export default {
         this.isUploading = true;
 
         const formData = new FormData();
-        // Chỉ append maSanPham khi editing
+        // SỬA: Không tạo maSanPham bằng Date.now() cho add mới. Chỉ append khi editing
         if (this.isEditing && this.form.maSanPham) {
           formData.append('maSanPham', this.form.maSanPham.toString());
         }
+        // Không append maSanPham cho add mới, backend tự sinh
+
         formData.append('tenSanPham', this.form.tenSanPham);
         formData.append('maCode', this.form.maCode);
         formData.append('moTa', this.form.moTa);
         formData.append('thuongHieuId', Number(this.form.thuongHieuId).toString());
         formData.append('chatLieuId', Number(this.form.chatLieuId).toString());
         formData.append('deGiayId', Number(this.form.deGiayId).toString());
+        // SỬA: Thêm append kieuDangId
+        formData.append('kieuDangId', Number(this.form.kieuDangId).toString());
         if (this.form.duongDanAnh) {
           formData.append('duongDanAnh', this.form.duongDanAnh);
         }
@@ -311,7 +350,7 @@ export default {
         formData.append('ngayCapNhat', this.form.ngayCapNhat);
         formData.append('daXoa', Number(this.form.daXoa).toString());
 
-        // Debug FormData
+        // SỬA: Thêm debug log FormData
         console.log('FormData keys:', Array.from(formData.keys()));
         for (let [key, value] of formData.entries()) {
           if (key !== 'duongDanAnh') {
@@ -323,11 +362,13 @@ export default {
 
         let response;
         if (this.isEditing && this.form.maSanPham) {
+          // Cập nhật sản phẩm
           response = await fetch(`http://localhost:8080/san-pham/update/${this.form.maSanPham}`, {
             method: 'PUT',
             body: formData,
           });
         } else {
+          // Thêm mới sản phẩm
           response = await fetch('http://localhost:8080/san-pham/add', {
             method: 'POST',
             body: formData,
@@ -351,16 +392,19 @@ export default {
     },
     async loadData() {
       try {
+        // SỬA: Thêm fetchKieuDang vào Promise.all
         await Promise.all([
           this.fetchThuongHieu(),
           this.fetchChatLieu(),
           this.fetchDeGiay(),
+          this.fetchKieuDang(),  // SỬA: Thêm fetchKieuDang
           this.fetchSanPham(),
         ]);
         this.isDataLoaded =
           this.thuongHieuList.length > 0 &&
           this.chatLieuList.length > 0 &&
-          this.deGiayList.length > 0;
+          this.deGiayList.length > 0 &&
+          this.kieuDangList.length > 0;  // SỬA: Thêm kiểm tra kieuDangList
       } catch (err) {
         this.error = 'Lỗi khi tải dữ liệu: ' + err.message;
         toast.error(this.error);
@@ -576,4 +620,3 @@ button {
   }
 }
 </style>
-```
