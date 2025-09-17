@@ -258,10 +258,7 @@ export default {
         return;
       }
 
-      if (!allowedTypes.includes(file.type)) {
-        this.errors.duongDanAnh = 'Chỉ hỗ trợ file JPEG, PNG, GIF.';
-        return;
-      }
+    
 
       this.isUploading = true;
       const reader = new FileReader();
