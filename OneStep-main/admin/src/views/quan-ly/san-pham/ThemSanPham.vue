@@ -1,3 +1,4 @@
+```vue
 <template>
   <div class="container">
     <div v-if="!isDataLoaded && !error" class="loading">Đang tải dữ liệu...</div>
@@ -59,16 +60,6 @@
             <span class="error-message" v-if="errors.deGiayId">{{ errors.deGiayId }}</span>
           </div>
           <div class="form-group">
-            <label>Kiểu dáng *</label>
-            <select v-model="form.kieuDangId" :class="{ 'error': errors.kieuDangId }">
-              <option value="0" disabled>Chọn kiểu dáng</option>
-              <option v-for="kieuDang in kieuDangList" :key="kieuDang.id" :value="kieuDang.id">
-                {{ kieuDang.ten }}
-              </option>
-            </select>
-            <span class="error-message" v-if="errors.kieuDangId">{{ errors.kieuDangId }}</span>
-          </div>
-          <div class="form-group">
             <label>Ảnh đại diện *</label>
             <div class="image-upload-container" @click="$refs.fileInput.click()" :class="{ 'uploading': isUploading }">
               <input ref="fileInput" type="file" accept="image/*" style="display: none;" @change="handleImageUpload" />
@@ -121,7 +112,6 @@ export default {
         thuongHieuId: 0,
         chatLieuId: 0,
         deGiayId: 0,
-        kieuDangId: 0,
         duongDanAnh: null,
         trangThai: 1,
         ngayCapNhat: new Date().toISOString().split('T')[0],
@@ -140,14 +130,12 @@ export default {
         thuongHieuId: '',
         chatLieuId: '',
         deGiayId: '',
-        kieuDangId: '',
         duongDanAnh: '',
         trangThai: '',
       },
       thuongHieuList: [],
       chatLieuList: [],
       deGiayList: [],
-      kieuDangList: [],
     };
   },
   methods: {
@@ -193,20 +181,6 @@ export default {
         toast.error(this.error);
       }
     },
-    async fetchKieuDang() {
-      try {
-        const response = await fetch('http://localhost:8080/kieu-dang/hien-thi');
-        const data = await response.json();
-        this.kieuDangList = Array.isArray(data) ? data : data.data || [];
-        if (this.kieuDangList.length === 0) {
-          throw new Error('Danh sách kiểu dáng trống.');
-        }
-      } catch (err) {
-        console.error('Lỗi khi lấy danh sách kiểu dáng:', err);
-        this.error = 'Không thể tải danh sách kiểu dáng: ' + err.message;
-        toast.error(this.error);
-      }
-    },
     async fetchSanPham() {
       const id = this.$route.params.id;
       if (id) {
@@ -223,7 +197,6 @@ export default {
             thuongHieuId: sanPham.thuongHieuId || 0,
             chatLieuId: sanPham.chatLieuId || 0,
             deGiayId: sanPham.deGiayId || 0,
-            kieuDangId: sanPham.kieuDangId || 0,
             duongDanAnh: null,
             trangThai: sanPham.trangThai || 1,
             ngayCapNhat: sanPham.ngayCapNhat || new Date().toISOString().split('T')[0],
@@ -243,14 +216,21 @@ export default {
     },
     handleImageUpload(event) {
       const file = event.target.files[0];
-      if (!file) return;
+      if (!file) {
+        this.errors.duongDanAnh = 'Vui lòng chọn file ảnh.';
+        return;
+      }
 
       const maxSize = 5 * 1024 * 1024; // 5MB
       const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
 
-
       if (file.size > maxSize) {
         this.errors.duongDanAnh = 'Kích thước ảnh không được vượt quá 5MB.';
+        return;
+      }
+
+      if (!allowedTypes.includes(file.type)) {
+        this.errors.duongDanAnh = 'Chỉ hỗ trợ file JPEG, PNG, GIF.';
         return;
       }
 
@@ -272,7 +252,6 @@ export default {
         thuongHieuId: '',
         chatLieuId: '',
         deGiayId: '',
-        kieuDangId: '',
         duongDanAnh: '',
         trangThai: '',
       };
@@ -292,10 +271,6 @@ export default {
       }
       if (!this.form.deGiayId || this.form.deGiayId === 0) {
         this.errors.deGiayId = 'Đế giày là bắt buộc.';
-        isValid = false;
-      }
-      if (!this.form.kieuDangId || this.form.kieuDangId === 0) {
-        this.errors.kieuDangId = 'Kiểu dáng là bắt buộc.';
         isValid = false;
       }
       if (!this.form.duongDanAnh && !this.isEditing) {
@@ -319,44 +294,51 @@ export default {
         this.isUploading = true;
 
         const formData = new FormData();
+        // Chỉ append maSanPham khi editing
+        if (this.isEditing && this.form.maSanPham) {
+          formData.append('maSanPham', this.form.maSanPham.toString());
+        }
         formData.append('tenSanPham', this.form.tenSanPham);
         formData.append('maCode', this.form.maCode);
         formData.append('moTa', this.form.moTa);
-        formData.append('thuongHieuId', Number(this.form.thuongHieuId));
-        formData.append('chatLieuId', Number(this.form.chatLieuId));
-        formData.append('deGiayId', Number(this.form.deGiayId));
-        formData.append('kieuDangId', Number(this.form.kieuDangId));
+        formData.append('thuongHieuId', Number(this.form.thuongHieuId).toString());
+        formData.append('chatLieuId', Number(this.form.chatLieuId).toString());
+        formData.append('deGiayId', Number(this.form.deGiayId).toString());
         if (this.form.duongDanAnh) {
           formData.append('duongDanAnh', this.form.duongDanAnh);
         }
-        formData.append('trangThai', Number(this.form.trangThai));
+        formData.append('trangThai', Number(this.form.trangThai).toString());
         formData.append('ngayCapNhat', this.form.ngayCapNhat);
-        formData.append('daXoa', Number(this.form.daXoa));
+        formData.append('daXoa', Number(this.form.daXoa).toString());
 
+        // Debug FormData
+        console.log('FormData keys:', Array.from(formData.keys()));
+        for (let [key, value] of formData.entries()) {
+          if (key !== 'duongDanAnh') {
+            console.log(`${key}: ${value}`);
+          } else {
+            console.log(`${key}: File được chọn (không log nội dung)`);
+          }
+        }
+
+        let response;
         if (this.isEditing && this.form.maSanPham) {
-          // Cập nhật sản phẩm
-          const response = await fetch(`http://localhost:8080/san-pham/update/${this.form.maSanPham}`, {
+          response = await fetch(`http://localhost:8080/san-pham/update/${this.form.maSanPham}`, {
             method: 'PUT',
             body: formData,
           });
-          if (!response.ok) {
-            const errorData = await response.text();
-            throw new Error(`Lỗi HTTP! Trạng thái: ${response.status}, Thông báo: ${errorData}`);
-          }
-          toast.success('Cập nhật sản phẩm thành công!');
         } else {
-          // Thêm mới sản phẩm
-          const response = await fetch('http://localhost:8080/san-pham/add', {
+          response = await fetch('http://localhost:8080/san-pham/add', {
             method: 'POST',
             body: formData,
           });
-          if (!response.ok) {
-            const errorData = await response.text();
-            throw new Error(`Lỗi HTTP! Trạng thái: ${response.status}, Thông báo: ${errorData}`);
-          }
-          toast.success('Thêm sản phẩm thành công!');
         }
-
+        if (!response.ok) {
+          const errorData = await response.text();
+          console.error('Lỗi response:', errorData);
+          throw new Error(`Lỗi HTTP! Trạng thái: ${response.status}, Thông báo: ${errorData}`);
+        }
+        toast.success(this.isEditing ? 'Cập nhật sản phẩm thành công!' : 'Thêm sản phẩm thành công!');
         this.$router.push({ name: 'SanPham' });
       } catch (err) {
         const action = this.isEditing ? 'cập nhật' : 'thêm';
@@ -373,14 +355,12 @@ export default {
           this.fetchThuongHieu(),
           this.fetchChatLieu(),
           this.fetchDeGiay(),
-          this.fetchKieuDang(),
           this.fetchSanPham(),
         ]);
         this.isDataLoaded =
           this.thuongHieuList.length > 0 &&
           this.chatLieuList.length > 0 &&
-          this.deGiayList.length > 0 &&
-          this.kieuDangList.length > 0;
+          this.deGiayList.length > 0;
       } catch (err) {
         this.error = 'Lỗi khi tải dữ liệu: ' + err.message;
         toast.error(this.error);
@@ -596,3 +576,4 @@ button {
   }
 }
 </style>
+```
