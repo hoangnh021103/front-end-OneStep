@@ -38,8 +38,8 @@
           </tr>
           <tr v-for="(discount, index) in paginatedDiscounts" :key="discount.id">
             <td>{{ index + 1 + (currentPage - 1) * pageSize }}</td>
-            <td>{{ discount.tenSanPham || discount.sanPhamName || 'N/A' }}</td>
-            <td>{{ discount.tenVoucher || discount.voucherName || 'N/A' }}</td>
+            <td>{{ discount.tenSanPham || 'N/A' }}</td>
+            <td>{{ discount.tenVoucher || 'N/A' }}</td>
             <td>{{ formatDate(discount.ngayCapNhat) }}</td>
             <td class="actions">
               <button class="action-btn edit" title="Sửa" @click="openEditModal(discount)"><i class="fa fa-edit"></i></button>
@@ -71,21 +71,24 @@
         <form @submit.prevent="saveDiscount">
           <div class="form-group">
             <label>Sản phẩm:</label>
-            <select v-model.number="form.sanPhamId" required>
-              <option :value="0">-- Chọn sản phẩm --</option>
+            <!-- NOTE: không dùng .number để tránh ép kiểu NaN khi id là string -->
+            <select v-model="form.sanPhamId" required>
+              <option value="">-- Chọn sản phẩm --</option>
               <option v-for="sp in sanPhamList" :key="sp.id" :value="sp.id">
-                {{ sp.tenSanPham || sp.ten || sp.name }}
+                {{ sp.tenSanPham }}
               </option>
             </select>
+            <div v-if="form.sanPhamId" class="hint-small">Đang chọn: {{ findSanPhamName(form.sanPhamId) }}</div>
           </div>
           <div class="form-group">
             <label>Voucher:</label>
-            <select v-model.number="form.voucherId" required>
-              <option :value="0">-- Chọn voucher --</option>
+            <select v-model="form.voucherId" required>
+              <option value="">-- Chọn voucher --</option>
               <option v-for="vc in voucherList" :key="vc.id" :value="vc.id">
-                {{ vc.tenVoucher || vc.ten || vc.name }}
+                {{ vc.tenVoucher }}
               </option>
             </select>
+            <div v-if="form.voucherId" class="hint-small">Đang chọn: {{ findVoucherName(form.voucherId) }}</div>
             <div v-if="voucherList.length === 0" class="hint">Không tìm thấy voucher — kiểm tra API.</div>
           </div>
           <div class="modal-actions">
@@ -116,9 +119,10 @@ export default {
       pageSize: 10,
       showModal: false,
       editingId: null,
+      // Chú ý: dùng string để an toàn với id là number hoặc mã string
       form: {
-        sanPhamId: 0,
-        voucherId: 0,
+        sanPhamId: '',
+        voucherId: '',
       },
       isLoading: false,
     };
@@ -129,9 +133,7 @@ export default {
       if (!kw) return this.discounts;
       return this.discounts.filter(d =>
         (d.tenSanPham && d.tenSanPham.toLowerCase().includes(kw)) ||
-        (d.tenVoucher && d.tenVoucher.toLowerCase().includes(kw)) ||
-        (d.sanPhamName && d.sanPhamName.toLowerCase().includes(kw)) ||
-        (d.voucherName && d.voucherName.toLowerCase().includes(kw))
+        (d.tenVoucher && d.tenVoucher.toLowerCase().includes(kw))
       );
     },
     totalPages() {
@@ -154,17 +156,27 @@ export default {
       this.currentPage = 1;
     },
 
+    // Helper: trả về tên sản phẩm theo id (nếu có), dùng cho hiển thị "Đang chọn"
+    findSanPhamName(id) {
+      const sp = this.sanPhamList.find(x => String(x.id) === String(id));
+      return sp ? sp.tenSanPham : `(ID: ${id})`;
+    },
+    findVoucherName(id) {
+      const vc = this.voucherList.find(x => String(x.id) === String(id));
+      return vc ? vc.tenVoucher : `(ID: ${id})`;
+    },
+
     async fetchSanPham() {
       try {
         const res = await fetch('http://localhost:8080/san-pham/hien-thi');
         if (!res.ok) throw new Error(`status ${res.status}`);
         const data = await res.json();
         const list = Array.isArray(data) ? data : (data.data || []);
+        // chuyển id thành STRING để so sánh an toàn
         this.sanPhamList = list.map(item => ({
-          id: item.maSanPham,   // 🔑 luôn lấy maSanPham
-          tenSanPham: item.tenSanPham
-        }));
-        console.log('Danh sách sản phẩm:', this.sanPhamList); // Debug log
+          id: String(item.id ?? item.maSanPham ?? item.ma ?? item.ma_san_pham ?? ''),
+          tenSanPham: item.tenSanPham || item.ten || item.name || `#${item.id ?? item.maSanPham ?? ''}`
+        })).filter(x => x.id !== '');
       } catch (err) {
         console.error('fetchSanPham error:', err);
         toast.error('Không tải được danh sách sản phẩm.');
@@ -179,10 +191,9 @@ export default {
         const data = await res.json();
         const list = Array.isArray(data) ? data : (data.data || []);
         this.voucherList = list.map(item => ({
-          id: item.id || item.ma || item.idVoucher,
-          tenVoucher: item.ten || item.tenVoucher || item.name
-        }));
-        console.log('Danh sách voucher:', this.voucherList); // Debug log
+          id: String(item.id ?? item.ma ?? item.idVoucher ?? ''),
+          tenVoucher: item.ten || item.tenVoucher || item.name || `#${item.id ?? ''}`
+        })).filter(x => x.id !== '');
       } catch (err) {
         console.error('fetchVoucher error:', err);
         toast.error('Không tải được danh sách voucher.');
@@ -201,20 +212,13 @@ export default {
 
         this.discounts = list.map(item => ({
           id: item.id,
-          // ✅ Lưu cả maSanPham và sanPhamId để xử lý đồng bộ
-          maSanPham: item.maSanPham || item.sanPham?.maSanPham,
-          sanPhamId: item.sanPhamId || item.maSanPham || item.sanPham?.maSanPham,
-          voucherId: item.voucherId || item.voucher?.id,
-          tenSanPham: item.tenSanPham 
-                      || item.sanPham?.tenSanPham 
-                      || item.sanPham?.ten,
-          tenVoucher: item.tenVoucher 
-                      || item.voucher?.tenVoucher 
-                      || item.voucher?.ten,
-          ngayCapNhat: item.ngayCapNhat || item.updatedAt
+          // lưu stringify để match sanPhamList (an toàn cả numeric & string)
+          sanPhamId: String(item.sanPhamId ?? item.sanPham?.id ?? item.sanPham?.maSanPham ?? item.maSanPham ?? ''),
+          voucherId: String(item.voucherId ?? item.voucher?.id ?? item.voucher?.ma ?? ''),
+          tenSanPham: item.tenSanPham || item.sanPham?.tenSanPham || item.sanPham?.ten || item.ten || '',
+          tenVoucher: item.tenVoucher || item.voucher?.tenVoucher || item.voucher?.ten || item.ten || '',
+          ngayCapNhat: item.ngayCapNhat || item.updatedAt || item.updated_at || ''
         }));
-        
-        console.log('Danh sách discounts:', this.discounts); // Debug log
       } catch (err) {
         console.error("fetchDiscounts error", err);
         toast.error("Không tải được danh sách đợt giảm giá.");
@@ -224,47 +228,35 @@ export default {
 
     openAddModal() {
       this.editingId = null;
-      this.form = { sanPhamId: 0, voucherId: 0 };
+      this.form = { sanPhamId: '', voucherId: '' };
       this.showModal = true;
     },
-    
+
     openEditModal(discount) {
-      console.log('🚀 Opening edit modal for discount:', discount); // Debug log
-      console.log('📋 Current sanPhamList:', this.sanPhamList); // Debug log
-      console.log('🎫 Current voucherList:', this.voucherList); // Debug log
-      
       this.editingId = discount.id;
-      
-      // ✅ Thử nhiều cách lấy sanPhamId
-      const sanPhamId = discount.sanPhamId || discount.maSanPham || 0;
-      const voucherId = discount.voucherId || 0;
-      
-      console.log('🔧 Extracted IDs:', { sanPhamId, voucherId }); // Debug log
-      
+      const spId = String(discount.sanPhamId ?? '');
+      const vcId = String(discount.voucherId ?? '');
+
+      // Nếu sản phẩm/voucher hiện tại không nằm trong danh sách (ví dụ đã bị xóa),
+      // thêm 1 option tạm để select vẫn hiển thị được giá trị
+      if (spId && !this.sanPhamList.find(sp => String(sp.id) === spId)) {
+        const fallbackName = discount.tenSanPham || `Sản phẩm ${spId} (không tìm thấy)`;
+        // đặt fallback lên đầu danh sách
+        this.sanPhamList = [{ id: spId, tenSanPham: fallbackName }, ...this.sanPhamList];
+      }
+      if (vcId && !this.voucherList.find(vc => String(vc.id) === vcId)) {
+        const fallbackVName = discount.tenVoucher || `Voucher ${vcId} (không tìm thấy)`;
+        this.voucherList = [{ id: vcId, tenVoucher: fallbackVName }, ...this.voucherList];
+      }
+
       this.form = {
-        sanPhamId: Number(sanPhamId),
-        voucherId: Number(voucherId)
+        sanPhamId: spId,
+        voucherId: vcId
       };
-      
-      console.log('📝 Final form data:', this.form); // Debug log
-      
-      // ✅ Kiểm tra xem ID có tồn tại trong danh sách không
-      const foundSanPham = this.sanPhamList.find(sp => sp.id === Number(sanPhamId));
-      const foundVoucher = this.voucherList.find(vc => vc.id === Number(voucherId));
-      
-      console.log('🔍 Found sanPham:', foundSanPham); // Debug log
-      console.log('🔍 Found voucher:', foundVoucher); // Debug log
-      
-      if (!foundSanPham) {
-        console.warn('⚠️ Sản phẩm không tìm thấy trong danh sách!');
-      }
-      if (!foundVoucher) {
-        console.warn('⚠️ Voucher không tìm thấy trong danh sách!');
-      }
-      
+
       this.showModal = true;
     },
-    
+
     closeModal() {
       this.showModal = false;
     },
@@ -276,12 +268,16 @@ export default {
       }
       this.isLoading = true;
       try {
-        const payload = {
-          sanPhamId: Number(this.form.sanPhamId),
-          voucherId: Number(this.form.voucherId),
+        // Nếu payload là số (toàn chữ số) thì gửi Number, còn không giữ string.
+        const norm = (val) => {
+          if (typeof val !== 'string') val = String(val);
+          return /^\d+$/.test(val) ? Number(val) : val;
         };
 
-        console.log('Saving with payload:', payload); // Debug log
+        const payload = {
+          sanPhamId: norm(this.form.sanPhamId),
+          voucherId: norm(this.form.voucherId),
+        };
 
         let url = '';
         let method = '';
@@ -321,7 +317,7 @@ export default {
       if (!confirm(`Xác nhận xóa đợt giảm giá cho "${discount.tenSanPham || 'sản phẩm'}" ?`)) return;
       this.deleteDiscount(discount.id);
     },
-    
+
     async deleteDiscount(id) {
       try {
         const res = await fetch(`http://localhost:8080/san-pham-khuyen-mai/delete/${id}`, { method: 'DELETE' });
@@ -338,6 +334,7 @@ export default {
     }
   },
   async mounted() {
+    // gọi đồng thời; nếu người dùng mở modal quá nhanh, fallback option sẽ đảm bảo hiển thị giá trị
     await Promise.all([this.fetchSanPham(), this.fetchVoucher(), this.fetchDiscounts()]);
   }
 };
@@ -359,6 +356,7 @@ export default {
 .save-btn{ background:#4f46e5; color:#fff; padding:8px 12px; border:none; border-radius:6px; }
 .cancel-btn{ background:#f3f4f6; color:#333; padding:8px 12px; border:none; border-radius:6px; }
 .hint{ color:#666; font-size:13px; margin-top:6px; }
+.hint-small{ color:#444; font-size:13px; margin-top:6px; }
 .page{ cursor:pointer; padding:6px 8px; margin:0 3px; border-radius:4px; }
 .page.active{ background:#4f46e5; color:white; }
 </style>

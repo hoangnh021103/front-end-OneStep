@@ -67,52 +67,77 @@
 
     <!-- Modal Thêm/Sửa -->
     <div v-if="showModal" class="modal-overlay">
-      <div class="form-card">
-        <div class="header">
-          <h2>{{ editIndex !== null ? 'Sửa khách hàng' : 'Thêm khách hàng' }}</h2>
-          <button class="btn-back" @click="closeModal">
-            <i class="fa fa-arrow-left"></i> Quay lại
-          </button>
-        </div>
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Họ và tên *</label>
-            <input v-model="newCustomer.hoTen" type="text" placeholder="Nhập họ tên" :class="{error: errors.hoTen}" />
-            <span v-if="errors.hoTen" class="error-message">{{ errors.hoTen }}</span>
-          </div>
-          <div class="form-group">
-            <label>Email *</label>
-            <input v-model="newCustomer.email" type="email" placeholder="Nhập email" :class="{error: errors.email}" />
-            <span v-if="errors.email" class="error-message">{{ errors.email }}</span>
-          </div>
-          <div class="form-group">
-            <label>Số điện thoại *</label>
-            <input v-model="newCustomer.soDienThoai" type="text" placeholder="Nhập số điện thoại" :class="{error: errors.soDienThoai}" />
-            <span v-if="errors.soDienThoai" class="error-message">{{ errors.soDienThoai }}</span>
-          </div>
-          <div class="form-group">
-            <label>Ngày sinh</label>
-            <input v-model="newCustomer.ngaySinh" type="date" />
-          </div>
-          <div class="form-group">
-            <label>Giới tính</label>
-            <select v-model="newCustomer.gioiTinh">
-              <option value="">Chọn giới tính</option>
-              <option value="Nam">Nam</option>
-              <option value="Nữ">Nữ</option>
-            </select>
-          </div>
-        </div>
-        <div class="actions">
-          <button class="btn-primary" @click="saveCustomer" :disabled="isSubmitting">
-            <i class="fa fa-check"></i> {{ isSubmitting ? 'Đang lưu...' : 'Lưu' }}
-          </button>
-          <button class="btn-secondary" @click="closeModal" :disabled="isSubmitting">
-            <i class="fa fa-times"></i> Hủy
-          </button>
-        </div>
+  <div class="modal-content">
+    <!-- Header -->
+    <div class="modal-header">
+      <h3>{{ editIndex !== null ? 'Sửa khách hàng' : 'Thêm khách hàng' }}</h3>
+      <button class="close-btn" @click="closeModal">
+        <i class="fa fa-times"></i> Quay lại
+      </button>
+    </div>
+
+    <!-- Form -->
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Họ và tên <span class="required">*</span></label>
+        <input
+          v-model="newCustomer.hoTen"
+          type="text"
+          placeholder="Nhập họ tên"
+          :class="{ error: errors.hoTen }"
+        />
+        <span v-if="errors.hoTen" class="error-message">{{ errors.hoTen }}</span>
+      </div>
+
+      <div class="form-group">
+        <label>Email <span class="required">*</span></label>
+        <input
+          v-model="newCustomer.email"
+          type="email"
+          placeholder="Nhập email"
+          :class="{ error: errors.email }"
+        />
+        <span v-if="errors.email" class="error-message">{{ errors.email }}</span>
+      </div>
+
+      <div class="form-group">
+        <label>Số điện thoại <span class="required">*</span></label>
+        <input
+          v-model="newCustomer.soDienThoai"
+          type="text"
+          placeholder="Nhập số điện thoại"
+          :class="{ error: errors.soDienThoai }"
+        />
+        <span v-if="errors.soDienThoai" class="error-message">{{ errors.soDienThoai }}</span>
+      </div>
+
+      <div class="form-group">
+        <label>Ngày sinh</label>
+        <input v-model="newCustomer.ngaySinh" type="date" />
+      </div>
+
+      <div class="form-group">
+        <label>Giới tính</label>
+        <select v-model="newCustomer.gioiTinh">
+          <option value="">Chọn giới tính</option>
+          <option value="Nam">Nam</option>
+          <option value="Nữ">Nữ</option>
+        </select>
       </div>
     </div>
+
+    <!-- Actions -->
+    <div class="modal-actions">
+      <button class="btn-primary" @click="saveCustomer" :disabled="isSubmitting">
+        <i class="fa fa-check"></i>
+        {{ isSubmitting ? 'Đang lưu...' : 'Lưu' }}
+      </button>
+      <button class="btn-secondary" @click="closeModal" :disabled="isSubmitting">
+        <i class="fa fa-times"></i> Hủy
+      </button>
+    </div>
+  </div>
+</div>
   </div>
 </template>
 
