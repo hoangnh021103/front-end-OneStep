@@ -22,6 +22,11 @@ const MainRoutes = {
       component: () => import('@/views/quan-ly/ban-hang/BanHang.vue'),
     },
     {
+      name: 'ChonThuocTinh',
+      path: '/quan-ly/ban-hang/chon-thuoc-tinh',
+      component: () => import('@/views/quan-ly/ban-hang/ChonThuocTinh.vue'),
+    },
+    {
       name: 'QuanLyHoaDon',
       path: '/quan-ly/hoa-don',
       component: () => import('@/views/quan-ly/hoa-don/DanhSachHoaDon.vue'),

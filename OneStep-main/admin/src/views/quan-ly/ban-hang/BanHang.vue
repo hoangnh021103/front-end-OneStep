@@ -109,7 +109,10 @@
             </template>
 
             <template #item.mauSac="{ item }">
-              <v-chip :color="item.mauSac" size="small" class="ma-1"></v-chip>
+              <div class="d-flex align-center">
+                <span class="color-dot" :style="{ backgroundColor: resolveColor(item.mauSac) }"></span>
+                <span class="ml-2">{{ getColorLabel(item.mauSac) }}</span>
+              </div>
             </template>
 
             <template #item.giaBan="{ item }">
@@ -201,7 +204,7 @@
               </v-col>
             </v-row>
             <div v-if="discountInfo" class="mt-2">
-              <v-alert type="success" variant="tonal" density="compact" class="text-caption">{{ discountInfo }}</v-alert>
+              <v-alert :type="discountType" variant="tonal" density="compact" class="text-caption">{{ discountInfo }}</v-alert>
             </div>
           </div>
 
@@ -369,12 +372,14 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import khachHangApi from '@/api/khachHangApi'
 
 const generateOrderId = () => {
   return 'ORD' + Date.now().toString().slice(-6)
 }
 
+const router = useRouter()
 const orderId = ref(generateOrderId())
 const orderStarted = ref(false)
 const isDelivery = ref(false)
@@ -383,6 +388,7 @@ const paymentMethod = ref<'cash' | 'bank'>('cash')
 const searchQuery = ref('')
 const showProductModal = ref(false)
 const discountInfo = ref('')
+const discountType = ref<'success' | 'error' | 'info' | 'warning'>('info')
 
 // Đặt đường dẫn ảnh QR cố định trong thư mục public
 const fixedBankQrUrl = ref<string>('/qr-vcb.png')
@@ -507,6 +513,43 @@ const detailAddressRules = [
 const subtotal = computed(() => {
   return cartItems.value.reduce((sum, item) => sum + item.tongTien, 0)
 })
+
+// Lưu/khôi phục trạng thái đơn hàng để đảm bảo điều hướng không làm mất trạng thái
+const ORDER_STATE_KEY = 'posOrderState'
+
+const saveOrderState = () => {
+  const state = {
+    orderId: orderId.value,
+    orderStarted: orderStarted.value,
+    isDelivery: isDelivery.value,
+    discountCode: discountCode.value,
+    paymentMethod: paymentMethod.value,
+    customerInfo: customerInfo.value,
+    selectedCustomer: selectedCustomer.value,
+    cartItems: cartItems.value,
+    cartItemId
+  }
+  sessionStorage.setItem(ORDER_STATE_KEY, JSON.stringify(state))
+}
+
+const loadOrderState = () => {
+  const raw = sessionStorage.getItem(ORDER_STATE_KEY)
+  if (!raw) return
+  try {
+    const s = JSON.parse(raw)
+    orderId.value = s.orderId || orderId.value
+    orderStarted.value = !!s.orderStarted
+    isDelivery.value = !!s.isDelivery
+    discountCode.value = s.discountCode || ''
+    paymentMethod.value = s.paymentMethod || 'cash'
+    customerInfo.value = s.customerInfo || { ten: '', sdt: '' }
+    selectedCustomer.value = s.selectedCustomer || null
+    cartItems.value = Array.isArray(s.cartItems) ? s.cartItems : []
+    cartItemId = s.cartItemId || 1
+  } catch (e) {
+    // ignore parse errors
+  }
+}
 
 const warehouseLocation = {
   province: 'HN',
@@ -681,19 +724,15 @@ const saveQuickCustomer = async () => {
 }
 
 const addToCart = (product: any) => {
-  const existingItem = cartItems.value.find((item) => item.maSanPham === product.maSanPham && item.kichThuoc === product.kichThuoc && item.mauSac === product.mauSac)
-  if (existingItem) {
-    existingItem.soLuong += 1
-    existingItem.tongTien = existingItem.soLuong * existingItem.giaBan
-  } else {
-    const newItem = { stt: cartItemId++, id: product.id, maSanPham: product.maSanPham, tenSanPham: product.tenSanPham, anh: product.anh, soLuong: 1, giaBan: product.giaBan, kichThuoc: product.kichThuoc, mauSac: product.mauSac, tongTien: product.giaBan }
-    cartItems.value.push(newItem)
-  }
+  // Điều hướng sang trang chọn size/màu
+  sessionStorage.setItem('selectedProduct', JSON.stringify(product))
+  router.push('/quan-ly/ban-hang/chon-thuoc-tinh')
 }
 
 const removeFromCart = (item: any) => {
   const index = cartItems.value.findIndex((cartItem) => cartItem.stt === item.stt)
   if (index > -1) cartItems.value.splice(index, 1)
+  saveOrderState()
 }
 
 const increaseQuantity = (item: any) => {
@@ -710,22 +749,37 @@ const decreaseQuantity = (item: any) => {
 
 const updateQuantity = (item: any) => {
   item.tongTien = item.soLuong * item.giaBan
+  saveOrderState()
 }
 
 const clearCart = () => {
   cartItems.value = []
   cartItemId = 1
+  saveOrderState()
 }
 
 const applyDiscount = () => {
-  if (discountCode.value) {
-    if (discountCode.value === 'GIAM10') discountInfo.value = 'Áp dụng giảm giá 10%'
-    else if (discountCode.value === 'GIAM20') discountInfo.value = 'Áp dụng giảm giá 20%'
-    else if (discountCode.value === 'GIAM50K') discountInfo.value = 'Áp dụng giảm giá 50.000 VNĐ'
-    else discountInfo.value = 'Mã giảm giá không hợp lệ'
-  } else {
+  const code = (discountCode.value || '').trim().toUpperCase()
+  if (!code) {
     discountInfo.value = ''
+    discountType.value = 'info'
+    saveOrderState()
+    return
   }
+  if (code === 'GIAM10') {
+    discountInfo.value = 'Áp dụng giảm giá 10%'
+    discountType.value = 'success'
+  } else if (code === 'GIAM20') {
+    discountInfo.value = 'Áp dụng giảm giá 20%'
+    discountType.value = 'success'
+  } else if (code === 'GIAM50K') {
+    discountInfo.value = 'Áp dụng giảm giá 50.000 VNĐ'
+    discountType.value = 'success'
+  } else {
+    discountInfo.value = 'Mã giảm giá không hợp lệ'
+    discountType.value = 'error'
+  }
+  saveOrderState()
 }
 
 const processPayment = () => {
@@ -820,6 +874,31 @@ const getPaymentMethodName = () => {
   return paymentMethod.value === 'bank' ? 'Chuyển khoản' : 'Tiền mặt'
 }
 
+// Chuẩn hóa hiển thị màu sắc: nhận giá trị ('red' | '#f00' | 'Đỏ' ...) -> trả về mã màu & nhãn
+const colorMap: Record<string, { label: string; hex: string }> = {
+  red: { label: 'Đỏ', hex: '#ff0000' },
+  blue: { label: 'Xanh dương', hex: '#1e88e5' },
+  black: { label: 'Đen', hex: '#000000' },
+  white: { label: 'Trắng', hex: '#ffffff' },
+  pink: { label: 'Hồng', hex: '#e91e63' }
+}
+
+const normalizeKey = (val: string) => (val || '').toString().trim().toLowerCase()
+
+const resolveColor = (val: string) => {
+  const key = normalizeKey(val)
+  if (colorMap[key]) return colorMap[key].hex
+  // nếu người dùng truyền sẵn mã màu hợp lệ (#abc, #aabbcc, rgb(...)) thì trả về trực tiếp
+  if (/^#([0-9a-f]{3}){1,2}$/i.test(val)) return val
+  return '#9e9e9e' // mặc định xám khi không map được
+}
+
+const getColorLabel = (val: string) => {
+  const key = normalizeKey(val)
+  if (colorMap[key]) return colorMap[key].label
+  return val || 'Không rõ'
+}
+
 const onProvinceChange = async (value: string) => {
   selectedDistrict.value = ''
   selectedWard.value = ''
@@ -856,14 +935,36 @@ const resetForm = () => {
 const startNewOrder = () => {
   resetForm()
   orderStarted.value = true
+  saveOrderState()
 }
 
 const cancelOrder = () => {
   resetForm()
+  sessionStorage.removeItem(ORDER_STATE_KEY)
 }
 
 onMounted(async () => {
-  addToCart(allProducts.value[0])
+  // Khôi phục trạng thái đơn nếu có
+  loadOrderState()
+  // Khi quay lại từ trang chọn thuộc tính, nhận dữ liệu và thêm vào giỏ
+  const pending = sessionStorage.getItem('cartAddItem')
+  if (pending) {
+    try {
+      const parsed = JSON.parse(pending)
+      const chosen = { ...parsed.product, kichThuoc: parsed.size, mauSac: parsed.color }
+      const existingItem = cartItems.value.find((item) => item.maSanPham === chosen.maSanPham && item.kichThuoc === chosen.kichThuoc && item.mauSac === chosen.mauSac)
+      if (existingItem) {
+        existingItem.soLuong += 1
+        existingItem.tongTien = existingItem.soLuong * existingItem.giaBan
+      } else {
+        const newItem = { stt: cartItemId++, id: chosen.id, maSanPham: chosen.maSanPham, tenSanPham: chosen.tenSanPham, anh: chosen.anh, soLuong: 1, giaBan: chosen.giaBan, kichThuoc: chosen.kichThuoc, mauSac: chosen.mauSac, tongTien: chosen.giaBan }
+        cartItems.value.push(newItem)
+      }
+    } catch (e) {}
+    sessionStorage.removeItem('cartAddItem')
+  }
+  // Bất kỳ thay đổi nào ở giỏ hoặc trạng thái chính sẽ được lưu định kỳ
+  saveOrderState()
   await fetchProvinces()
 })
 </script>
@@ -965,6 +1066,14 @@ onMounted(async () => {
   font-size: 14px !important;
   padding: 8px 4px !important;
   min-height: 32px !important;
+}
+
+.color-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.2);
+  display: inline-block;
 }
 
 @media (max-width: 1200px) {
