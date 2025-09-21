@@ -66,7 +66,7 @@
                 <span class="type-badge">{{ formatType(inv.loaiDon) }}</span>
               </td>
               <td>{{ inv.email }}</td>
-              <td>{{ inv.tongTien }}</td>
+              <td>{{ formatCurrency(inv.tongTien) }}</td>
               <td>{{ formatDate(inv.ngayXacNhan) }}</td>
               <td>
                 <span :class="['status-badge', inv.statusClass]">{{ inv.statusLabel }}</span>
@@ -84,9 +84,6 @@
         <div class="form-card">
           <div class="header">
             <h2>Chỉnh sửa hóa đơn</h2>
-            <button class="btn-back" @click="closeModal">
-              <i class="fa fa-arrow-left"></i> Quay lại
-            </button>
           </div>
           <div class="form-grid">
             <div class="form-group">
@@ -210,6 +207,7 @@ export default {
       editIndex: null,
       newInvoice: {
         khachHangId: 0,
+        nhanVienId: 0,
         voucherId: 0,
         diaChiId: 0,
         soDienThoai: "",
@@ -225,7 +223,12 @@ export default {
         loaiDon: 0,
         ghiChu: "",
         maDon: "",
-        status: "pending"
+        trangThai: 1, // Thay thế cho status
+        ngayCapNhat: "",
+        nguoiTao: "",
+        nguoiCapNhat: "",
+        daXoa: 0,
+        status: "pending" // Chỉ dùng cho form UI
       },
       errors: {
         maDon: "",
@@ -255,9 +258,9 @@ export default {
         })
         .map(inv => ({
           ...inv,
-          status: inv.status || 'pending',
-          statusLabel: this.statusLabel(inv.status || 'pending'),
-          statusClass: inv.status || 'pending'
+          status: this.mapTrangThaiToStatus(inv.trangThai || 1), // Chuyển từ số sang string
+          statusLabel: this.statusLabel(this.mapTrangThaiToStatus(inv.trangThai || 1)),
+          statusClass: this.mapTrangThaiToStatus(inv.trangThai || 1)
         }));
     },
     tabInvoices() {
@@ -266,6 +269,32 @@ export default {
     }
   },
   methods: {
+    // Map từ số trạng thái API sang string cho UI
+    mapTrangThaiToStatus(trangThai) {
+      switch (trangThai) {
+        case 1: return 'pending';    // Chờ xác nhận
+        case 2: return 'confirmed';  // Đã xác nhận
+        case 3: return 'shipping';   // Chờ giao
+        case 4: return 'delivering'; // Đang giao
+        case 5: return 'done';       // Hoàn thành
+        case 6: return 'cancel';     // Đã hủy
+        default: return 'pending';
+      }
+    },
+    
+    // Map từ string UI sang số cho API
+    mapStatusToTrangThai(status) {
+      switch (status) {
+        case 'pending': return 1;    // Chờ xác nhận
+        case 'confirmed': return 2;  // Đã xác nhận
+        case 'shipping': return 3;   // Chờ giao
+        case 'delivering': return 4; // Đang giao
+        case 'done': return 5;       // Hoàn thành
+        case 'cancel': return 6;     // Đã hủy
+        default: return 1;
+      }
+    },
+
     async fetchInvoices() {
       try {
         const res = await axios.get("http://localhost:8080/don-hang/hien-thi");
@@ -276,6 +305,7 @@ export default {
         toast.error('Không thể tải danh sách hóa đơn');
       }
     },
+
     async deleteInvoice(id) {
       if (confirm("Xác nhận xóa hóa đơn này?")) {
         try {
@@ -288,6 +318,7 @@ export default {
         }
       }
     },
+
     resetFilter() {
       this.search = "";
       this.status = "";
@@ -295,14 +326,22 @@ export default {
       this.toDate = "";
       this.fetchInvoices();
     },
+
     countByStatus(status) {
       return this.filteredInvoices.filter(inv => inv.status === status).length;
     },
+
     formatDate(date) {
       if (!date) return "";
       const d = new Date(date);
       return d.toLocaleDateString("vi-VN");
     },
+
+    formatCurrency(amount) {
+      if (!amount) return "0 VNĐ";
+      return new Intl.NumberFormat('vi-VN').format(amount) + ' VNĐ';
+    },
+
     statusLabel(status) {
       switch (status) {
         case "pending": return "Chờ xác nhận";
@@ -314,9 +353,11 @@ export default {
         default: return "Không xác định";
       }
     },
+
     formatType(loaiDon) {
       return loaiDon === 0 ? "OFFLINE" : "ONLINE";
     },
+
     closeModal() {
       this.showModal = false;
       this.errors = {
@@ -330,6 +371,7 @@ export default {
         status: ""
       };
     },
+
     validateForm() {
       this.errors = {
         maDon: "",
@@ -374,14 +416,22 @@ export default {
 
       return isValid;
     },
+
     async handleSubmit() {
       if (!this.validateForm()) return;
 
       try {
         this.isSubmitting = true;
         const updatedInvoice = { ...this.newInvoice };
+        
+        // Chuyển đổi status string thành trangThai number cho API
+        updatedInvoice.trangThai = this.mapStatusToTrangThai(updatedInvoice.status);
+        delete updatedInvoice.status; // Xóa trường status không cần thiết cho API
+        
         await axios.put(`http://localhost:8080/don-hang/update/${updatedInvoice.id}`, updatedInvoice);
-        this.invoices[this.editIndex] = updatedInvoice;
+        
+        // Refresh danh sách sau khi update
+        await this.fetchInvoices();
         toast.success("Cập nhật hóa đơn thành công!");
         this.closeModal();
       } catch (err) {
@@ -391,9 +441,15 @@ export default {
         this.isSubmitting = false;
       }
     },
+
     editInvoice(index) {
       this.editIndex = index;
-      this.newInvoice = { ...this.invoices[index] };
+      const invoice = { ...this.filteredInvoices[index] };
+      
+      // Chuyển đổi trangThai thành status string cho form
+      invoice.status = this.mapTrangThaiToStatus(invoice.trangThai || 1);
+      
+      this.newInvoice = invoice;
       this.errors = {
         maDon: "",
         hoTen: "",
@@ -407,6 +463,7 @@ export default {
       this.showModal = true;
     }
   },
+  
   mounted() {
     this.fetchInvoices();
   }
@@ -414,10 +471,258 @@ export default {
 </script>
 
 <style scoped>
+.main-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.content {
+  flex: 1;
+  padding: 20px;
+}
+
+.header {
+  background: white;
+  padding: 16px 24px;
+  margin-bottom: 24px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.page-title h2 {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 24px;
+}
+
+.filter-box {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.filter-title {
+  font-weight: 600;
+  font-size: 18px;
+  color: #374151;
+  margin-bottom: 16px;
+}
+
 .filter-controls {
   display: flex;
   gap: 12px;
   align-items: center;
+  flex-wrap: wrap;
+}
+
+.filter-controls input, .filter-controls button {
+  padding: 10px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.filter-controls input {
+  min-width: 200px;
+}
+
+.filter-controls button {
+  background: #6366f1;
+  color: white;
+  border: 1px solid #6366f1;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.filter-controls button:hover {
+  background: #4f46e5;
+  transform: translateY(-1px);
+}
+
+.tab-section {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.tab {
+  padding: 12px 20px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  color: #6b7280;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tab:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.tab.active {
+  background: #6366f1;
+  color: white;
+  border-color: #6366f1;
+}
+
+.tab-badge {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tab.active .tab-badge {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.table-section {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead {
+  background: #f8fafc;
+}
+
+th, td {
+  padding: 16px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+th {
+  font-weight: 600;
+  color: #374151;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+tbody tr:hover {
+  background: #f9fafb;
+}
+
+.no-data {
+  text-align: center;
+  padding: 48px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: #6b7280;
+}
+
+.empty-icon {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+.empty-text {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.empty-subtext {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.type-badge {
+  background: #dbeafe;
+  color: #1d4ed8;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-badge.confirmed {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-badge.shipping {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.status-badge.delivering {
+  background: #fce7f3;
+  color: #be185d;
+}
+
+.status-badge.done {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-badge.cancel {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.action-btn {
+  padding: 8px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-right: 8px;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.edit-btn {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.edit-btn:hover {
+  background: #dbeafe;
+}
+
+.delete-btn {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.delete-btn:hover {
+  background: #fee2e2;
 }
 
 .modal-overlay {
@@ -437,14 +742,6 @@ export default {
   transition: opacity 0.3s ease;
 }
 
-.modal-overlay-enter-active, .modal-overlay-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.modal-overlay-enter-from, .modal-overlay-leave-to {
-  opacity: 0;
-}
-
 .form-card {
   background: #ffffff;
   border-radius: 12px;
@@ -456,15 +753,6 @@ export default {
   min-height: 400px;
   transition: transform 0.3s ease, opacity 0.3s ease;
   transform: translateY(0);
-}
-
-.form-card-enter-active, .form-card-leave-active {
-  transition: transform 0.3s ease, opacity 0.3s ease;
-}
-
-.form-card-enter-from, .form-card-leave-to {
-  transform: translateY(20px);
-  opacity: 0;
 }
 
 .header {
@@ -479,22 +767,6 @@ export default {
   font-weight: 700;
   color: #1f2a44;
   margin: 0;
-}
-
-.btn-back {
-  background: #f5f5f5;
-  color: #333;
-  border: 1px solid #e0e0e0;
-  padding: 10px 16px;
-  font-size: 15px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-.btn-back:hover {
-  background: #e0e0e0;
-  transform: translateY(-2px);
 }
 
 .form-grid {
@@ -594,12 +866,39 @@ button {
 }
 
 @media (max-width: 768px) {
+  .filter-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-controls input,
+  .filter-controls button {
+    min-width: 100%;
+  }
+
+  .tab-section {
+    flex-direction: column;
+  }
+
+  .tab {
+    justify-content: center;
+  }
+
+  .table-section {
+    overflow-x: auto;
+  }
+
+  table {
+    min-width: 800px;
+  }
+
   .modal-overlay {
     padding: 20px 10px;
   }
 
   .form-card {
     max-width: 95%;
+    padding: 24px;
   }
 
   .form-grid {
@@ -621,5 +920,46 @@ button {
   .actions button {
     width: 100%;
   }
+}
+
+/* Additional utility classes */
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.text-sm {
+  font-size: 14px;
+}
+
+.text-xs {
+  font-size: 12px;
+}
+
+.opacity-50 {
+  opacity: 0.5;
+}
+
+/* Loading animation */
+.loading {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>
