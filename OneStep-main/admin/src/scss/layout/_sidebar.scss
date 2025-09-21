@@ -3,7 +3,41 @@
   border: 0px;
   box-shadow: none !important;
   .logo {
-    padding-left: 7px;
+    padding: 16px 20px;
+    margin: 8px 12px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+      background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    }
+    
+      a {
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+      
+      img {
+        width: 180px;
+        height: 50px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+        object-fit: contain;
+        
+        &:hover {
+          transform: scale(1.05);
+          filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+        }
+      }
+    }
   }
 }
 /*This is for the Vertical sidebar*/
@@ -98,13 +132,45 @@
     .logo {
       width: 40px;
       overflow: hidden;
+      margin: 8px 6px;
+      padding: 8px;
+      
+      a {
+        justify-content: center;
+        
+        img {
+          width: 24px;
+          height: 24px;
+        }
+        
+        span {
+          display: none;
+        }
+      }
     }
+    
     .leftSidebar:hover {
       box-shadow: $box-shadow !important;
     }
+    
     .v-navigation-drawer--expand-on-hover:hover {
       .logo {
-        width: 100%;
+        width: calc(100% - 24px);
+        margin: 8px 12px;
+        padding: 12px 16px;
+        
+        a {
+          justify-content: flex-start;
+          
+          img {
+            width: 32px;
+            height: 32px;
+          }
+          
+          span {
+            display: block;
+          }
+        }
       }
       .v-list .v-list-group__items,
       .hide-menu {

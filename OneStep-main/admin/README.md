@@ -1,4 +1,4 @@
-# Berry Free Vue Material Admin Template 
+# OneStep Free Vue Material Admin Template 
 #### Preview
 
 - [Demo](https://themewagon.github.io/berry-vue/)
@@ -36,7 +36,7 @@ bun start
 ## Author
 
 ```
-Berry is developed by Team CodedThemes.
+OneStep is developed by Team CodedThemes.
 ```
 
 ## License
