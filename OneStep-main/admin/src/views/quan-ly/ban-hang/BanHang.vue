@@ -66,8 +66,15 @@
                     <h4 class="text-subtitle-2 font-weight-bold">{{ product.tenSanPham }}</h4>
                     <p class="text-caption text-grey">{{ product.maSanPham }}</p>
                     <div class="d-flex justify-space-between align-center mt-2">
-                      <span class="text-h6 font-weight-bold text-primary">{{ formatCurrency(product.giaBan) }}</span>
-                      <v-chip size="small" :color="product.mauSac">{{ product.mauSac }}</v-chip>
+                      <span class="text-h6 font-weight-bold text-primary">
+                        {{ product.giaBan ? formatCurrency(product.giaBan) : 'Chưa có giá' }}
+                      </span>
+                      <v-chip size="small" :color="product.mauSac || 'grey'">
+                        {{ product.mauSac || 'Chưa có màu' }}
+                      </v-chip>
+                    </div>
+                    <div class="mt-1 text-caption text-grey-darken-1">
+                      Tồn kho: {{ product.tonKho !== null ? product.tonKho : 'Chưa có' }}
                     </div>
                   </v-card-text>
                 </v-card>
@@ -266,14 +273,9 @@
             </v-card>
           </div>
 
-          <v-btn color="primary" variant="elevated" size="large" block class="text-h6 font-weight-bold mb-2 action-btn" @click="processPayment" :disabled="cartItems.length === 0 || !orderStarted">
+          <v-btn color="primary" variant="elevated" size="large" block class="text-h6 font-weight-bold action-btn" @click="confirmPayment" :disabled="cartItems.length === 0 || !orderStarted">
             <v-icon class="mr-2">mdi-check</v-icon>
             Xác nhận thanh toán
-          </v-btn>
-
-          <v-btn color="success" variant="elevated" size="large" block @click="printReceipt" :disabled="cartItems.length === 0 || !orderStarted" class="action-btn">
-            <v-icon class="mr-2">mdi-printer</v-icon>
-            In hóa đơn
           </v-btn>
         </v-card>
       </v-col>
@@ -305,7 +307,14 @@
               </v-avatar>
             </template>
             <template #item.giaBan="{ item }">
-              <span class="font-weight-medium">{{ formatCurrency(item.giaBan) }}</span>
+              <span class="font-weight-medium">
+                {{ item.giaBan ? formatCurrency(item.giaBan) : 'Chưa có giá' }}
+              </span>
+            </template>
+            <template #item.tonKho="{ item }">
+              <span class="font-weight-medium">
+                {{ item.tonKho !== null ? item.tonKho : 'Chưa có' }}
+              </span>
             </template>
             <template #item.thaoTac="{ item }">
               <v-btn color="success" variant="elevated" size="small" @click="addToCart(item); showProductModal = false" class="action-btn">
@@ -378,6 +387,85 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Dialog xác nhận thanh toán -->
+    <v-dialog v-model="showPaymentConfirmDialog" max-width="500px" persistent>
+      <v-card>
+        <v-card-title class="text-h6 font-weight-bold d-flex align-center text-primary">
+          <v-icon class="mr-2" color="primary">mdi-help-circle</v-icon>
+          Xác nhận thanh toán
+        </v-card-title>
+        <v-card-text class="pb-2">
+          <div class="text-body-1 mb-4">Bạn có chắc chắn muốn thực hiện thanh toán không?</div>
+          
+          <v-card variant="outlined" class="pa-3 mb-3">
+            <div class="d-flex justify-space-between mb-2">
+              <span class="text-body-2">Tổng tiền hàng:</span>
+              <span class="font-weight-medium">{{ formatCurrency(subtotal) }}</span>
+            </div>
+            <div v-if="isDelivery" class="d-flex justify-space-between mb-2">
+              <span class="text-body-2">Phí giao hàng:</span>
+              <span class="font-weight-medium">{{ formatCurrency(deliveryFee) }}</span>
+            </div>
+            <div v-if="discountAmount > 0" class="d-flex justify-space-between mb-2">
+              <span class="text-body-2">Giảm giá:</span>
+              <span class="font-weight-medium text-success">-{{ formatCurrency(discountAmount) }}</span>
+            </div>
+            <v-divider class="my-2"></v-divider>
+            <div class="d-flex justify-space-between">
+              <span class="text-h6 font-weight-bold">Tổng thanh toán:</span>
+              <span class="text-h6 font-weight-bold text-primary">{{ formatCurrency(totalAmount) }}</span>
+            </div>
+          </v-card>
+
+          <div class="text-body-2 text-grey-darken-1">
+            <v-icon size="small" class="mr-1">mdi-information</v-icon>
+            Phương thức: {{ getPaymentMethodName() }}
+          </div>
+        </v-card-text>
+        <v-card-actions class="pt-0">
+          <v-spacer></v-spacer>
+          <v-btn color="grey" variant="elevated" class="action-btn" @click="showPaymentConfirmDialog = false">
+            <v-icon class="mr-1">mdi-close</v-icon>
+            Hủy
+          </v-btn>
+          <v-btn color="primary" variant="elevated" class="action-btn" @click="processPayment">
+            <v-icon class="mr-1">mdi-check</v-icon>
+            Xác nhận
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Dialog xác nhận in hóa đơn -->
+    <v-dialog v-model="showPrintConfirmDialog" max-width="400px" persistent>
+      <v-card>
+        <v-card-title class="text-h6 font-weight-bold d-flex align-center text-success">
+          <v-icon class="mr-2" color="success">mdi-check-circle</v-icon>
+          Thanh toán thành công!
+        </v-card-title>
+        <v-card-text class="pb-2">
+          <div class="text-body-1 mb-3">
+            <v-icon class="mr-2" color="success">mdi-receipt</v-icon>
+            Bạn có muốn in hóa đơn không?
+          </div>
+          <div class="text-body-2 text-grey-darken-1">
+            Mã đơn hàng: <span class="font-weight-bold">#{{ orderId }}</span>
+          </div>
+        </v-card-text>
+        <v-card-actions class="pt-0">
+          <v-spacer></v-spacer>
+          <v-btn color="grey" variant="elevated" class="action-btn" @click="skipPrint">
+            <v-icon class="mr-1">mdi-close</v-icon>
+            Không in
+          </v-btn>
+          <v-btn color="success" variant="elevated" class="action-btn" @click="printReceiptAndClose">
+            <v-icon class="mr-1">mdi-printer</v-icon>
+            In hóa đơn
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
   
 </template>
@@ -439,6 +527,10 @@ const selectedCustomer = ref<any | null>(null)
 // Quick add customer
 const showQuickAddModal = ref(false)
 const quickCustomer = ref<{ hoTen: string; soDienThoai: string; email?: string }>({ hoTen: '', soDienThoai: '', email: '' })
+
+// Confirm dialogs
+const showPaymentConfirmDialog = ref(false)
+const showPrintConfirmDialog = ref(false)
 
 const provinces = ref<any[]>([])
 const districts = ref<any[]>([])
@@ -582,29 +674,41 @@ const calculateDistanceFromWarehouse = (provinceCode: string) => {
 }
 
 const calculateShippingFee = (distance: number) => {
-  if (distance <= 5) return 0
-  if (distance <= 15) return 10000
-  if (distance <= 30) return 15000
-  if (distance <= 50) return 20000
-  if (distance <= 100) return 25000
-  if (distance <= 200) return 30000
-  if (distance <= 400) return 35000
-  if (distance <= 600) return 40000
-  if (distance <= 1000) return 45000
-  return 50000
+  // Hệ thống tính phí ship theo khoảng cách giống Shopee
+  if (distance <= 3) return 0        // Miễn phí nội thành gần
+  if (distance <= 5) return 8000     // Nội thành (3-5km)
+  if (distance <= 10) return 12000   // Nội thành xa (5-10km)
+  if (distance <= 15) return 15000   // Ngoại thành gần (10-15km)
+  if (distance <= 20) return 18000   // Ngoại thành (15-20km)
+  if (distance <= 30) return 22000   // Ngoại thành xa (20-30km)
+  if (distance <= 50) return 25000   // Tỉnh lân cận gần (30-50km)
+  if (distance <= 80) return 28000   // Tỉnh lân cận (50-80km)
+  if (distance <= 120) return 32000  // Tỉnh lân cận xa (80-120km)
+  if (distance <= 200) return 35000  // Miền gần (120-200km)
+  if (distance <= 300) return 38000  // Miền trung bình (200-300km)
+  if (distance <= 500) return 42000  // Miền xa (300-500km)
+  if (distance <= 700) return 45000  // Toàn quốc gần (500-700km)
+  if (distance <= 1000) return 48000 // Toàn quốc xa (700-1000km)
+  return 52000                       // Toàn quốc rất xa (>1000km)
 }
 
 const getShippingZone = (distance: number) => {
-  if (distance <= 5) return 'Nội thành (miễn phí)'
-  if (distance <= 15) return 'Nội thành'
-  if (distance <= 30) return 'Ngoại thành (gần)'
-  if (distance <= 50) return 'Ngoại thành (xa)'
-  if (distance <= 100) return 'Tỉnh lân cận'
-  if (distance <= 200) return 'Miền (gần)'
-  if (distance <= 400) return 'Miền (xa)'
-  if (distance <= 600) return 'Toàn quốc (gần)'
-  if (distance <= 1000) return 'Toàn quốc (xa)'
-  return 'Toàn quốc (rất xa)'
+  // Cập nhật zones theo hệ thống phí ship mới
+  if (distance <= 3) return 'Nội thành (miễn phí)'
+  if (distance <= 5) return 'Nội thành gần'
+  if (distance <= 10) return 'Nội thành xa'
+  if (distance <= 15) return 'Ngoại thành gần'
+  if (distance <= 20) return 'Ngoại thành'
+  if (distance <= 30) return 'Ngoại thành xa'
+  if (distance <= 50) return 'Tỉnh lân cận gần'
+  if (distance <= 80) return 'Tỉnh lân cận'
+  if (distance <= 120) return 'Tỉnh lân cận xa'
+  if (distance <= 200) return 'Miền gần'
+  if (distance <= 300) return 'Miền trung bình'
+  if (distance <= 500) return 'Miền xa'
+  if (distance <= 700) return 'Toàn quốc gần'
+  if (distance <= 1000) return 'Toàn quốc xa'
+  return 'Toàn quốc rất xa'
 }
 
 const deliveryFee = computed(() => {
@@ -661,7 +765,6 @@ const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'inf
         hideProgressBar: false,
         closeOnClick: true,
         pauseOnHover: true,
-        draggable: true,
       })
       break
     case 'error':
@@ -671,7 +774,6 @@ const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'inf
         hideProgressBar: false,
         closeOnClick: true,
         pauseOnHover: true,
-        draggable: true,
       })
       break
     case 'warning':
@@ -681,7 +783,6 @@ const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'inf
         hideProgressBar: false,
         closeOnClick: true,
         pauseOnHover: true,
-        draggable: true,
       })
       break
     default:
@@ -691,7 +792,6 @@ const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'inf
         hideProgressBar: false,
         closeOnClick: true,
         pauseOnHover: true,
-        draggable: true,
       })
   }
 }
@@ -871,8 +971,8 @@ const applyDiscount = () => {
   saveOrderState()
 }
 
-const processPayment = async () => {
-  // Validation
+const confirmPayment = () => {
+  // Validation trước khi hiển thị dialog confirm
   if (cartItems.value.length === 0) {
     showToast('Giỏ hàng trống! Vui lòng thêm sản phẩm trước khi thanh toán', 'warning')
     return
@@ -882,6 +982,14 @@ const processPayment = async () => {
     showToast('Vui lòng chọn địa chỉ giao hàng đầy đủ!', 'warning')
     return
   }
+
+  // Hiển thị dialog confirm thanh toán
+  showPaymentConfirmDialog.value = true
+}
+
+const processPayment = async () => {
+  // Đóng dialog confirm
+  showPaymentConfirmDialog.value = false
 
   // Hiển thị loading
   showToast('Đang xử lý thanh toán...', 'info')
@@ -904,10 +1012,10 @@ const processPayment = async () => {
       maHoaDon: orderId.value,
       khachHangId: selectedCustomer.value?.id || null,
       diaChiGiaoHang: isDelivery.value ? fullAddress.value : null,
-      phiGiaoHang: parseFloat(deliveryFee.value) || 0.0,
+      phiGiaoHang: parseFloat(String(deliveryFee.value)) || 0.0,
       maGiamGia: discountCode.value || null,
       phuongThucThanhToan: paymentMethod.value,
-      tongTien: parseFloat(totalAmount.value),
+      tongTien: parseFloat(String(totalAmount.value)),
       trangThai: 1,
       ghiChu: `Bán hàng tại quầy - ${new Date().toLocaleDateString('vi-VN')}`,
       nguoiTao: 'Admin',
@@ -924,7 +1032,7 @@ const processPayment = async () => {
           maSanPham: item.maSanPham
         })
         
-        const finalSanPhamId = parseInt(sanPhamId)
+        const finalSanPhamId = parseInt(String(sanPhamId))
         
         if (!finalSanPhamId || isNaN(finalSanPhamId)) {
           throw new Error(`Sản phẩm "${item.tenSanPham}" không có ID hợp lệ`)
@@ -932,9 +1040,9 @@ const processPayment = async () => {
         
         return {
           sanPhamId: finalSanPhamId,
-          soLuong: parseInt(item.soLuong) || 1,
-          donGia: parseFloat(item.giaBan) || 0.0,
-          thanhTien: parseFloat(item.tongTien) || 0.0,
+          soLuong: parseInt(String(item.soLuong)) || 1,
+          donGia: parseFloat(String(item.giaBan)) || 0.0,
+          thanhTien: parseFloat(String(item.tongTien)) || 0.0,
           kichThuoc: item.kichThuoc || 'Không xác định',
           mauSac: item.mauSac || 'Không xác định'
         }
@@ -947,15 +1055,15 @@ const processPayment = async () => {
     const result = await thanhToanApi.taoHoaDon(orderData)
     console.log('Kết quả từ server:', result)
     
-    // Thông báo thành công với toast
-    showToast(`✅ Thanh toán thành công!\nMã đơn hàng: ${orderId.value}\nTổng tiền: ${formatCurrency(totalAmount.value)}`, 'success')
+    // Thông báo thành công và hiển thị dialog hỏi in hóa đơn
+    showToast(`✅ Thanh toán thành công! Mã đơn hàng: ${orderId.value}`, 'success')
     
-    // Reset form sau khi thành công
+    // Hiển thị dialog hỏi có muốn in hóa đơn không
     setTimeout(() => {
-      resetForm()
-    }, 2000) // Delay 2s để người dùng đọc thông báo
+      showPrintConfirmDialog.value = true
+    }, 1000) // Delay 1s để hiển thị toast trước
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('Lỗi xử lý thanh toán:', error)
     
     // Xử lý các loại lỗi khác nhau
@@ -973,12 +1081,7 @@ const processPayment = async () => {
   }
 }
 
-const printReceipt = () => {
-  if (cartItems.value.length === 0) {
-    showToast('Giỏ hàng trống! Không thể in hóa đơn', 'warning')
-    return
-  }
-  
+const printReceiptAndClose = () => {
   try {
     const receiptContent = generateReceiptContent()
     const printWindow = window.open('', '_blank')
@@ -993,7 +1096,21 @@ const printReceipt = () => {
   } catch (error) {
     console.error('Lỗi khi in hóa đơn:', error)
     showToast('Có lỗi khi in hóa đơn!', 'error')
+  } finally {
+    // Đóng dialog và reset form
+    showPrintConfirmDialog.value = false
+    setTimeout(() => {
+      resetForm()
+    }, 1000)
   }
+}
+
+const skipPrint = () => {
+  showPrintConfirmDialog.value = false
+  showToast('Đã bỏ qua in hóa đơn', 'info')
+  setTimeout(() => {
+    resetForm()
+  }, 1000)
 }
 
 const generateReceiptContent = () => {
@@ -1002,11 +1119,16 @@ const generateReceiptContent = () => {
       <head>
         <title>Hóa đơn #${orderId.value}</title>
         <style>
-          body { font-family: Arial, sans-serif; margin: 20px; }
+          body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.4; }
           .header { text-align: center; margin-bottom: 20px; }
+          .customer-info { margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 5px; }
+          .customer-info h4 { margin: 0 0 8px 0; color: #2c3e50; }
+          .customer-info p { margin: 3px 0; font-size: 14px; }
           .item { display: flex; justify-content: space-between; margin: 5px 0; }
           .total { font-weight: bold; font-size: 18px; }
           .divider { border-top: 1px solid #ccc; margin: 10px 0; }
+          .shipping-detail { background-color: #e8f4f8; padding: 8px; border-radius: 5px; margin: 5px 0; }
+          .shipping-detail p { margin: 2px 0; font-size: 12px; color: #2c3e50; }
         </style>
       </head>
       <body>
@@ -1015,6 +1137,21 @@ const generateReceiptContent = () => {
           <p>Hóa đơn #${orderId.value}</p>
           <p>${new Date().toLocaleString('vi-VN')}</p>
         </div>
+        
+        ${selectedCustomer.value ? `
+        <div class="customer-info">
+          <h4>Thông tin khách hàng:</h4>
+          <p><strong>Tên:</strong> ${selectedCustomer.value.hoTen || 'Khách lẻ'}</p>
+          <p><strong>Số điện thoại:</strong> ${selectedCustomer.value.soDienThoai || 'Không có'}</p>
+          ${selectedCustomer.value.email ? `<p><strong>Email:</strong> ${selectedCustomer.value.email}</p>` : ''}
+        </div>
+        ` : `
+        <div class="customer-info">
+          <h4>Thông tin khách hàng:</h4>
+          <p><strong>Khách hàng:</strong> Khách lẻ</p>
+        </div>
+        `}
+        
         <div class="divider"></div>
         ${cartItems.value.map(item => `
           <div class="item">
@@ -1025,8 +1162,14 @@ const generateReceiptContent = () => {
         <div class="divider"></div>
         <div class="item"><span>Tổng tiền hàng:</span><span>${formatCurrency(subtotal.value)}</span></div>
         ${isDelivery.value ? `
-        <div class="item"><span>Phí giao hàng (${shippingInfo.value ? shippingInfo.value.zone + ' - ' + shippingInfo.value.distance + 'km' : 'Giao hàng'}):</span><span>${formatCurrency(deliveryFee.value)}</span></div>
-        <div class="item"><span>Kho hàng:</span><span>${warehouseLocation.name}</span></div>
+        <div class="shipping-detail">
+          <div class="item"><span>Phí giao hàng:</span><span>${formatCurrency(deliveryFee.value)}</span></div>
+          ${shippingInfo.value ? `
+          <p><strong>Khu vực:</strong> ${shippingInfo.value.zone}</p>
+          <p><strong>Khoảng cách:</strong> Từ ${shippingInfo.value.from} → ${shippingInfo.value.distance}km</p>
+          <p><strong>Phí ship được tính theo khoảng cách thực tế</strong></p>
+          ` : ''}
+        </div>
         ` : ''}
         ${discountAmount.value > 0 ? `
         <div class="item"><span>Giảm giá:</span><span>-${formatCurrency(discountAmount.value)}</span></div>
@@ -1034,8 +1177,8 @@ const generateReceiptContent = () => {
         <div class="divider"></div>
         <div class="item total"><span>Tổng thanh toán:</span><span>${formatCurrency(totalAmount.value)}</span></div>
         <div class="divider"></div>
-        <p>Phương thức thanh toán: ${getPaymentMethodName()}</p>
-        ${isDelivery.value ? `<p>Địa chỉ giao hàng: ${fullAddress.value}</p>` : ''}
+        <p><strong>Phương thức thanh toán:</strong> ${getPaymentMethodName()}</p>
+        ${isDelivery.value ? `<p><strong>Địa chỉ giao hàng:</strong> ${fullAddress.value}</p>` : ''}
         <div style="text-align: center; margin-top: 30px;"><p>Cảm ơn quý khách!</p></div>
       </body>
     </html>
@@ -1124,8 +1267,8 @@ const fetchProducts = async () => {
   allProducts.value = [] // Reset dữ liệu cũ
   
   try {
-    // Gọi API sản phẩm đã cập nhật có đầy đủ thông tin chi tiết
-    console.log('📞 Gọi API SẢN PHẨM CẬP NHẬT: http://localhost:8080/san-pham/hien-thi')
+    // Gọi API sản phẩm chung với đầy đủ thông tin từ database
+    console.log('📞 Gọi API SẢN PHẨM: http://localhost:8080/san-pham/hien-thi')
     
     const response = await fetch('http://localhost:8080/san-pham/hien-thi', {
       method: 'GET',
@@ -1156,19 +1299,18 @@ const fetchProducts = async () => {
       return
     }
     
-    // Map dữ liệu từ API san-pham/hien-thi đã cập nhật (có đầy đủ thông tin + chi tiết)
+    // Map dữ liệu từ API san-pham/hien-thi (đã bổ sung thông tin chi tiết)
     const mappedProducts = products.map((item, index) => {
-      console.log(`🔄 Mapping SAN PHAM + CHI TIET ${index + 1}:`, item)
+      console.log(`🔄 Mapping SAN PHAM ${index + 1}:`, item)
       return {
-        id: item.id,
-        chiTietSanPhamId: item.chiTietSanPhamId,
+        id: item.maSanPham, // Sử dụng maSanPham làm ID
         maSanPham: item.maCode,
         tenSanPham: item.tenSanPham,
         anh: item.duongDanAnh,
-        giaBan: item.giaBan,
-        mauSac: item.tenMauSac,
-        kichThuoc: item.tenKichThuoc,
-        tonKho: item.soLuongTon,
+        giaBan: item.giaBan, // Từ chi tiết sản phẩm
+        mauSac: item.tenMauSac, // Từ chi tiết sản phẩm
+        kichThuoc: item.tenKichThuoc, // Từ chi tiết sản phẩm
+        tonKho: item.soLuongTon, // Từ chi tiết sản phẩm
         trangThai: item.trangThai
       }
     })
@@ -1177,7 +1319,7 @@ const fetchProducts = async () => {
     allProducts.value = mappedProducts
     console.log('✅ allProducts.value updated:', allProducts.value.length, 'items')
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ LỖI KHI GỌI API:', error)
     showToast(`Không thể tải danh sách sản phẩm: ${error.message}`, 'error')
     allProducts.value = []
