@@ -17,7 +17,9 @@
     <div class="product-section">
       <div class="header">
         <h2>Danh sách sản phẩm</h2>
-        <button class="btn-add" @click="$router.push({ name: 'ThemSanPham' })"><i class="fa fa-plus"></i> Thêm sản phẩm</button>
+        <div class="header-buttons">
+          <button class="btn-add" @click="$router.push({ name: 'ThemSanPham' })"><i class="fa fa-plus"></i> Thêm sản phẩm</button>
+        </div>
       </div>
       <div class="table-wrapper">
         <table>
@@ -67,6 +69,7 @@
 
 <script>
 import { toast } from 'vue3-toastify';
+import { sanPhamApi } from '@/api/sanPhamApi.js';
 
 export default {
   name: 'SanPham',
@@ -94,14 +97,48 @@ export default {
     },
   },
   methods: {
+    async testBackendConnection() {
+      try {
+        console.log('=== Test kết nối backend...');
+        const response = await fetch('http://localhost:8080/san-pham/test');
+        if (response.ok) {
+          const message = await response.text();
+          console.log('=== Backend response:', message);
+          toast.success('Kết nối backend thành công!');
+          return true;
+        } else {
+          throw new Error('Backend không phản hồi');
+        }
+      } catch (err) {
+        console.error('=== Backend không hoạt động:', err);
+        toast.error('Backend không hoạt động. Vui lòng kiểm tra server!');
+        return false;
+      }
+    },
+
     async fetchProducts() {
       try {
-        const response = await fetch('http://localhost:8080/san-pham/hien-thi');
-        const data = await response.json();
+        console.log('=== Đang gọi API lấy sản phẩm...');
+
+        const data = await sanPhamApi.layDanhSachSanPham();
+        console.log('=== Dữ liệu nhận được:', data);
+        console.log('=== Kiểu dữ liệu:', typeof data, Array.isArray(data));
+        
         this.products = Array.isArray(data) ? data : data.data || [];
+        console.log('=== Số sản phẩm sau khi xử lý:', this.products.length);
+        
+        if (this.products.length === 0) {
+          console.log('=== Không có sản phẩm nào trong database');
+          toast.info('Chưa có sản phẩm nào. Vui lòng thêm sản phẩm mới hoặc tạo dữ liệu test.');
+        } else {
+          console.log(`=== Đã tải ${this.products.length} sản phẩm thành công!`);
+        }
       } catch (err) {
         console.error('Lỗi khi lấy danh sách sản phẩm:', err);
-        toast.error('Không thể tải danh sách sản phẩm.');
+        toast.error('Không thể tải danh sách sản phẩm. Backend có thể chưa chạy!');
+        
+        // Thử test backend connection khi có lỗi
+        this.testBackendConnection();
       }
     },
     async fetchThuongHieu() {
@@ -190,14 +227,9 @@ export default {
       if (confirm('Xác nhận xóa sản phẩm này?')) {
         try {
           const product = this.products[index];
-          await fetch(`http://localhost:8080/san-pham/delete/${product.maSanPham}`, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ...product, daXoa: 1 }),
-          });
+          await sanPhamApi.xoaSanPham(product.maSanPham);
           toast.success('Xóa sản phẩm thành công!');
-          this.products[index].daXoa = 1;
-          this.fetchProducts();
+          this.fetchProducts(); // Tải lại danh sách
         } catch (err) {
           console.error('Lỗi khi xóa sản phẩm:', err);
           toast.error('Không thể xóa sản phẩm.');
@@ -207,6 +239,7 @@ export default {
     viewProduct(maSanPham) {
       this.$router.push({ name: 'SanPhamChiTiet', params: { id: maSanPham } });
     },
+
   },
   mounted() {
     this.fetchProducts();
@@ -283,6 +316,11 @@ export default {
   margin-bottom: 20px;
 }
 
+.header-buttons {
+  display: flex;
+  gap: 10px;
+}
+
 .header h2 {
   font-size: 22px;
   font-weight: 600;
@@ -300,6 +338,8 @@ export default {
 .btn-add:hover {
   background: #4338ca;
 }
+
+
 
 .table-wrapper {
   overflow-x: auto;

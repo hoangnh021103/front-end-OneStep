@@ -49,7 +49,7 @@
               ></v-text-field>
             </v-col>
             <v-col cols="4">
-              <v-btn color="primary" variant="elevated" size="large" block @click="showProductModal = true" class="action-btn" :disabled="!orderStarted">
+              <v-btn color="primary" variant="elevated" size="large" block @click="openProductModal" class="action-btn" :disabled="!orderStarted">
                 <v-icon class="mr-2">mdi-plus</v-icon>
                 Chọn sản phẩm
               </v-btn>
@@ -286,7 +286,19 @@
           Chọn sản phẩm
         </v-card-title>
         <v-card-text>
-          <v-data-table :headers="productModalHeaders" :items="allProducts" :items-per-page="10" class="elevation-0">
+          <v-progress-linear v-if="isLoadingProducts" indeterminate color="primary" class="mb-4"></v-progress-linear>
+          
+          <v-alert v-if="!isLoadingProducts && allProducts.length === 0" type="warning" class="mb-4">
+            <v-icon>mdi-alert</v-icon>
+            Không có sản phẩm nào từ API. Vui lòng kiểm tra:
+            <ul>
+              <li>Backend đang chạy ở port 8080</li>
+              <li>Database có dữ liệu sản phẩm</li>
+              <li>Xem Console log để biết chi tiết lỗi</li>
+            </ul>
+          </v-alert>
+          
+          <v-data-table v-if="!isLoadingProducts" :headers="productModalHeaders" :items="allProducts" :items-per-page="10" class="elevation-0">
             <template #item.anh="{ item }">
               <v-avatar size="40" class="mr-3">
                 <v-img :src="item.anh" :alt="item.tenSanPham"></v-img>
@@ -320,7 +332,7 @@
         <v-card-text>
           <v-row class="mb-3">
             <v-col cols="12" md="6">
-              <v-text-field v-model="customerSearch" placeholder="Tìm theo tên/email/số điện thoại" density="compact" variant="outlined" prepend-inner-icon="mdi-magnify" @input="filterCustomerList"></v-text-field>
+              <v-text-field v-model="customerSearch" placeholder="Tìm theo tên/email/số điện thoại" density="compact" variant="outlined" prepend-inner-icon="mdi-magnify" @input="filterCustomerList" clearable></v-text-field>
             </v-col>
           </v-row>
           <v-data-table :headers="customerHeaders" :items="filteredCustomers" :items-per-page="8" class="elevation-0">
@@ -373,7 +385,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import khachHangApi from '@/api/khachHangApi'
+import { khachHangApi } from '@/api/khachHangApi'
+import thanhToanApi from '@/api/thanhToanApi'
+import { toast } from 'vue3-toastify'
 
 const generateOrderId = () => {
   return 'ORD' + Date.now().toString().slice(-6)
@@ -410,12 +424,8 @@ const customerInfo = ref({
 const cartItems = ref<any[]>([])
 let cartItemId = 1
 
-const allProducts = ref([
-  { id: 1, maSanPham: 'SP001', tenSanPham: 'Giày thể thao Nike Air Max', anh: 'https://via.placeholder.com/200x200/FF6B6B/FFFFFF?text=Nike', giaBan: 2500000, mauSac: 'red', kichThuoc: '42', tonKho: 50 },
-  { id: 2, maSanPham: 'SP002', tenSanPham: 'Giày chạy bộ Adidas Ultraboost', anh: 'https://via.placeholder.com/200x200/4ECDC4/FFFFFF?text=Adidas', giaBan: 3200000, mauSac: 'blue', kichThuoc: '41', tonKho: 30 },
-  { id: 3, maSanPham: 'SP003', tenSanPham: 'Giày cao gót đen', anh: 'https://via.placeholder.com/200x200/45B7D1/FFFFFF?text=Heels', giaBan: 1800000, mauSac: 'black', kichThuoc: '38', tonKho: 25 },
-  { id: 4, maSanPham: 'SP004', tenSanPham: 'Sandal nữ mùa hè', anh: 'https://via.placeholder.com/200x200/96CEB4/FFFFFF?text=Sandal', giaBan: 850000, mauSac: 'pink', kichThuoc: '37', tonKho: 40 }
-])
+const allProducts = ref<any[]>([])
+const isLoadingProducts = ref(false)
 
 const searchResults = ref<any[]>([])
 
@@ -641,18 +651,75 @@ const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
 }
 
-const searchProducts = () => {
+// Function hiển thị toast notification
+const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info') => {
+  switch (type) {
+    case 'success':
+      toast.success(message, {
+        position: 'top-right',
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      })
+      break
+    case 'error':
+      toast.error(message, {
+        position: 'top-right',
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      })
+      break
+    case 'warning':
+      toast.warning(message, {
+        position: 'top-right',
+        autoClose: 4000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      })
+      break
+    default:
+      toast.info(message, {
+        position: 'top-right',
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      })
+  }
+}
+
+const searchProducts = async () => {
   if (searchQuery.value.trim()) {
-    searchResults.value = allProducts.value.filter((product: any) =>
-      product.tenSanPham.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      product.maSanPham.toLowerCase().includes(searchQuery.value.toLowerCase())
-    )
+    try {
+      searchResults.value = await thanhToanApi.timKiemSanPham(searchQuery.value)
+    } catch (error) {
+      console.error('Lỗi tìm kiếm sản phẩm:', error)
+      searchResults.value = []
+    }
   } else {
     searchResults.value = []
   }
 }
 
 // Dialog khách hàng
+// Dialog sản phẩm
+const openProductModal = async () => {
+  console.log('🔵 MỞ MODAL CHỌN SẢN PHẨM')
+  
+  showProductModal.value = true
+  
+  // Luôn gọi API mới khi mở modal
+  await fetchProducts()
+}
+
 const openCustomerDialog = async () => {
   showCustomerModal.value = true
   if (customers.value.length === 0) {
@@ -669,17 +736,25 @@ const fetchCustomers = async () => {
   }
 }
 
-const filterCustomerList = () => {
-  const kw = customerSearch.value.trim().toLowerCase()
+const filterCustomerList = async () => {
+  const kw = customerSearch.value.trim()
   if (!kw) {
     filteredCustomers.value = [...customers.value]
     return
   }
-  filteredCustomers.value = customers.value.filter((c: any) =>
-    (c.hoTen && c.hoTen.toLowerCase().includes(kw)) ||
-    (c.email && c.email.toLowerCase().includes(kw)) ||
-    (c.soDienThoai && String(c.soDienThoai).includes(kw))
-  )
+  
+  try {
+    // Sử dụng API tìm kiếm
+    filteredCustomers.value = await khachHangApi.timKiem(kw)
+  } catch (error) {
+    console.error('Lỗi tìm kiếm khách hàng:', error)
+    // Fallback tìm kiếm local
+    filteredCustomers.value = customers.value.filter((c: any) =>
+      (c.hoTen && c.hoTen.toLowerCase().includes(kw.toLowerCase())) ||
+      (c.email && c.email.toLowerCase().includes(kw.toLowerCase())) ||
+      (c.soDienThoai && String(c.soDienThoai).includes(kw))
+    )
+  }
 }
 
 const chooseCustomer = (cus: any) => {
@@ -687,6 +762,9 @@ const chooseCustomer = (cus: any) => {
   customerInfo.value.ten = cus.hoTen || ''
   customerInfo.value.sdt = String(cus.soDienThoai || '')
   showCustomerModal.value = false
+  
+  // Hiển thị thông báo chọn khách hàng thành công
+  showToast(`Đã chọn khách hàng: ${cus.hoTen}`, 'success')
 }
 
 const openQuickAddCustomer = () => {
@@ -695,13 +773,13 @@ const openQuickAddCustomer = () => {
 }
 
 const saveQuickCustomer = async () => {
-  const payload: any = {
+  const payload = {
     hoTen: quickCustomer.value.hoTen?.trim(),
     soDienThoai: String(quickCustomer.value.soDienThoai || '').trim(),
     email: quickCustomer.value.email?.trim() || ''
   }
   if (!payload.hoTen || !payload.soDienThoai) {
-    alert('Vui lòng nhập Họ tên và Số điện thoại')
+    showToast('Vui lòng nhập Họ tên và Số điện thoại', 'error')
     return
   }
   try {
@@ -712,26 +790,28 @@ const saveQuickCustomer = async () => {
     customerInfo.value.ten = created.hoTen || ''
     customerInfo.value.sdt = String(created.soDienThoai || '')
     showQuickAddModal.value = false
+    
+    // Hiển thị thông báo thành công
+    showToast('Thêm khách hàng thành công!', 'success')
   } catch (e) {
-    // fallback: thêm local nếu API chưa có
-    const local = { id: Date.now(), ...payload }
-    customers.value.unshift(local)
-    selectedCustomer.value = local
-    customerInfo.value.ten = local.hoTen
-    customerInfo.value.sdt = local.soDienThoai
-    showQuickAddModal.value = false
+    console.error('Lỗi khi thêm khách hàng:', e)
+    showToast('Có lỗi xảy ra khi thêm khách hàng', 'error')
   }
 }
 
 const addToCart = (product: any) => {
   // Điều hướng sang trang chọn size/màu
   sessionStorage.setItem('selectedProduct', JSON.stringify(product))
+  showToast(`Đã chọn sản phẩm: ${product.tenSanPham}`, 'info')
   router.push('/quan-ly/ban-hang/chon-thuoc-tinh')
 }
 
 const removeFromCart = (item: any) => {
   const index = cartItems.value.findIndex((cartItem) => cartItem.stt === item.stt)
-  if (index > -1) cartItems.value.splice(index, 1)
+  if (index > -1) {
+    cartItems.value.splice(index, 1)
+    showToast(`Đã xóa sản phẩm: ${item.tenSanPham}`, 'warning')
+  }
   saveOrderState()
 }
 
@@ -753,9 +833,12 @@ const updateQuantity = (item: any) => {
 }
 
 const clearCart = () => {
-  cartItems.value = []
-  cartItemId = 1
-  saveOrderState()
+  if (cartItems.value.length > 0) {
+    cartItems.value = []
+    cartItemId = 1
+    saveOrderState()
+    showToast('Đã xóa tất cả sản phẩm khỏi giỏ hàng', 'warning')
+  }
 }
 
 const applyDiscount = () => {
@@ -764,63 +847,152 @@ const applyDiscount = () => {
     discountInfo.value = ''
     discountType.value = 'info'
     saveOrderState()
+    showToast('Đã xóa mã giảm giá', 'info')
     return
   }
+  
   if (code === 'GIAM10') {
     discountInfo.value = 'Áp dụng giảm giá 10%'
     discountType.value = 'success'
+    showToast('✅ Áp dụng mã giảm giá 10% thành công!', 'success')
   } else if (code === 'GIAM20') {
     discountInfo.value = 'Áp dụng giảm giá 20%'
     discountType.value = 'success'
+    showToast('✅ Áp dụng mã giảm giá 20% thành công!', 'success')
   } else if (code === 'GIAM50K') {
     discountInfo.value = 'Áp dụng giảm giá 50.000 VNĐ'
     discountType.value = 'success'
+    showToast('✅ Áp dụng mã giảm giá 50.000đ thành công!', 'success')
   } else {
     discountInfo.value = 'Mã giảm giá không hợp lệ'
     discountType.value = 'error'
+    showToast('❌ Mã giảm giá không hợp lệ!', 'error')
   }
   saveOrderState()
 }
 
-const processPayment = () => {
+const processPayment = async () => {
+  // Validation
   if (cartItems.value.length === 0) {
-    alert('Giỏ hàng trống!')
+    showToast('Giỏ hàng trống! Vui lòng thêm sản phẩm trước khi thanh toán', 'warning')
     return
   }
+  
   if (isDelivery.value && !fullAddress.value) {
-    alert('Vui lòng chọn địa chỉ giao hàng đầy đủ!')
+    showToast('Vui lòng chọn địa chỉ giao hàng đầy đủ!', 'warning')
     return
   }
-  const orderData = {
-    orderId: orderId.value,
-    customerInfo: customerInfo.value,
-    items: cartItems.value,
-    isDelivery: isDelivery.value,
-    deliveryAddress: fullAddress.value,
-    discountCode: discountCode.value,
-    paymentMethod: paymentMethod.value,
-    subtotal: subtotal.value,
-    deliveryFee: deliveryFee.value,
-    discountAmount: discountAmount.value,
-    totalAmount: totalAmount.value,
-    timestamp: new Date().toISOString()
+
+  // Hiển thị loading
+  showToast('Đang xử lý thanh toán...', 'info')
+
+  try {
+    // Validation chi tiết trước khi gửi
+    if (cartItems.value.length === 0) {
+      throw new Error('Chi tiết đơn hàng không được trống')
+    }
+    
+    // Đảm bảo tất cả sản phẩm có ID hợp lệ
+    const invalidItems = cartItems.value.filter(item => 
+      !item.chiTietSanPhamId && !item.id
+    )
+    if (invalidItems.length > 0) {
+      throw new Error('Có sản phẩm không có ID hợp lệ')
+    }
+    
+    const orderData = {
+      maHoaDon: orderId.value,
+      khachHangId: selectedCustomer.value?.id || null,
+      diaChiGiaoHang: isDelivery.value ? fullAddress.value : null,
+      phiGiaoHang: parseFloat(deliveryFee.value) || 0.0,
+      maGiamGia: discountCode.value || null,
+      phuongThucThanhToan: paymentMethod.value,
+      tongTien: parseFloat(totalAmount.value),
+      trangThai: 1,
+      ghiChu: `Bán hàng tại quầy - ${new Date().toLocaleDateString('vi-VN')}`,
+      nguoiTao: 'Admin',
+      chiTietDonHang: cartItems.value.map(item => {
+        console.log('🔍 Item để gửi:', item)
+        
+        // Lấy chiTietSanPhamId từ item (đã được set khi thêm vào giỏ)
+        const sanPhamId = item.chiTietSanPhamId || item.id
+        
+        console.log('🔍 sanPhamId được chọn:', sanPhamId)
+        console.log('🔍 Item data:', {
+          chiTietSanPhamId: item.chiTietSanPhamId,
+          id: item.id,
+          maSanPham: item.maSanPham
+        })
+        
+        const finalSanPhamId = parseInt(sanPhamId)
+        
+        if (!finalSanPhamId || isNaN(finalSanPhamId)) {
+          throw new Error(`Sản phẩm "${item.tenSanPham}" không có ID hợp lệ`)
+        }
+        
+        return {
+          sanPhamId: finalSanPhamId,
+          soLuong: parseInt(item.soLuong) || 1,
+          donGia: parseFloat(item.giaBan) || 0.0,
+          thanhTien: parseFloat(item.tongTien) || 0.0,
+          kichThuoc: item.kichThuoc || 'Không xác định',
+          mauSac: item.mauSac || 'Không xác định'
+        }
+      })
+    }
+
+    console.log('Dữ liệu gửi lên server:', orderData)
+    
+    // Gửi lên server
+    const result = await thanhToanApi.taoHoaDon(orderData)
+    console.log('Kết quả từ server:', result)
+    
+    // Thông báo thành công với toast
+    showToast(`✅ Thanh toán thành công!\nMã đơn hàng: ${orderId.value}\nTổng tiền: ${formatCurrency(totalAmount.value)}`, 'success')
+    
+    // Reset form sau khi thành công
+    setTimeout(() => {
+      resetForm()
+    }, 2000) // Delay 2s để người dùng đọc thông báo
+    
+  } catch (error) {
+    console.error('Lỗi xử lý thanh toán:', error)
+    
+    // Xử lý các loại lỗi khác nhau
+    let errorMessage = 'Có lỗi xảy ra khi xử lý thanh toán!'
+    
+    if (error.response?.status === 400) {
+      errorMessage = 'Dữ liệu thanh toán không hợp lệ!'
+    } else if (error.response?.status === 500) {
+      errorMessage = 'Lỗi server! Vui lòng thử lại sau!'
+    } else if (error.message?.includes('Network')) {
+      errorMessage = 'Lỗi kết nối! Kiểm tra internet và thử lại!'
+    }
+    
+    showToast(errorMessage, 'error')
   }
-  console.log('Xử lý thanh toán:', orderData)
-  alert(`Thanh toán thành công!\nMã đơn hàng: ${orderId.value}\nTổng tiền: ${formatCurrency(totalAmount.value)}`)
-  resetForm()
 }
 
 const printReceipt = () => {
   if (cartItems.value.length === 0) {
-    alert('Giỏ hàng trống!')
+    showToast('Giỏ hàng trống! Không thể in hóa đơn', 'warning')
     return
   }
-  const receiptContent = generateReceiptContent()
-  const printWindow = window.open('', '_blank')
-  if (printWindow) {
-    printWindow.document.write(receiptContent)
-    printWindow.document.close()
-    printWindow.print()
+  
+  try {
+    const receiptContent = generateReceiptContent()
+    const printWindow = window.open('', '_blank')
+    if (printWindow) {
+      printWindow.document.write(receiptContent)
+      printWindow.document.close()
+      printWindow.print()
+      showToast('Đã gửi hóa đơn đến máy in!', 'success')
+    } else {
+      showToast('Không thể mở cửa sổ in! Vui lòng kiểm tra popup blocker', 'error')
+    }
+  } catch (error) {
+    console.error('Lỗi khi in hóa đơn:', error)
+    showToast('Có lỗi khi in hóa đơn!', 'error')
   }
 }
 
@@ -936,16 +1108,93 @@ const startNewOrder = () => {
   resetForm()
   orderStarted.value = true
   saveOrderState()
+  showToast('Đã tạo hóa đơn mới!', 'success')
 }
 
 const cancelOrder = () => {
   resetForm()
   sessionStorage.removeItem(ORDER_STATE_KEY)
+  showToast('Đã hủy hóa đơn', 'warning')
+}
+
+// Hàm tải danh sách sản phẩm từ API
+const fetchProducts = async () => {
+  console.log('🚀 BẮT ĐẦU GỌI API SẢN PHẨM')
+  isLoadingProducts.value = true
+  allProducts.value = [] // Reset dữ liệu cũ
+  
+  try {
+    // Gọi API sản phẩm đã cập nhật có đầy đủ thông tin chi tiết
+    console.log('📞 Gọi API SẢN PHẨM CẬP NHẬT: http://localhost:8080/san-pham/hien-thi')
+    
+    const response = await fetch('http://localhost:8080/san-pham/hien-thi', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    })
+    
+    console.log('📡 Response status:', response.status)
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    }
+    
+    const products = await response.json()
+    console.log('🔥 RAW API DATA:', products)
+    console.log('🔥 Type:', typeof products)
+    console.log('🔥 Is Array:', Array.isArray(products))
+    console.log('🔥 Length:', products?.length)
+    
+    if (!Array.isArray(products)) {
+      throw new Error('API không trả về array')
+    }
+    
+    if (products.length === 0) {
+      console.warn('⚠️ API trả về 0 sản phẩm')
+      allProducts.value = []
+      return
+    }
+    
+    // Map dữ liệu từ API san-pham/hien-thi đã cập nhật (có đầy đủ thông tin + chi tiết)
+    const mappedProducts = products.map((item, index) => {
+      console.log(`🔄 Mapping SAN PHAM + CHI TIET ${index + 1}:`, item)
+      return {
+        id: item.id,
+        chiTietSanPhamId: item.chiTietSanPhamId,
+        maSanPham: item.maCode,
+        tenSanPham: item.tenSanPham,
+        anh: item.duongDanAnh,
+        giaBan: item.giaBan,
+        mauSac: item.tenMauSac,
+        kichThuoc: item.tenKichThuoc,
+        tonKho: item.soLuongTon,
+        trangThai: item.trangThai
+      }
+    })
+    
+    console.log('✅ MAPPED PRODUCTS:', mappedProducts)
+    allProducts.value = mappedProducts
+    console.log('✅ allProducts.value updated:', allProducts.value.length, 'items')
+    
+  } catch (error) {
+    console.error('❌ LỖI KHI GỌI API:', error)
+    showToast(`Không thể tải danh sách sản phẩm: ${error.message}`, 'error')
+    allProducts.value = []
+  } finally {
+    isLoadingProducts.value = false
+    console.log('🏁 HOÀN THÀNH fetchProducts')
+  }
 }
 
 onMounted(async () => {
+  console.log('🟢 COMPONENT MOUNTED')
+  
   // Khôi phục trạng thái đơn nếu có
   loadOrderState()
+  
+  // KHÔNG gọi fetchProducts ở đây - chỉ gọi khi mở modal
+  
   // Khi quay lại từ trang chọn thuộc tính, nhận dữ liệu và thêm vào giỏ
   const pending = sessionStorage.getItem('cartAddItem')
   if (pending) {
@@ -957,7 +1206,19 @@ onMounted(async () => {
         existingItem.soLuong += 1
         existingItem.tongTien = existingItem.soLuong * existingItem.giaBan
       } else {
-        const newItem = { stt: cartItemId++, id: chosen.id, maSanPham: chosen.maSanPham, tenSanPham: chosen.tenSanPham, anh: chosen.anh, soLuong: 1, giaBan: chosen.giaBan, kichThuoc: chosen.kichThuoc, mauSac: chosen.mauSac, tongTien: chosen.giaBan }
+        const newItem = { 
+          stt: cartItemId++, 
+          id: chosen.id, 
+          chiTietSanPhamId: chosen.chiTietSanPhamId || chosen.id,
+          maSanPham: chosen.maSanPham, 
+          tenSanPham: chosen.tenSanPham, 
+          anh: chosen.anh, 
+          soLuong: 1, 
+          giaBan: chosen.giaBan, 
+          kichThuoc: chosen.kichThuoc, 
+          mauSac: chosen.mauSac, 
+          tongTien: chosen.giaBan 
+        }
         cartItems.value.push(newItem)
       }
     } catch (e) {}

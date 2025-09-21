@@ -60,7 +60,7 @@ export const sanPhamApi = {
    */
   capNhatSanPham: async (id, sanPham) => {
     try {
-      const response = await axios.put(`${API_URL}/san-pham/${id}`, sanPham);
+      const response = await axios.put(`${API_URL}/san-pham/update/${id}`, sanPham);
       return response.data;
     } catch (error) {
       console.error(`Lỗi khi cập nhật sản phẩm ID ${id}:`, error);
@@ -75,7 +75,7 @@ export const sanPhamApi = {
    */
   xoaSanPham: async (id) => {
     try {
-      const response = await axios.delete(`${API_URL}/san-pham/${id}`);
+      const response = await axios.delete(`${API_URL}/san-pham/delete/${id}`);
       return response.data;
     } catch (error) {
       console.error(`Lỗi khi xóa sản phẩm ID ${id}:`, error);

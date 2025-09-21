@@ -98,6 +98,7 @@
 <script>
 import { toast } from 'vue3-toastify';
 import axios from 'axios';
+import { sanPhamApi } from '@/api/sanPhamApi.js';
 
 export default {
   name: 'ThemSanPham',
@@ -187,8 +188,7 @@ export default {
         console.log('Chỉnh sửa sản phẩm với ID:', id);
         try {
           this.isSubmitting = true;
-          const response = await axios.get(`http://localhost:8080/san-pham/${id}`);
-          const sanPham = response.data;
+          const sanPham = await sanPhamApi.layChiTietSanPham(id);
           
           this.form = {
             maSanPham: sanPham.maSanPham || sanPham.id,
@@ -341,23 +341,23 @@ export default {
           }
         }
 
-        let response;
+        let result;
         if (this.isEditing && this.form.maSanPham) {
-          response = await fetch(`http://localhost:8080/san-pham/update/${this.form.maSanPham}`, {
-            method: 'PUT',
-            body: formData,
+          // Sử dụng axios để gửi FormData cho update
+          const response = await axios.put(`http://localhost:8080/san-pham/update/${this.form.maSanPham}`, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
           });
+          result = response.data;
         } else {
-          response = await fetch('http://localhost:8080/san-pham/add', {
-            method: 'POST',
-            body: formData,
+          // Sử dụng axios để gửi FormData cho add
+          const response = await axios.post('http://localhost:8080/san-pham/add', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
           });
-        }
-        
-        if (!response.ok) {
-          const errorData = await response.text();
-          console.error('Lỗi response:', errorData);
-          throw new Error(`Lỗi HTTP! Trạng thái: ${response.status}, Thông báo: ${errorData}`);
+          result = response.data;
         }
         
         toast.success(this.isEditing ? 'Cập nhật sản phẩm thành công!' : 'Thêm sản phẩm thành công!');
