@@ -201,7 +201,7 @@ class ProductService {
       code: product.maCode || product.code,
       name: product.tenSanPham || product.tenChiTiet || 'Unknown Product',
       description: product.moTa || product.description || '',
-      brand: product.thuongHieuTen || (product.thuongHieu && product.thuongHieu.ten) || 'Unknown Brand',
+      brand: product.thuongHieuTen || (product.thuongHieu && product.thuongHieu.ten) || '',
       price: basePrice,
       originalPrice: originalPrice,
       image: buildImageUrl(product.duongDanAnh || product.image),

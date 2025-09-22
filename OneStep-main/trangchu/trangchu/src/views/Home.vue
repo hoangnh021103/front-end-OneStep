@@ -67,7 +67,6 @@
             :key="product.id" 
             :product="product"
             @product-added="handleProductAdded"
-            @wishlist-toggled="handleWishlistToggled"
           />
         </div>
         
@@ -96,7 +95,6 @@
             :key="product.id" 
             :product="product"
             @product-added="handleProductAdded"
-            @wishlist-toggled="handleWishlistToggled"
           />
         </div>
         
@@ -219,7 +217,7 @@ export default {
               image: product.duongDanAnh || 'https://via.placeholder.com/300x300',
               price: basePrice,
               originalPrice: originalPrice,
-              brand: product.thuongHieuTen || (product.thuongHieu && product.thuongHieu.ten) || 'Unknown Brand',
+              brand: product.thuongHieuTen || (product.thuongHieu && product.thuongHieu.ten) || '',
               rating: 5,
               colors: Array.isArray(product.mauSacList) ? product.mauSacList : ['Đen', 'Trắng'],
               sizes: Array.isArray(product.kichCoList) ? product.kichCoList : ['39', '40', '41', '42'],
@@ -266,7 +264,7 @@ export default {
               image: product.duongDanAnh || 'https://via.placeholder.com/300x300',
               price: basePrice,
               originalPrice: originalPrice,
-              brand: product.thuongHieuTen || product.thuongHieu?.ten || 'Unknown Brand',
+              brand: product.thuongHieuTen || product.thuongHieu?.ten || '',
               rating: 5,
               colors: product.mauSacList || ['Đen', 'Trắng'],
               sizes: product.kichCoList || ['39', '40', '41', '42'],
@@ -397,10 +395,6 @@ export default {
       this.$toast?.success(`${product.name} đã được thêm vào giỏ hàng!`)
     },
     
-    handleWishlistToggled(product) {
-      // Handle wishlist toggle
-      this.$toast?.info(`${product.name} đã được thêm vào danh sách yêu thích!`)
-    }
   }
 }
 </script>

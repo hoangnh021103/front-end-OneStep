@@ -62,7 +62,7 @@
     <div class="copy">
       <div class="row">
         <div class="col-sm-12 text-center">
-          <p>&copy; 2024 Giày Dép Premium. Tất cả quyền được bảo lưu.</p>
+          <p>&copy; 2025 Onestep. Tất cả quyền được bảo lưu.</p>
         </div>
       </div>
     </div>

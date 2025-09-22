@@ -25,12 +25,6 @@
           >
             {{ product.stock === 0 ? 'Hết hàng' : 'Thêm vào giỏ hàng' }}
           </button>
-          <button 
-            class="btn btn-outline-secondary btn-sm" 
-            @click.stop="toggleWishlist"
-          >
-            <i :class="isInWishlist ? 'icon-heart' : 'icon-heart-o'"></i>
-          </button>
         </div>
       </div>
     </div>
@@ -50,10 +44,6 @@ export default {
   },
   computed: {
     ...mapGetters('cart', ['isInCart']),
-    isInWishlist() {
-      // This would be connected to a wishlist store in a real app
-      return false
-    }
   },
   methods: {
     
@@ -62,7 +52,21 @@ export default {
       // Sử dụng sanPhamId nếu có, nếu không thì dùng id
       const productId = this.product.sanPhamId || this.product.id
       console.log('🔄 Navigating to product detail:', productId, 'Product:', this.product)
-      this.$router.push(`/product/${productId}`)
+      
+      if (!productId) {
+        console.error('❌ No product ID found:', this.product)
+        alert('Không tìm thấy ID sản phẩm!')
+        return
+      }
+      
+      try {
+        this.$router.push(`/product/${productId}`)
+        console.log('✅ Navigation successful to:', `/product/${productId}`)
+      } catch (error) {
+        console.error('❌ Navigation error:', error)
+        // Fallback: chuyển bằng window.location
+        window.location.href = `/product/${productId}`
+      }
     },
     
     addToCart() {
@@ -72,10 +76,6 @@ export default {
       this.$emit('product-added', this.product)
     },
     
-    toggleWishlist() {
-      // This would toggle wishlist in a real app
-      this.$emit('wishlist-toggled', this.product)
-    },
     
     getStars(rating) {
       return '★'.repeat(rating) + '☆'.repeat(5 - rating)

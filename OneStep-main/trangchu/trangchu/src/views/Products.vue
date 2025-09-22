@@ -20,7 +20,7 @@
       <div class="container">
         <div class="row">
           <div class="col-sm-8 offset-sm-2 text-center colorlib-heading">
-            <h2>🛍️ Tất cả sản phẩm</h2>
+            <h2> Tất cả sản phẩm</h2>
             <p>Khám phá bộ sưu tập giày đa dạng với chất lượng cao và giá cả hợp lý</p>
             <div class="product-stats">
               <div class="stat-item">
@@ -42,21 +42,6 @@
         <!-- Product Filter -->
         <ProductFilter @filter-changed="handleFilterChanged" />
         
-        <!-- Sort Options -->
-        <div class="row mb-4">
-          <div class="col-12">
-            <div class="sort-options">
-              <span class="sort-label">Sắp xếp theo:</span>
-              <select v-model="sortBy" @change="handleSort" class="form-select sort-select">
-                <option value="name">Tên A-Z</option>
-                <option value="price-low">Giá thấp đến cao</option>
-                <option value="price-high">Giá cao đến thấp</option>
-                <option value="rating">Đánh giá cao nhất</option>
-                <option value="newest">Mới nhất</option>
-              </select>
-            </div>
-          </div>
-        </div>
         
         <!-- Products Count -->
         <div class="row mb-3">
@@ -74,7 +59,6 @@
             :key="product.id"
             :product="product"
             @product-added="handleProductAdded"
-            @wishlist-toggled="handleWishlistToggled"
           />
         </div>
         <div v-else class="row">
@@ -122,6 +106,7 @@
 
 <script>
 import axios from 'axios';
+import { mapGetters, mapActions } from 'vuex';
 import ProductFilter from '../components/ProductFilter.vue';
 import ProductCard from '../components/ProductCard.vue';
 
@@ -133,9 +118,6 @@ export default {
   },
   data() {
     return {
-      allProducts: [],
-      filteredProducts: [],
-      sortBy: 'name',
       currentPage: 1,
       itemsPerPage: 12,
       currentFilters: {
@@ -150,22 +132,12 @@ export default {
     };
   },
   computed: {
+    ...mapGetters('products', ['allProducts', 'filteredProducts']),
+    ...mapGetters('filters', ['currentFilters']),
+    
     sortedProducts() {
-      const products = [...this.filteredProducts];
-      switch (this.sortBy) {
-        case 'name':
-          return products.sort((a, b) => a.name.localeCompare(b.name));
-        case 'price-low':
-          return products.sort((a, b) => (a.price || 0) - (b.price || 0));
-        case 'price-high':
-          return products.sort((a, b) => (b.price || 0) - (a.price || 0));
-        case 'rating':
-          return products.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-        case 'newest':
-          return products.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-        default:
-          return products;
-      }
+      // Sử dụng filteredProducts từ store, không cần sort lại vì đã được sort trong store
+      return this.filteredProducts;
     },
     paginatedProducts() {
       const start = (this.currentPage - 1) * this.itemsPerPage;
@@ -218,10 +190,20 @@ export default {
     }
   },
   mounted() {
-    this.fetchProducts();
+    this.loadProducts();
   },
   methods: {
-    async fetchProducts() {
+    ...mapActions('products', ['fetchProducts', 'filterProducts']),
+    ...mapActions('filters', ['setColor', 'setSize', 'setPriceRange']),
+    
+    async loadProducts() {
+      console.log('🔄 Loading products...');
+      await this.fetchProducts();
+      // Áp dụng filter hiện tại sau khi load xong
+      this.applyCurrentFilters();
+    },
+    
+    async fetchProductsOld() {
       console.log('🔄 Bắt đầu fetch products...');
       
       try {
@@ -250,7 +232,7 @@ export default {
               image: product.duongDanAnh || 'https://via.placeholder.com',
               price: basePrice,
               originalPrice: originalPrice,
-              brand: product.thuongHieuTen || (product.thuongHieu && product.thuongHieu.ten) || 'Unknown Brand',
+              brand: product.thuongHieuTen || (product.thuongHieu && product.thuongHieu.ten) || '',
               rating: 5,
               colors: Array.isArray(product.mauSacList) ? product.mauSacList : [],
               sizes: Array.isArray(product.kichCoList) ? product.kichCoList : [],
@@ -297,7 +279,7 @@ export default {
               image: product.duongDanAnh || 'https://via.placeholder.com',
               price: basePrice,
               originalPrice: originalPrice,
-              brand: product.thuongHieuTen || product.thuongHieu?.ten || 'Unknown Brand',
+              brand: product.thuongHieuTen || product.thuongHieu?.ten || '',
               rating: 5,
               colors: product.mauSacList || [],
               sizes: product.kichCoList || [],
@@ -429,8 +411,28 @@ export default {
       })
       this.filteredProducts = filtered;
     },
-    handleSort() {
-      // Sorting is handled by sortedProducts computed property
+    
+    handleFilterChanged(filters) {
+      console.log('🔍 Filter changed:', filters);
+      this.currentFilters = { ...this.currentFilters, ...filters };
+      this.applyCurrentFilters();
+    },
+    
+    applyCurrentFilters() {
+      const filters = {
+        ...this.currentFilters,
+        priceRange: this.getPriceRange(),
+        color: this.selectedColors.length > 0 ? this.selectedColors[0] : 'all',
+        size: this.selectedSizes.length > 0 ? this.selectedSizes[0] : 'all'
+      };
+      this.filterProducts(filters);
+    },
+    
+    getPriceRange() {
+      if (this.priceMin > 0 || this.priceMax < 10000000) {
+        return `${this.priceMin}-${this.priceMax}`;
+      }
+      return 'all';
     },
     goToPage(page) {
       if (page >= 1 && page <= this.totalPages) {
@@ -444,39 +446,16 @@ export default {
     handleProductAdded(product) {
       this.$toast?.success(`${product.name} đã được thêm vào giỏ hàng!`);
     },
-    handleWishlistToggled(product) {
-      this.$toast?.info(`${product.name} đã được thêm vào danh sách yêu thích!`);
-    },
-    applyFilters() {
-      let list = [...this.allProducts]
-      if (this.selectedColors.length > 0) {
-        list = list.filter(p => {
-          const cs = p.colors || []
-          return this.selectedColors.some(c => cs.includes(c))
-        })
-      }
-      if (this.selectedSizes.length > 0) {
-        list = list.filter(p => {
-          const ss = p.sizes || []
-          return this.selectedSizes.some(s => ss.includes(s))
-        })
-      }
-      list = list.filter(p => {
-        const price = p.price || 0
-        return price >= this.priceMin && price <= this.priceMax
-      })
-      this.filteredProducts = list
-    },
     resetFilters() {
       this.selectedColors = []
       this.selectedSizes = []
       this.priceMin = this.suggestedMin
       this.priceMax = this.suggestedMax
-      this.applyFilters()
+      this.applyCurrentFilters()
     },
     onFilterChanged() {
       this.isFiltering = true
-      this.applyFilters()
+      this.applyCurrentFilters()
     }
   }
 };
@@ -533,31 +512,6 @@ export default {
   letter-spacing: 1px;
 }
 
-.sort-options {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  background: #f8f9fa;
-  padding: 15px 20px;
-  border-radius: 8px;
-}
-
-.sort-label {
-  font-weight: 600;
-  color: #333;
-}
-
-.sort-select {
-  width: 200px;
-  border: 2px solid #e9ecef;
-  border-radius: 4px;
-  padding: 8px 12px;
-}
-
-.sort-select:focus {
-  outline: none;
-  border-color: #007bff;
-}
 
 .products-count {
   color: #666;
@@ -649,14 +603,6 @@ export default {
 }
 
 @media (max-width: 768px) {
-  .sort-options {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .sort-select {
-    width: 100%;
-  }
   
   .product-stats {
     flex-direction: column;

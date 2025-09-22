@@ -50,24 +50,6 @@
               {{ range.label }}
             </button>
           </div>
-          <div class="custom-price-input">
-            <input 
-              type="number" 
-              v-model="customMinPrice"
-              placeholder="Từ" 
-              class="price-input-small"
-            >
-            <span class="price-separator">-</span>
-            <input 
-              type="number" 
-              v-model="customMaxPrice"
-              placeholder="Đến" 
-              class="price-input-small"
-            >
-            <button class="apply-custom-price-btn" @click="applyCustomPrice">
-              <i class="icon-search"></i>
-            </button>
-          </div>
         </div>
       </div>
     </div>
@@ -81,8 +63,6 @@ export default {
   name: 'ProductFilter',
   data() {
     return {
-      customMinPrice: '',
-      customMaxPrice: '',
       priceRanges: [
         { label: 'Tất cả', value: 'all' },
         { label: 'Dưới 1M', value: '0-1000000' },
@@ -135,15 +115,6 @@ export default {
       this.applyFilters()
     },
     
-    applyCustomPrice() {
-      if (this.customMinPrice || this.customMaxPrice) {
-        const min = parseInt(this.customMinPrice) || 0
-        const max = parseInt(this.customMaxPrice) || 9999999
-        const priceRange = `${min}-${max}`
-        this.setPriceRange(priceRange)
-        this.applyFilters()
-      }
-    },
     
     applyFilters() {
       this.filterProducts(this.filters)
@@ -213,43 +184,9 @@ export default {
   flex-wrap: wrap;
 }
 
-.custom-price-input {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
 
-.price-input-small {
-  width: 100px;
-  padding: 8px 12px;
-  border: 2px solid #e9ecef;
-  border-radius: 4px;
-  font-size: 14px;
-}
 
-.price-input-small:focus {
-  outline: none;
-  border-color: #007bff;
-}
 
-.price-separator {
-  font-weight: 600;
-  color: #666;
-}
-
-.apply-custom-price-btn {
-  background: #007bff;
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.apply-custom-price-btn:hover {
-  background: #0056b3;
-}
 
 @media (max-width: 768px) {
   .homepage-color-size-filter {

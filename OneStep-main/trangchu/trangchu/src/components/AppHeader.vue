@@ -8,26 +8,13 @@
               <router-link to="/" class="logo-container">
                 <img src="/images/logo.jpg" alt="OneStep Logo" class="logo-image" />
                 <div class="logo-text">
-                  <span class="main-text">Bán Giày onestep shoes</span>
+                  <span class="main-text"> Onestep Shoes</span>
                 </div>
               </router-link>
             </div>
           </div>
           <div class="col-sm-6 col-md-6">
             <div class="search-cart-container">
-              <form @submit.prevent="handleSearch" class="search-wrap">
-                <div class="form-group">
-                  <input 
-                    type="search" 
-                    class="form-control search" 
-                    placeholder="🔍 Tìm kiếm sản phẩm..."
-                    v-model="searchQuery"
-                  >
-                  <button class="btn btn-primary submit-search text-center" type="submit">
-                    <i class="icon-search"></i>
-                  </button>
-                </div>
-              </form>
               <div class="auth-section">
                 <!-- Hiển thị khi chưa đăng nhập -->
                 <template v-if="!isAuthenticated">
@@ -97,7 +84,6 @@ export default {
   name: 'AppHeader',
   data() {
     return {
-      searchQuery: ''
     }
   },
   computed: {
@@ -109,15 +95,7 @@ export default {
     this.checkAuth()
   },
   methods: {
-    ...mapActions('products', ['searchProducts']),
     ...mapActions('auth', ['logout', 'checkAuth']),
-    
-    handleSearch() {
-      this.searchProducts(this.searchQuery)
-      if (this.$route.name !== 'Products') {
-        this.$router.push('/products')
-      }
-    },
     
     async handleLogout() {
       if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
@@ -350,11 +328,6 @@ export default {
   box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
 }
 
-.search-wrap {
-  position: relative;
-  flex: 1;
-  max-width: 300px;
-}
 
 @media (max-width: 768px) {
   .search-cart-container {
@@ -374,9 +347,6 @@ export default {
     padding: 10px 12px;
   }
   
-  .search-wrap {
-    max-width: none;
-  }
 }
 
 @media (max-width: 480px) {
@@ -407,21 +377,6 @@ export default {
   }
 }
 
-.search-wrap .form-control {
-  padding-right: 50px;
-}
-
-.submit-search {
-  position: absolute;
-  right: 5px;
-  top: 50%;
-  transform: translateY(-50%);
-  border: none;
-  background: #007bff;
-  color: white;
-  padding: 8px 12px;
-  border-radius: 3px;
-}
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
@@ -431,9 +386,6 @@ export default {
     align-items: stretch;
   }
   
-  .search-wrap {
-    max-width: 100%;
-  }
   
   .cart-section {
     justify-content: center;

@@ -2,8 +2,7 @@ import axios from 'axios'
 
 const state = {
   products: [],
-  filteredProducts: [],
-  searchQuery: ''
+  filteredProducts: []
 }
 
 const mutations = {
@@ -13,9 +12,6 @@ const mutations = {
   SET_FILTERED_PRODUCTS(state, products) {
     state.filteredProducts = products
   },
-  SET_SEARCH_QUERY(state, query) {
-    state.searchQuery = query
-  }
 }
 
 const actions = {
@@ -68,7 +64,7 @@ const actions = {
           code: p.maCode || p.code,
           name: p.tenSanPham || p.tenChiTiet || 'Unknown Product',
           description: p.moTa || p.description || '',
-          brand: p.thuongHieuTen || (p.thuongHieu && p.thuongHieu.ten) || 'Unknown Brand',
+          brand: p.thuongHieuTen || (p.thuongHieu && p.thuongHieu.ten) || '',
           price: basePrice,
           originalPrice: originalPrice,
           image: buildImageUrl(p.duongDanAnh || p.image),
@@ -119,7 +115,7 @@ const actions = {
             code: p.maCode || p.code,
             name: p.tenSanPham || 'Unknown Product',
             description: p.moTa || p.description || '',
-            brand: p.thuongHieuTen || (p.thuongHieu && p.thuongHieu.ten) || 'Unknown Brand',
+            brand: p.thuongHieuTen || (p.thuongHieu && p.thuongHieu.ten) || '',
             price: basePrice,
             originalPrice: originalPrice,
             image: p.duongDanAnh || '/images/item-1.jpg',
@@ -181,37 +177,37 @@ const actions = {
       }
     }
   },
-  filterProducts({ commit, state }, filters) {
+  filterProducts({ commit, state }, filters = {}) {
     let filtered = [...state.products]
     
-    // Filter by search query
-    if (state.searchQuery) {
-      filtered = filtered.filter(product => 
-        product.name.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
-        product.brand.toLowerCase().includes(state.searchQuery.toLowerCase())
-      )
-    }
+    console.log('🔍 Filtering products with:', filters)
     
     // Filter by price range
     if (filters.priceRange && filters.priceRange !== 'all') {
       const [min, max] = filters.priceRange.split('-').map(Number)
-      filtered = filtered.filter(product => 
-        product.price >= min && product.price <= max
-      )
+      filtered = filtered.filter(product => {
+        const price = product.price || 0
+        return price >= min && price <= max
+      })
+      console.log(`💰 Price filter (${min}-${max}): ${filtered.length} products`)
     }
     
     // Filter by color
     if (filters.color && filters.color !== 'all') {
-      filtered = filtered.filter(product => 
-        product.colors.includes(filters.color)
-      )
+      filtered = filtered.filter(product => {
+        const colors = product.colors || []
+        return colors.includes(filters.color)
+      })
+      console.log(`🎨 Color filter (${filters.color}): ${filtered.length} products`)
     }
     
     // Filter by size
     if (filters.size && filters.size !== 'all') {
-      filtered = filtered.filter(product => 
-        product.sizes.includes(filters.size)
-      )
+      filtered = filtered.filter(product => {
+        const sizes = product.sizes || []
+        return sizes.includes(filters.size)
+      })
+      console.log(`📏 Size filter (${filters.size}): ${filtered.length} products`)
     }
     
     // Filter by category
@@ -219,14 +215,40 @@ const actions = {
       filtered = filtered.filter(product => 
         product.category === filters.category
       )
+      console.log(`📂 Category filter (${filters.category}): ${filtered.length} products`)
     }
     
+    console.log(`✅ Final filtered products: ${filtered.length}`)
     commit('SET_FILTERED_PRODUCTS', filtered)
   },
   
-  searchProducts({ commit, dispatch }, query) {
-    commit('SET_SEARCH_QUERY', query)
-    dispatch('filterProducts', {})
+  sortProducts({ commit, state }, sortBy = 'name') {
+    let sorted = [...state.filteredProducts]
+    
+    console.log('🔄 Sorting products by:', sortBy)
+    
+    switch (sortBy) {
+      case 'name':
+        sorted = sorted.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+        break
+      case 'price-low':
+        sorted = sorted.sort((a, b) => (a.price || 0) - (b.price || 0))
+        break
+      case 'price-high':
+        sorted = sorted.sort((a, b) => (b.price || 0) - (a.price || 0))
+        break
+      case 'rating':
+        sorted = sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0))
+        break
+      case 'newest':
+        sorted = sorted.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+        break
+      default:
+        console.warn('Unknown sort option:', sortBy)
+    }
+    
+    console.log(`✅ Sorted ${sorted.length} products by ${sortBy}`)
+    commit('SET_FILTERED_PRODUCTS', sorted)
   }
 }
 
@@ -234,7 +256,6 @@ const getters = {
   allProducts: state => state.products,
   filteredProducts: state => state.filteredProducts,
   productById: state => id => state.products.find(product => product.id === id),
-  searchQuery: state => state.searchQuery
 }
 
 export default {

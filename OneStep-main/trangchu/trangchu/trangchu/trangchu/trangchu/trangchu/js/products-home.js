@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     </a>
                     <div class="desc">
                         <div class="rating">
-                            <span class="stars">★★★★★</span>
+                            <span class="stars"></span>
                         </div>
                         <div class="brand">${product.thuongHieu || ''}</div>
                         <h2><a href="#">${product.tenSanPham}</a></h2>
