@@ -214,7 +214,7 @@ export default {
             return {
               id: product.id || product.chiTietSanPhamId || Math.random().toString(),
               name: product.tenSanPham || product.tenChiTiet || 'Unknown Product',
-              image: product.duongDanAnh || 'https://via.placeholder.com/300x300',
+              image: product.duongDanAnh || product.hinhAnh || product.image || product.anh || '/images/item-1.jpg',
               price: basePrice,
               originalPrice: originalPrice,
               brand: product.thuongHieuTen || (product.thuongHieu && product.thuongHieu.ten) || '',
@@ -261,7 +261,7 @@ export default {
             return {
               id: product.productId || product.id || Math.random().toString(),
               name: product.tenSanPham || 'Unknown Product',
-              image: product.duongDanAnh || 'https://via.placeholder.com/300x300',
+              image: product.duongDanAnh || product.hinhAnh || product.image || product.anh || '/images/item-1.jpg',
               price: basePrice,
               originalPrice: originalPrice,
               brand: product.thuongHieuTen || product.thuongHieu?.ten || '',
@@ -271,7 +271,10 @@ export default {
               tags: tags,
               category: product.danhMuc || '',
               description: product.moTa || '',
-              stock: Math.floor(Math.random() * 50) + 1
+              stock: Math.floor(Math.random() * 50) + 1,
+              // Thông tin bổ sung cho navigation
+              sanPhamId: product.productId || product.id,
+              productId: product.productId || product.id
             }
           });
           
@@ -316,6 +319,8 @@ export default {
       const fallbackProducts = [
         {
           id: 1,
+          sanPhamId: 1,
+          productId: 1,
           name: 'Giày Adidas Ultraboost',
           image: '/images/item-1.jpg',
           price: 1890000,
@@ -326,10 +331,13 @@ export default {
           sizes: ['39', '40', '41', '42'],
           tags: ['-14%', 'MỚI'],
           category: 'Giày thể thao',
-          description: 'Giày thể thao cao cấp với công nghệ Boost'
+          description: 'Giày thể thao cao cấp với công nghệ Boost',
+          stock: 15
         },
         {
           id: 2,
+          sanPhamId: 2,
+          productId: 2,
           name: 'Giày Converse Sneaker',
           image: '/images/item-2.jpg',
           price: 850000,
@@ -340,10 +348,13 @@ export default {
           sizes: ['38', '39', '40', '41'],
           tags: ['-29%', 'SALE'],
           category: 'Giày sneaker',
-          description: 'Giày sneaker cổ điển với thiết kế đơn giản'
+          description: 'Giày sneaker cổ điển với thiết kế đơn giản',
+          stock: 20
         },
         {
           id: 3,
+          sanPhamId: 3,
+          productId: 3,
           name: 'Giày Nike Court Vision Mid',
           image: '/images/item-3.jpg',
           price: 1450000,
@@ -354,10 +365,13 @@ export default {
           sizes: ['39', '40', '41', '42', '43'],
           tags: ['-19%', 'QUYỀN'],
           category: 'Giày thể thao',
-          description: 'Giày thể thao với thiết kế hiện đại'
+          description: 'Giày thể thao với thiết kế hiện đại',
+          stock: 12
         },
         {
           id: 4,
+          sanPhamId: 4,
+          productId: 4,
           name: 'Giày Puma Speedcat OG',
           image: '/images/item-4.jpg',
           price: 1200000,
@@ -368,10 +382,13 @@ export default {
           sizes: ['39', '40', '41', '42'],
           tags: ['-20%', 'MỚI'],
           category: 'Giày thể thao',
-          description: 'Giày thể thao với công nghệ tiên tiến'
+          description: 'Giày thể thao với công nghệ tiên tiến',
+          stock: 18
         },
         {
           id: 5,
+          sanPhamId: 5,
+          productId: 5,
           name: 'Giày Vans Old Skool',
           image: '/images/item-5.jpg',
           price: 950000,
@@ -382,7 +399,8 @@ export default {
           sizes: ['38', '39', '40', '41'],
           tags: ['-27%', 'SALE'],
           category: 'Giày sneaker',
-          description: 'Giày sneaker với thiết kế cổ điển'
+          description: 'Giày sneaker với thiết kế cổ điển',
+          stock: 25
         }
       ];
       

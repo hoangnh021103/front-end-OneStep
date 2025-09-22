@@ -43,14 +43,6 @@
         <ProductFilter @filter-changed="handleFilterChanged" />
         
         
-        <!-- Products Count -->
-        <div class="row mb-3">
-          <div class="col-12">
-            <p class="products-count">
-              Hiển thị {{ filteredProducts.length }} / {{ allProducts.length }} sản phẩm
-            </p>
-          </div>
-        </div>
         
         <!-- Products Grid -->
         <div v-if="filteredProducts.length" class="row row-pb-md">
@@ -198,166 +190,16 @@ export default {
     
     async loadProducts() {
       console.log('🔄 Loading products...');
-      await this.fetchProducts();
-      // Áp dụng filter hiện tại sau khi load xong
-      this.applyCurrentFilters();
-    },
-    
-    async fetchProductsOld() {
-      console.log('🔄 Bắt đầu fetch products...');
-      
       try {
-        // Thử API chi-tiet-san-pham trước
-        console.log('📡 Gọi API chi-tiet-san-pham/hien-thi...');
-        const response = await axios.get('/chi-tiet-san-pham/hien-thi');
-        console.log('✅ Chi-tiet-san-pham API Response:', response.data);
-        
-        if (response.data && response.data.length > 0) {
-          this.allProducts = response.data.map(product => {
-            // Lấy giá từ ChiTietSanPhamResponse
-            const basePrice = product.giaTien || product.giaBan || product.gia || 0;
-            const discountAmount = product.tienGiamGia || 0;
-            const originalPrice = basePrice + discountAmount;
-            
-            // Tạo tags giảm giá
-            const discountPercent = discountAmount > 0 ? Math.floor((discountAmount / originalPrice) * 100) : 0;
-            const tags = [];
-            if (discountPercent > 0) {
-              tags.push(`-${discountPercent}%`);
-            }
-            
-            return {
-              id: product.id || product.chiTietSanPhamId || Math.random().toString(),
-              name: product.tenSanPham || product.tenChiTiet || 'Unknown Product',
-              image: product.duongDanAnh || 'https://via.placeholder.com',
-              price: basePrice,
-              originalPrice: originalPrice,
-              brand: product.thuongHieuTen || (product.thuongHieu && product.thuongHieu.ten) || '',
-              rating: 5,
-              colors: Array.isArray(product.mauSacList) ? product.mauSacList : [],
-              sizes: Array.isArray(product.kichCoList) ? product.kichCoList : [],
-              tags: tags,
-              category: product.danhMuc || '',
-              description: product.moTa || '',
-              stock: product.soLuongTon || 0,
-              // Thông tin bổ sung
-              sanPhamId: product.sanPhamId,
-              chiTietSanPhamId: product.chiTietSanPhamId,
-              giaTien: product.giaTien,
-              tienGiamGia: product.tienGiamGia,
-              soLuongTon: product.soLuongTon
-            }
-          });
-          
-          console.log('✅ Processed products from chi-tiet-san-pham:', this.allProducts.length);
-        } else {
-          console.log('⚠️ Chi-tiet-san-pham API trả về dữ liệu rỗng, thử fallback...');
-          throw new Error('No data from chi-tiet-san-pham API');
-        }
-        
+        await this.fetchProducts();
+        // Áp dụng filter hiện tại sau khi load xong
+        this.applyCurrentFilters();
       } catch (error) {
-        console.error('❌ Error fetching products from chi-tiet-san-pham:', error);
-        
-        // Fallback: thử API san-pham
-        try {
-          console.log('📡 Fallback: Gọi API san-pham/hien-thi...');
-          const fallbackResponse = await axios.get('/san-pham/hien-thi');
-          console.log('✅ San-pham API Response:', fallbackResponse.data);
-          
-          this.allProducts = fallbackResponse.data.map(product => {
-            const basePrice = product.giaBan || product.gia || Math.floor(Math.random() * 2000000) + 500000;
-            const originalPrice = product.giaGoc || product.giaNiemYet || Math.floor(basePrice * (1.2 + Math.random() * 0.3));
-            const discountPercent = Math.floor(((originalPrice - basePrice) / originalPrice) * 100);
-            const tags = product.tags || [];
-            if (discountPercent > 0) {
-              tags.push(`-${discountPercent}%`);
-            }
-            
-            return {
-              id: product.productId || product.id || Math.random().toString(),
-              name: product.tenSanPham || 'Unknown Product',
-              image: product.duongDanAnh || 'https://via.placeholder.com',
-              price: basePrice,
-              originalPrice: originalPrice,
-              brand: product.thuongHieuTen || product.thuongHieu?.ten || '',
-              rating: 5,
-              colors: product.mauSacList || [],
-              sizes: product.kichCoList || [],
-              tags: tags,
-              category: product.danhMuc || '',
-              description: product.moTa || '',
-              stock: Math.floor(Math.random() * 50) + 1
-            }
-          });
-          
-          console.log('✅ Processed products from san-pham fallback:', this.allProducts.length);
-          
-        } catch (fallbackError) {
-          console.error('❌ Both APIs failed:', fallbackError);
-          
-          // Tạo dữ liệu demo nếu cả 2 API đều lỗi
-          console.log('📦 Tạo dữ liệu demo...');
-          this.createDemoProducts();
-        }
+        console.error('❌ Error loading products:', error);
+        this.$toast?.error('Không thể tải danh sách sản phẩm');
       }
-      
-      // Cập nhật UI
-      this.filteredProducts = [...this.allProducts];
-      this.handleRouteQuery();
-      console.log('🎉 Hoàn thành fetch products. Tổng số sản phẩm:', this.allProducts.length);
     },
     
-    createDemoProducts() {
-      console.log('📦 Tạo dữ liệu demo sản phẩm...');
-      this.allProducts = [
-        {
-          id: '1',
-          name: 'Giày Nike Air Max 270',
-          image: 'https://via.placeholder.com/300x300',
-          price: 2500000,
-          originalPrice: 3000000,
-          brand: 'Nike',
-          rating: 5,
-          colors: ['Đen', 'Trắng', 'Xanh'],
-          sizes: ['39', '40', '41', '42'],
-          tags: ['-17%', 'Bán chạy'],
-          category: 'Giày thể thao',
-          description: 'Giày thể thao Nike Air Max 270 với thiết kế hiện đại',
-          stock: 25
-        },
-        {
-          id: '2',
-          name: 'Giày Adidas Ultraboost 22',
-          image: 'https://via.placeholder.com/300x300',
-          price: 3200000,
-          originalPrice: 3800000,
-          brand: 'Adidas',
-          rating: 5,
-          colors: ['Trắng', 'Đen'],
-          sizes: ['39', '40', '41', '42', '43'],
-          tags: ['-16%', 'Mới'],
-          category: 'Giày thể thao',
-          description: 'Giày chạy bộ Adidas Ultraboost 22 với công nghệ Boost',
-          stock: 18
-        },
-        {
-          id: '3',
-          name: 'Giày Converse Chuck Taylor',
-          image: 'https://via.placeholder.com/300x300',
-          price: 1200000,
-          originalPrice: 1500000,
-          brand: 'Converse',
-          rating: 4,
-          colors: ['Đen', 'Trắng', 'Đỏ'],
-          sizes: ['38', '39', '40', '41', '42'],
-          tags: ['-20%', 'Classic'],
-          category: 'Giày sneaker',
-          description: 'Giày Converse Chuck Taylor All Star cổ điển',
-          stock: 30
-        }
-      ];
-      console.log('✅ Đã tạo', this.allProducts.length, 'sản phẩm demo');
-    },
     
     async loadProductDetails() {
       try {
@@ -373,7 +215,7 @@ export default {
               product.price = firstVariant.giaTien || product.price;
               product.originalPrice = (firstVariant.giaTien || 0) + (firstVariant.tienGiamGia || 0);
               product.stock = firstVariant.soLuongTon || product.stock;
-              product.image = firstVariant.duongDanAnh || product.image;
+              product.image = firstVariant.duongDanAnh || firstVariant.hinhAnh || firstVariant.image || firstVariant.anh || product.image;
             }
           } catch (detailError) {
             console.warn(`Could not fetch details for product ${product.id}:`, detailError);
@@ -513,11 +355,6 @@ export default {
 }
 
 
-.products-count {
-  color: #666;
-  font-size: 14px;
-  margin: 0;
-}
 
 .no-products {
   padding: 60px 20px;

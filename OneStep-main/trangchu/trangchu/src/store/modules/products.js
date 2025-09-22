@@ -60,7 +60,8 @@ const actions = {
         }
         
         return {
-          id: p.id || p.chiTietSanPhamId || Math.random().toString(),
+          // Ưu tiên sanPhamId làm ID chính, sau đó id, cuối cùng là chiTietSanPhamId
+          id: p.sanPhamId || p.id || p.chiTietSanPhamId || Math.random().toString(),
           code: p.maCode || p.code,
           name: p.tenSanPham || p.tenChiTiet || 'Unknown Product',
           description: p.moTa || p.description || '',
@@ -81,6 +82,7 @@ const actions = {
           // Thông tin bổ sung từ chi tiết sản phẩm
           sanPhamId: p.sanPhamId,
           chiTietSanPhamId: p.chiTietSanPhamId,
+          productId: p.productId || p.id,
           giaTien: p.giaTien,
           tienGiamGia: p.tienGiamGia,
           soLuongTon: p.soLuongTon
@@ -100,18 +102,19 @@ const actions = {
         const fallbackResponse = await axios.get('/san-pham/hien-thi')
         console.log('✅ Store - San-pham API Response:', fallbackResponse.data)
         
-        // Process fallback data
+        // Process fallback data - chỉ sử dụng dữ liệu thực từ API
         const fallbackProducts = fallbackResponse.data.map(p => {
-          const basePrice = p.giaBan || p.gia || Math.floor(Math.random() * 2000000) + 500000
-          const originalPrice = p.giaGoc || p.giaNiemYet || Math.floor(basePrice * (1.2 + Math.random() * 0.3))
-          const discountPercent = Math.floor(((originalPrice - basePrice) / originalPrice) * 100)
+          const basePrice = p.giaBan || p.gia || 0
+          const originalPrice = p.giaGoc || p.giaNiemYet || basePrice
+          const discountPercent = originalPrice > basePrice ? Math.floor(((originalPrice - basePrice) / originalPrice) * 100) : 0
           const tags = p.tags || []
           if (discountPercent > 0) {
             tags.push(`-${discountPercent}%`)
           }
           
           return {
-            id: p.productId || p.id || Math.random().toString(),
+            // Đảm bảo có ID chính
+            id: p.productId || p.id || p.sanPhamId || Math.random().toString(),
             code: p.maCode || p.code,
             name: p.tenSanPham || 'Unknown Product',
             description: p.moTa || p.description || '',
@@ -125,7 +128,11 @@ const actions = {
             tags: tags,
             category: p.danhMuc || p.category || '',
             status: p.trangThai || p.status,
-            stock: Math.floor(Math.random() * 50) + 1
+            stock: p.soLuongTon || 0,
+            // Thông tin bổ sung
+            sanPhamId: p.sanPhamId,
+            productId: p.productId || p.id,
+            chiTietSanPhamId: p.chiTietSanPhamId
           }
         })
         
@@ -136,43 +143,9 @@ const actions = {
       } catch (fallbackError) {
         console.error('❌ Store - Both APIs failed:', fallbackError)
         
-        // Tạo dữ liệu demo nếu cả 2 API đều lỗi
-        console.log('📦 Store - Tạo dữ liệu demo...')
-        const demoProducts = [
-          {
-            id: '1',
-            name: 'Giày Nike Air Max 270',
-            image: 'https://via.placeholder.com/300x300',
-            price: 2500000,
-            originalPrice: 3000000,
-            brand: 'Nike',
-            rating: 5,
-            colors: ['Đen', 'Trắng', 'Xanh'],
-            sizes: ['39', '40', '41', '42'],
-            tags: ['-17%', 'Bán chạy'],
-            category: 'Giày thể thao',
-            description: 'Giày thể thao Nike Air Max 270 với thiết kế hiện đại',
-            stock: 25
-          },
-          {
-            id: '2',
-            name: 'Giày Adidas Ultraboost 22',
-            image: 'https://via.placeholder.com/300x300',
-            price: 3200000,
-            originalPrice: 3800000,
-            brand: 'Adidas',
-            rating: 5,
-            colors: ['Trắng', 'Đen'],
-            sizes: ['39', '40', '41', '42', '43'],
-            tags: ['-16%', 'Mới'],
-            category: 'Giày thể thao',
-            description: 'Giày chạy bộ Adidas Ultraboost 22 với công nghệ Boost',
-            stock: 18
-          }
-        ]
-        
-        console.log('✅ Store - Đã tạo', demoProducts.length, 'sản phẩm demo')
-        commit('SET_PRODUCTS', demoProducts)
+        // Không tạo demo data, chỉ hiển thị thông báo lỗi
+        console.log('⚠️ Store - Không thể tải dữ liệu sản phẩm từ API')
+        commit('SET_PRODUCTS', [])
         dispatch('filterProducts', {})
       }
     }
