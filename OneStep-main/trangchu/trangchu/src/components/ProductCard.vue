@@ -50,33 +50,17 @@ export default {
     goToProductDetail() {
       // Chuyển đến trang chi tiết sản phẩm
       // Ưu tiên sanPhamId, sau đó id, cuối cùng là chiTietSanPhamId
-      const productId = this.product.sanPhamId || this.product.id || this.product.chiTietSanPhamId || this.product.productId
+      const productId = this.product.sanPhamId || this.product.id || this.product.chiTietSanPhamId
       console.log('🔄 Navigating to product detail:', productId, 'Product:', this.product)
       console.log('🔍 Available IDs:', {
         sanPhamId: this.product.sanPhamId,
         id: this.product.id,
-        chiTietSanPhamId: this.product.chiTietSanPhamId,
-        productId: this.product.productId
+        chiTietSanPhamId: this.product.chiTietSanPhamId
       })
       
       if (!productId) {
         console.error('❌ No product ID found:', this.product)
-        console.log('🔍 Full product object:', JSON.stringify(this.product, null, 2))
-        
-        // Tạo ID tạm thời từ tên sản phẩm hoặc index
-        const fallbackId = this.product.name ? 
-          this.product.name.toLowerCase().replace(/\s+/g, '-') : 
-          `product-${Date.now()}`
-        
-        console.log('🔄 Using fallback ID:', fallbackId)
-        
-        try {
-          this.$router.push(`/product/${fallbackId}`)
-          console.log('✅ Navigation successful with fallback ID:', `/product/${fallbackId}`)
-        } catch (error) {
-          console.error('❌ Navigation error with fallback:', error)
-          window.location.href = `/product/${fallbackId}`
-        }
+        alert('Không tìm thấy ID sản phẩm!')
         return
       }
       
