@@ -316,9 +316,10 @@ export default {
           formData.append('maSanPham', this.form.maSanPham.toString());
         }
 
-        formData.append('tenSanPham', this.form.tenSanPham);
-        formData.append('maCode', this.form.maCode);
-        formData.append('moTa', this.form.moTa);
+        // Xử lý encoding cho tiếng Việt
+        formData.append('tenSanPham', this.form.tenSanPham.trim());
+        formData.append('maCode', this.form.maCode.trim());
+        formData.append('moTa', this.form.moTa.trim());
         formData.append('thuongHieuId', Number(this.form.thuongHieuId).toString());
         formData.append('chatLieuId', Number(this.form.chatLieuId).toString());
         formData.append('deGiayId', Number(this.form.deGiayId).toString());
@@ -333,6 +334,8 @@ export default {
         formData.append('daXoa', Number(this.form.daXoa).toString());
 
         console.log('FormData keys:', Array.from(formData.keys()));
+        console.log('Tên sản phẩm trước khi gửi:', this.form.tenSanPham);
+        console.log('Mô tả trước khi gửi:', this.form.moTa);
         for (let [key, value] of formData.entries()) {
           if (key !== 'duongDanAnh') {
             console.log(`${key}: ${value}`);
@@ -346,18 +349,22 @@ export default {
           // Sử dụng axios để gửi FormData cho update
           const response = await axios.put(`http://localhost:8080/san-pham/update/${this.form.maSanPham}`, formData, {
             headers: {
-              'Content-Type': 'multipart/form-data'
+              'Content-Type': 'multipart/form-data',
+              'Accept': 'application/json; charset=utf-8'
             }
           });
           result = response.data;
+          console.log('Response sau khi update:', result);
         } else {
           // Sử dụng axios để gửi FormData cho add
           const response = await axios.post('http://localhost:8080/san-pham/add', formData, {
             headers: {
-              'Content-Type': 'multipart/form-data'
+              'Content-Type': 'multipart/form-data',
+              'Accept': 'application/json; charset=utf-8'
             }
           });
           result = response.data;
+          console.log('Response sau khi add:', result);
         }
         
         toast.success(this.isEditing ? 'Cập nhật sản phẩm thành công!' : 'Thêm sản phẩm thành công!');
