@@ -6,12 +6,7 @@
           <div class="col-sm-6 col-md-6">
             <div id="colorlib-logo">
               <router-link to="/" class="logo-container">
-                <div class="logo-icon">
-                  <div class="logo-circle">
-                    <div class="circle-text">ONE STEP</div>
-                    <div class="sneaker-icon">👟</div>
-                  </div>
-                </div>
+                <img src="/images/logo.jpg" alt="OneStep Logo" class="logo-image" />
                 <div class="logo-text">
                   <span class="main-text">Bán Giày onestep shoes</span>
                 </div>
@@ -156,54 +151,17 @@ export default {
   color: #333;
 }
 
-.logo-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.logo-circle {
-  width: 60px;
+.logo-image {
   height: 60px;
-  border-radius: 50%;
-  background: #000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  border: 3px solid #333;
+  width: auto;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease;
 }
 
-.logo-circle::before {
-  content: '';
-  position: absolute;
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background: #666;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 1;
-}
-
-.circle-text {
-  position: absolute;
-  top: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 8px;
-  font-weight: bold;
-  color: #000;
-  z-index: 3;
-  letter-spacing: 0.5px;
-}
-
-.sneaker-icon {
-  font-size: 20px;
-  z-index: 2;
-  position: relative;
-  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+.logo-image:hover {
+  transform: scale(1.05);
 }
 
 .logo-text {

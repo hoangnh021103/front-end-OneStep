@@ -43,4 +43,13 @@ import AuthLogin from '../authForms/AuthLogin.vue';
   max-width: 475px;
   margin: 0 auto;
 }
+
+.logo {
+  img {
+    max-width: 200px;
+    height: auto;
+    max-height: 60px;
+    object-fit: contain;
+  }
+}
 </style>

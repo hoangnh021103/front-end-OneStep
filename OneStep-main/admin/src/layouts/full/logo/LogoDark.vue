@@ -1,7 +1,7 @@
 <template>
   <div class="logo">
     <RouterLink to="/">
-      <!-- Logo đã được xóa theo yêu cầu -->
+      <img src="/logo.jpg" alt="OneStep Logo" />
     </RouterLink>
   </div>
 </template>
