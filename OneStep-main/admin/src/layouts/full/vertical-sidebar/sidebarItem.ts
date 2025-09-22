@@ -103,10 +103,6 @@ const sidebarItem: menu[] = [
     icon: CircleIcon,
     to: '/quan-ly/phieu-giam-gia'
   },
-  { title: ' thanh toán',
-    icon: CircleIcon,
-    to: '/quan-ly/thanh-toan'
-  },
 
   // {
   //   title: 'Thư viện ảnh',
