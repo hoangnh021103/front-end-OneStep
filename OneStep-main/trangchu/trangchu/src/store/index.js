@@ -4,6 +4,8 @@ import cart from './modules/cart'
 import filters from './modules/filters'
 import productDetails from './modules/productDetails'
 import auth from './modules/auth'
+import payment from './modules/payment'
+import order from './modules/order'
 
 export default createStore({
   modules: {
@@ -11,6 +13,8 @@ export default createStore({
     cart,
     filters,
     productDetails,
-    auth
+    auth,
+    payment,
+    order
   }
 })

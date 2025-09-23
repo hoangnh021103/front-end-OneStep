@@ -169,43 +169,99 @@
                 <!-- Payment Method -->
                 <div class="form-section">
                   <h4>Phương thức thanh toán</h4>
-                  <div class="payment-methods">
-                    <div class="payment-option">
+                  
+                  <!-- Loading state -->
+                  <div v-if="isLoading" class="payment-loading">
+                    <div class="loading-spinner">
+                      <i class="icon-spinner"></i>
+                      <span>Đang tải phương thức thanh toán...</span>
+                    </div>
+                  </div>
+                  
+                  <!-- Error state -->
+                  <div v-if="error && !isLoading && !isCreatingPayment && !hasCurrentPayment" class="payment-error">
+                    <div class="error-message">
+                      <i class="icon-warning"></i>
+                      <span>{{ error }}</span>
+                      <button @click="clearPaymentError" class="btn btn-sm btn-outline-primary ms-2">
+                        <i class="icon-close"></i> Đóng
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <!-- Payment methods -->
+                  <div v-else class="payment-methods">
+                    <div 
+                      v-for="method in paymentMethods" 
+                      :key="method.id"
+                      class="payment-option"
+                    >
                       <input 
                         type="radio" 
-                        id="cod" 
+                        :id="`payment-${method.id}`"
                         v-model="form.paymentMethod" 
-                        value="cod"
+                        :value="method.id.toString()"
                         class="payment-radio"
+                        :disabled="!method.isActive"
                       >
-                      <label for="cod" class="payment-label">
+                      <label :for="`payment-${method.id}`" class="payment-label" :class="{ disabled: !method.isActive }">
                         <div class="payment-icon">
-                          <i class="icon-cash"></i>
+                          <img 
+                            v-if="method.icon && method.icon.includes('.png')"
+                            :src="`/images/${method.icon}`" 
+                            :alt="method.ten"
+                            style="width: 40px; height: 40px;"
+                            @error="handleImageError"
+                          >
+                          <i v-else class="icon-cash"></i>
                         </div>
                         <div class="payment-info">
-                          <h5>Thanh toán khi nhận hàng (COD)</h5>
-                          <p>Thanh toán bằng tiền mặt khi giao hàng</p>
+                          <h5>{{ method.ten }}</h5>
+                          <p>{{ method.moTa }}</p>
+                          <div v-if="method.phiDichVu > 0" class="service-fee">
+                            Phí dịch vụ: {{ formatPrice(method.phiDichVu) }}
+                          </div>
                         </div>
                       </label>
                     </div>
-                    
-                    <div class="payment-option">
-                      <input 
-                        type="radio" 
-                        id="vietqr" 
-                        v-model="form.paymentMethod" 
-                        value="vietqr"
-                        class="payment-radio"
-                      >
-                      <label for="vietqr" class="payment-label">
-                        <div class="payment-icon">
-                          <img src="https://play-lh.googleusercontent.com/22cJzF0otG-EmmQgILMRTWFPnx0wTCSDY9aFaAmOhHs30oNHxi63KcGwUwmbR76Msko" alt="VietQR" style="width: 40px; height: 40px;" onerror="this.src='images/vietqr_icon.png'">
-                        </div>
-                        <div class="payment-info">
-                          <h5>VietQR</h5>
-                          <p>Thanh toán qua VietQR</p>
-                        </div>
-                      </label>
+                  </div>
+                  
+                  <!-- Selected payment method info -->
+                  <div v-if="selectedPaymentMethod" class="selected-payment-info">
+                    <div class="info-card">
+                      <h6>Thông tin thanh toán:</h6>
+                      <p><strong>Phương thức:</strong> {{ selectedPaymentMethod.ten }}</p>
+                      <p><strong>Tổng tiền:</strong> {{ formatPrice(finalTotal) }}</p>
+                      <p v-if="selectedPaymentMethod.phiDichVu > 0">
+                        <strong>Phí dịch vụ:</strong> {{ formatPrice(selectedPaymentMethod.phiDichVu) }}
+                      </p>
+                      <p><strong>Tổng cộng:</strong> {{ formatPrice(finalTotal + (selectedPaymentMethod.phiDichVu || 0)) }}</p>
+                    </div>
+                  </div>
+                  
+                  <!-- Payment success info - chỉ hiển thị khi đã thanh toán thành công -->
+                  <div v-if="hasCurrentPayment && currentPayment.trangThai === 1" class="payment-success-info">
+                    <div class="success-card">
+                      <h6><i class="icon-check"></i> Thanh toán thành công!</h6>
+                      <p><strong>Mã giao dịch:</strong> {{ currentPayment.maGiaoDich }}</p>
+                      <p><strong>Trạng thái:</strong> {{ currentPayment.trangThaiText }}</p>
+                      <p><strong>Phương thức:</strong> {{ getPaymentMethodName(currentPayment.phuongThucId) }}</p>
+                      <p v-if="currentPayment.isMock" class="mock-notice">
+                        <i class="icon-info"></i> Đang sử dụng chế độ offline
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <!-- Payment pending info - hiển thị khi đang chờ thanh toán -->
+                  <div v-else-if="hasCurrentPayment && currentPayment.trangThai === 0" class="payment-pending-info">
+                    <div class="pending-card">
+                      <h6><i class="icon-clock"></i> Đang chờ thanh toán</h6>
+                      <p><strong>Mã giao dịch:</strong> {{ currentPayment.maGiaoDich }}</p>
+                      <p><strong>Trạng thái:</strong> {{ currentPayment.trangThaiText }}</p>
+                      <p><strong>Phương thức:</strong> {{ getPaymentMethodName(currentPayment.phuongThucId) }}</p>
+                      <p v-if="currentPayment.isMock" class="mock-notice">
+                        <i class="icon-info"></i> Đang sử dụng chế độ offline
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -310,11 +366,6 @@
                       </div>
                     </div>
                     
-                    <!-- Show price update indicator -->
-                    <div v-if="updatedCartItems.length > 0 && !isLoadingPrices" class="price-updated">
-                      <i class="icon-check"></i>
-                      <small>Giá đã cập nhật từ API</small>
-                    </div>
                   </div>
                   <div class="item-price">
                     {{ formatPrice(item.price * item.quantity) }}
@@ -339,13 +390,6 @@
                 <div class="total-row total">
                   <span><strong>Tổng cộng:</strong></span>
                   <span><strong>{{ formatPrice(updatedCartTotal + shippingFee) }}</strong></span>
-                </div>
-                <!-- Show price update info -->
-                <div v-if="updatedCartItems.length > 0 && !isLoadingPrices" class="price-update-info">
-                  <small>
-                    <i class="icon-info"></i>
-                    Giá sản phẩm đã được cập nhật từ hệ thống
-                  </small>
                 </div>
               </div>
               
@@ -442,6 +486,7 @@
 <script>
 import { mapGetters, mapActions } from 'vuex'
 import productService from '../services/productService'
+import paymentService from '../services/paymentService'
 import axios from 'axios'
 
 export default {
@@ -456,7 +501,7 @@ export default {
         address: '',
         city: '',
         district: '',
-        paymentMethod: 'cod',
+        paymentMethod: '1', // Default to COD
         notes: ''
       },
       errors: {},
@@ -478,6 +523,7 @@ export default {
   },
   computed: {
     ...mapGetters('cart', ['cartItems', 'cartTotal']),
+    ...mapGetters('payment', ['paymentMethods', 'isLoading', 'error', 'currentPayment']),
     
     // Sử dụng dữ liệu đã cập nhật từ API hoặc dữ liệu gốc
     displayCartItems() {
@@ -491,15 +537,40 @@ export default {
     
     shippingFee() {
       return this.updatedCartTotal > 2000000 ? 0 : 50000 // Free shipping over 2M
+    },
+    
+    // Tổng tiền cuối cùng
+    finalTotal() {
+      return this.updatedCartTotal + this.shippingFee
+    },
+    
+    // Phương thức thanh toán được chọn
+    selectedPaymentMethod() {
+      return this.paymentMethods.find(method => method.id === this.form.paymentMethod) || null
+    },
+    
+    // Kiểm tra có đang trong quá trình tạo thanh toán không
+    isCreatingPayment() {
+      return this.isSubmitting || this.isGeneratingQR
+    },
+    
+    // Kiểm tra có thanh toán hiện tại không
+    hasCurrentPayment() {
+      return this.currentPayment && this.currentPayment.id
     }
   },
   async mounted() {
     // Load updated prices from API when component mounts
     await this.loadUpdatedPrices()
+    
+    // Load payment methods
+    await this.loadPaymentMethods()
   },
   
   methods: {
     ...mapActions('cart', ['clearCart']),
+    ...mapActions('payment', ['createPayment', 'fetchPaymentMethods', 'setPendingPayment', 'updatePayment']),
+    ...mapActions('order', ['setCurrentOrder']),
     
     // Load updated prices from API
     async loadUpdatedPrices() {
@@ -526,18 +597,57 @@ export default {
       await this.loadUpdatedPrices()
     },
     
-    submitOrder() {
+    // Lưu thông tin đơn hàng vào store
+    saveOrderInfo() {
+      const orderData = {
+        orderNumber: 'GD' + Date.now().toString().slice(-8),
+        orderDate: new Date().toISOString(),
+        orderTotal: this.updatedCartTotal,
+        shippingFee: this.shippingFee,
+        finalTotal: this.finalTotal,
+        paymentMethod: this.selectedPaymentMethod?.tenPhuongThuc || 'Thanh toán khi nhận hàng (COD)',
+        customerInfo: {
+          firstName: this.form.firstName,
+          lastName: this.form.lastName,
+          email: this.form.email,
+          phone: this.form.phone,
+          address: this.form.address,
+          city: this.form.city,
+          district: this.form.district,
+          note: this.form.note
+        },
+        items: this.displayCartItems.map(item => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          image: item.image,
+          brand: item.brand
+        })),
+        paymentInfo: this.currentPayment ? {
+          id: this.currentPayment.id,
+          maGiaoDich: this.currentPayment.maGiaoDich,
+          trangThai: this.currentPayment.trangThai,
+          phuongThucId: this.currentPayment.phuongThucId
+        } : null
+      }
+      
+      console.log('💾 Lưu thông tin đơn hàng:', orderData)
+      this.setCurrentOrder(orderData)
+    },
+    
+    async submitOrder() {
       this.validateForm()
       
       if (Object.keys(this.errors).length === 0) {
         this.isSubmitting = true
         
-        // Xử lý theo phương thức thanh toán
-        if (this.form.paymentMethod === 'vietqr') {
-          this.handleVietQRPayment()
-        } else {
-          // COD - Thanh toán khi nhận hàng
-          this.processCODOrder()
+        try {
+          // Sử dụng phương thức thanh toán mới
+          await this.processPayment()
+        } catch (error) {
+          console.error('❌ Error in submitOrder:', error)
+          this.isSubmitting = false
         }
       }
     },
@@ -560,7 +670,7 @@ export default {
           bankBin: this.vietQRData.bankBin,
           accountNo: this.vietQRData.accountNo,
           accountName: this.vietQRData.accountName,
-          amount: this.updatedCartTotal + this.shippingFee,
+          amount: this.finalTotal,
           addInfo: `Thanh toan don hang OneStep - ${new Date().toLocaleDateString('vi-VN')}`
         }
         
@@ -583,19 +693,60 @@ export default {
       }
     },
     
-    checkPaymentStatus() {
+    async checkPaymentStatus() {
       // Kiểm tra trạng thái thanh toán
       console.log('Checking payment status...')
       
-      // Simulate payment verification
-      this.$toast?.success('Đang xác minh thanh toán...')
-      
-      setTimeout(() => {
+      try {
+        // Hiển thị thông báo đang xác minh
+        this.$toast?.success('Đang xác minh thanh toán...')
+        
+        // Simulate payment verification với delay
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        
+        // Cập nhật trạng thái thanh toán thành công
+        if (this.currentPayment) {
+          if (this.currentPayment.isMock) {
+            // Cập nhật mock payment trong store
+            const updatedPayment = {
+              ...this.currentPayment,
+              trangThai: 1, // Đã thanh toán
+              trangThaiText: 'Đã thanh toán',
+              ngayCapNhat: new Date().toISOString().split('T')[0],
+              nguoiCapNhat: this.form.email
+            }
+            this.$store.commit('payment/UPDATE_PAYMENT', updatedPayment)
+            this.$store.commit('payment/SET_CURRENT_PAYMENT', updatedPayment)
+            console.log('✅ Mock payment updated:', updatedPayment)
+          } else {
+            // Cập nhật payment thật qua API
+            await this.updatePayment({
+              paymentId: this.currentPayment.id,
+              updateData: {
+                trangThai: 1, // Đã thanh toán
+                ngayCapNhat: new Date().toISOString().split('T')[0],
+                nguoiCapNhat: this.form.email
+              }
+            })
+          }
+        }
+        
+        // Lưu thông tin đơn hàng vào store
+        this.saveOrderInfo()
+        
+        // Hoàn tất thanh toán
         this.isSubmitting = false
         this.showVietQRModal = false
         this.clearCart()
+        
+        // Chuyển đến trang hoàn tất
         this.$router.push('/order-complete')
-      }, 2000)
+        
+      } catch (error) {
+        console.error('❌ Error checking payment status:', error)
+        this.$toast?.error('Có lỗi xảy ra khi xác minh thanh toán')
+        this.isSubmitting = false
+      }
     },
     
     closeVietQRModal() {
@@ -605,16 +756,59 @@ export default {
       this.isSubmitting = false
     },
     
-    processCODOrder() {
+    async processCODOrder() {
       // Xử lý đơn hàng COD
       console.log('Processing COD order...')
       
-      // Simulate order processing
-      setTimeout(() => {
+      try {
+        // Hiển thị thông báo đang xử lý
+        this.$toast?.success('Đang xử lý đơn hàng COD...')
+        
+        // Simulate order processing với delay
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        
+        // Cập nhật trạng thái thanh toán thành công cho COD
+        if (this.currentPayment) {
+          if (this.currentPayment.isMock) {
+            // Cập nhật mock payment trong store
+            const updatedPayment = {
+              ...this.currentPayment,
+              trangThai: 1, // Đã thanh toán
+              trangThaiText: 'Đã thanh toán',
+              ngayCapNhat: new Date().toISOString().split('T')[0],
+              nguoiCapNhat: this.form.email
+            }
+            this.$store.commit('payment/UPDATE_PAYMENT', updatedPayment)
+            this.$store.commit('payment/SET_CURRENT_PAYMENT', updatedPayment)
+            console.log('✅ Mock COD payment updated:', updatedPayment)
+          } else {
+            // Cập nhật payment thật qua API
+            await this.updatePayment({
+              paymentId: this.currentPayment.id,
+              updateData: {
+                trangThai: 1, // Đã thanh toán
+                ngayCapNhat: new Date().toISOString().split('T')[0],
+                nguoiCapNhat: this.form.email
+              }
+            })
+          }
+        }
+        
+        // Lưu thông tin đơn hàng vào store
+        this.saveOrderInfo()
+        
+        // Hoàn tất đơn hàng
         this.isSubmitting = false
         this.clearCart()
+        
+        // Chuyển đến trang hoàn tất
         this.$router.push('/order-complete')
-      }, 3000)
+        
+      } catch (error) {
+        console.error('❌ Error processing COD order:', error)
+        this.$toast?.error('Có lỗi xảy ra khi xử lý đơn hàng')
+        this.isSubmitting = false
+      }
     },
     
     validateForm() {
@@ -702,6 +896,220 @@ export default {
         })
       } catch (error) {
         return dateString
+      }
+    },
+    
+    // Payment-related methods
+    async loadPaymentMethods() {
+      try {
+        await this.fetchPaymentMethods()
+        console.log('✅ Payment methods loaded successfully')
+      } catch (error) {
+        console.error('❌ Error loading payment methods:', error)
+      }
+    },
+    
+    async createOrderPayment() {
+      try {
+        // Tạo mã giao dịch duy nhất
+        const maGiaoDich = paymentService.generateTransactionCode()
+        
+        // Chuẩn bị dữ liệu thanh toán
+        const paymentData = {
+          id: 0,
+          donHangId: this.generateOrderId(), // Tạo ID đơn hàng tạm thời
+          phuongThucId: parseInt(this.form.paymentMethod),
+          maGiaoDich: maGiaoDich,
+          tongTien: this.finalTotal,
+          moTa: `Thanh toán đơn hàng - ${this.form.notes || 'Không có ghi chú'}`,
+          trangThai: 0, // Chờ thanh toán
+          ngayCapNhat: new Date().toISOString().split('T')[0],
+          nguoiTao: this.form.email,
+          nguoiCapNhat: this.form.email,
+          daXoa: 0
+        }
+        
+        // Tạo ID khách hàng tạm thời (trong thực tế sẽ lấy từ hệ thống auth)
+        const khachHangId = this.generateCustomerId()
+        
+        // Tạo ID hóa đơn tạm thời
+        const hoaDonId = this.generateInvoiceId()
+        
+        console.log('🔄 Creating payment with data:', {
+          hoaDonId,
+          khachHangId,
+          paymentData,
+          endpoint: `/thanh-toan/${hoaDonId}/chon-khach-hang/${khachHangId}`
+        })
+        
+        // Validate dữ liệu trước khi gửi
+        const validation = paymentService.validatePaymentData(paymentData)
+        if (!validation.isValid) {
+          throw new Error(`Dữ liệu thanh toán không hợp lệ: ${validation.errors.join(', ')}`)
+        }
+        
+        // Thử gọi API tạo thanh toán
+        try {
+          const payment = await this.createPayment({
+            hoaDonId,
+            khachHangId,
+            paymentData
+          })
+          
+          console.log('✅ Payment created successfully via API:', payment)
+          
+          // Clear error sau khi tạo thanh toán thành công
+          this.$store.commit('payment/CLEAR_ERROR')
+          
+          // Lưu thông tin thanh toán vào store
+          this.setPendingPayment({
+            donHangId: paymentData.donHangId,
+            khachHangId: khachHangId,
+            phuongThucId: paymentData.phuongThucId,
+            tongTien: paymentData.tongTien,
+            moTa: paymentData.moTa,
+            maGiaoDich: paymentData.maGiaoDich
+          })
+          
+          return payment
+          
+        } catch (apiError) {
+          console.warn('⚠️ API call failed, creating mock payment:', apiError.message)
+          
+          // Fallback: Tạo thanh toán mock khi API không hoạt động
+          const mockPayment = {
+            id: Math.floor(Math.random() * 100000) + 10000,
+            donHangId: paymentData.donHangId,
+            phuongThucId: paymentData.phuongThucId,
+            maGiaoDich: paymentData.maGiaoDich,
+            tongTien: paymentData.tongTien,
+            moTa: paymentData.moTa,
+            trangThai: 0,
+            ngayCapNhat: paymentData.ngayCapNhat,
+            nguoiTao: paymentData.nguoiTao,
+            nguoiCapNhat: paymentData.nguoiCapNhat,
+            daXoa: 0,
+            // Thông tin bổ sung
+            trangThaiText: 'Chờ thanh toán',
+            phuongThucText: paymentService.getPaymentMethodText(paymentData.phuongThucId),
+            formattedTongTien: this.formatPrice(paymentData.tongTien),
+            isActive: true,
+            isMock: true // Đánh dấu đây là mock payment
+          }
+          
+          console.log('✅ Mock payment created:', mockPayment)
+          
+          // Clear error sau khi tạo mock payment thành công
+          this.$store.commit('payment/CLEAR_ERROR')
+          
+          // Lưu thông tin thanh toán vào store
+          this.setPendingPayment({
+            donHangId: paymentData.donHangId,
+            khachHangId: khachHangId,
+            phuongThucId: paymentData.phuongThucId,
+            tongTien: paymentData.tongTien,
+            moTa: paymentData.moTa,
+            maGiaoDich: paymentData.maGiaoDich
+          })
+          
+          // Thêm vào store như một payment thật
+          this.$store.commit('payment/ADD_PAYMENT', mockPayment)
+          this.$store.commit('payment/SET_CURRENT_PAYMENT', mockPayment)
+          
+          return mockPayment
+        }
+        
+      } catch (error) {
+        console.error('❌ Error creating payment:', error)
+        this.$toast?.error(`Lỗi tạo thanh toán: ${error.message}`)
+        throw error
+      }
+    },
+    
+    generateOrderId() {
+      // Tạo ID đơn hàng tạm thời
+      return Math.floor(Math.random() * 1000000) + 100000
+    },
+    
+    generateCustomerId() {
+      // Tạo ID khách hàng tạm thời
+      return Math.floor(Math.random() * 100000) + 10000
+    },
+    
+    generateInvoiceId() {
+      // Tạo ID hóa đơn tạm thời
+      return Math.floor(Math.random() * 1000000) + 200000
+    },
+    
+    async processPayment() {
+      try {
+        // Tạo thanh toán trước
+        const payment = await this.createOrderPayment()
+        
+        // Xử lý thanh toán theo phương thức được chọn
+        if (this.form.paymentMethod === '1') {
+          // COD - Thanh toán khi nhận hàng
+          await this.processCODOrder()
+        } else if (this.form.paymentMethod === '2') {
+          // VNPay
+          await this.processVNPayOrder(payment)
+        } else {
+          throw new Error('Phương thức thanh toán không hợp lệ')
+        }
+        
+      } catch (error) {
+        console.error('❌ Error processing payment:', error)
+        this.$toast?.error('Có lỗi xảy ra khi xử lý thanh toán: ' + error.message)
+        this.isSubmitting = false
+      }
+    },
+    
+    async processVNPayOrder(payment) {
+      try {
+        console.log('🔄 Processing VNPay order:', payment)
+        
+        // Tạo VietQR cho VNPay
+        await this.generateVietQR()
+        
+        // Hiển thị modal VietQR
+        this.showVietQRModal = true
+        
+      } catch (error) {
+        console.error('❌ Error processing VNPay order:', error)
+        throw error
+      }
+    },
+    
+    
+    handleImageError(event) {
+      // Fallback to default icon when image fails to load
+      event.target.style.display = 'none'
+      const iconElement = event.target.nextElementSibling
+      if (iconElement && iconElement.classList.contains('icon-cash')) {
+        iconElement.style.display = 'block'
+      }
+    },
+    
+    clearPaymentError() {
+      // Clear error từ store
+      this.$store.commit('payment/CLEAR_ERROR')
+    },
+    
+    // Lấy tên phương thức thanh toán theo ID
+    getPaymentMethodName(phuongThucId) {
+      const method = this.paymentMethods.find(m => m.id === phuongThucId)
+      if (method) {
+        return method.ten
+      }
+      
+      // Fallback theo ID
+      switch (phuongThucId) {
+        case 1:
+          return 'Thanh toán khi nhận hàng (COD)'
+        case 2:
+          return 'VNPay'
+        default:
+          return 'Phương thức thanh toán'
       }
     }
   }
@@ -1088,17 +1496,6 @@ export default {
   color: #dc3545;
 }
 
-.price-updated {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  color: #28a745;
-  margin-top: 5px;
-}
-
-.price-updated i {
-  font-size: 0.8rem;
-}
 
 .original-price {
   text-decoration: line-through;
@@ -1107,18 +1504,6 @@ export default {
   margin-top: 2px;
 }
 
-.price-update-info {
-  text-align: center;
-  padding: 10px;
-  background: #d1ecf1;
-  border-radius: 4px;
-  margin-top: 10px;
-  color: #0c5460;
-}
-
-.price-update-info i {
-  margin-right: 5px;
-}
 
 /* Product Details Styles */
 .product-details {
@@ -1339,6 +1724,151 @@ export default {
 .qr-error .error-message i {
   font-size: 2rem;
   color: #dc3545;
+}
+
+/* Payment method styles */
+.payment-loading {
+  text-align: center;
+  padding: 20px;
+}
+
+.payment-loading .loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: #666;
+}
+
+.payment-loading .loading-spinner i {
+  font-size: 1.5rem;
+  animation: spin 1s linear infinite;
+}
+
+.payment-error {
+  padding: 15px;
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.payment-error .error-message {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #721c24;
+}
+
+.payment-error .error-message i {
+  font-size: 1.2rem;
+}
+
+.payment-label.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.service-fee {
+  font-size: 0.875rem;
+  color: #666;
+  margin-top: 5px;
+}
+
+.selected-payment-info {
+  margin-top: 20px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.selected-payment-info .info-card h6 {
+  margin: 0 0 10px;
+  color: #333;
+  font-size: 1rem;
+}
+
+.selected-payment-info .info-card p {
+  margin: 5px 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.selected-payment-info .info-card p strong {
+  color: #333;
+}
+
+.payment-success-info {
+  margin-top: 20px;
+  padding: 15px;
+  background: #d4edda;
+  border-radius: 8px;
+  border: 1px solid #c3e6cb;
+}
+
+.payment-success-info .success-card h6 {
+  margin: 0 0 10px;
+  color: #155724;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.payment-success-info .success-card p {
+  margin: 5px 0;
+  color: #155724;
+  font-size: 0.9rem;
+}
+
+.payment-success-info .success-card p strong {
+  color: #0c5460;
+}
+
+.payment-pending-info {
+  margin-top: 20px;
+  padding: 15px;
+  background: #fff3cd;
+  border-radius: 8px;
+  border: 1px solid #ffeaa7;
+}
+
+.payment-pending-info .pending-card h6 {
+  margin: 0 0 10px;
+  color: #856404;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.payment-pending-info .pending-card p {
+  margin: 5px 0;
+  color: #856404;
+  font-size: 0.9rem;
+}
+
+.payment-pending-info .pending-card p strong {
+  color: #6c5700;
+}
+
+.mock-notice {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 4px;
+  padding: 8px;
+  margin-top: 10px;
+  color: #856404;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 @media (max-width: 768px) {
