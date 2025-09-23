@@ -321,6 +321,17 @@
                 </div>
               </div>
               
+              <!-- Debug Price State -->
+              <div v-if="updatedCartTotal === 0 && cartItems.length > 0" class="price-debug">
+                <div class="debug-message">
+                  <i class="icon-info"></i>
+                  <span>Giá sản phẩm không hiển thị đúng</span>
+                  <button @click="debugAndFixPrices" class="btn btn-sm btn-outline-warning">
+                    Sửa giá
+                  </button>
+                </div>
+              </div>
+              
               <!-- Order Items -->
               <div class="order-items">
                 <div 
@@ -527,12 +538,25 @@ export default {
     
     // Sử dụng dữ liệu đã cập nhật từ API hoặc dữ liệu gốc
     displayCartItems() {
-      return this.updatedCartItems.length > 0 ? this.updatedCartItems : this.cartItems
+      if (this.updatedCartItems.length > 0) {
+        // Kiểm tra và đảm bảo giá không bị 0
+        return this.updatedCartItems.map(item => ({
+          ...item,
+          price: item.price || item.giaTien || 0
+        }))
+      }
+      return this.cartItems
     },
     
     // Tính tổng tiền từ dữ liệu đã cập nhật
     updatedCartTotal() {
-      return this.displayCartItems.reduce((total, item) => total + (item.price * item.quantity), 0)
+      const total = this.displayCartItems.reduce((total, item) => {
+        const itemPrice = item.price || item.giaTien || 0
+        console.log(`💰 Item ${item.name}: price=${item.price}, giaTien=${item.giaTien}, quantity=${item.quantity}, total=${itemPrice * item.quantity}`)
+        return total + (itemPrice * item.quantity)
+      }, 0)
+      console.log(`💰 Total cart: ${total}`)
+      return total
     },
     
     shippingFee() {
@@ -562,6 +586,9 @@ export default {
   async mounted() {
     // Load updated prices from API when component mounts
     await this.loadUpdatedPrices()
+    
+    // Debug và sửa giá nếu cần
+    this.debugAndFixPrices()
     
     // Load payment methods
     await this.loadPaymentMethods()
@@ -595,6 +622,24 @@ export default {
     // Refresh prices manually
     async refreshPrices() {
       await this.loadUpdatedPrices()
+    },
+    
+    // Debug và sửa giá nếu cần
+    debugAndFixPrices() {
+      console.log('🔍 Debug cart items:')
+      console.log('Original cart items:', this.cartItems)
+      console.log('Updated cart items:', this.updatedCartItems)
+      console.log('Display cart items:', this.displayCartItems)
+      
+      // Nếu tất cả giá đều là 0, sử dụng giá gốc từ cart
+      const hasZeroPrices = this.displayCartItems.every(item => (item.price || item.giaTien || 0) === 0)
+      if (hasZeroPrices && this.cartItems.length > 0) {
+        console.log('⚠️ Tất cả giá đều là 0, sử dụng giá gốc từ cart')
+        this.updatedCartItems = this.cartItems.map(item => ({
+          ...item,
+          price: item.price || 0
+        }))
+      }
     },
     
     // Lưu thông tin đơn hàng vào store
@@ -1494,6 +1539,25 @@ export default {
 
 .error-message i {
   color: #dc3545;
+}
+
+.price-debug {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.debug-message {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #856404;
+}
+
+.debug-message i {
+  color: #ffc107;
 }
 
 

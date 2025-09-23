@@ -103,7 +103,7 @@ class ProductService {
                 
                 return {
                   ...item,
-                  price: firstDetail.giaTien || item.price,
+                  price: firstDetail.giaTien || item.price || 0,
                   originalPrice: (firstDetail.giaTien || 0) + (firstDetail.tienGiamGia || 0),
                   name: item.name, // Giữ tên gốc
                   image: firstDetail.duongDanAnh || item.image,
