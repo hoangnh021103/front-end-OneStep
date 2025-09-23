@@ -163,9 +163,9 @@ class PaymentService {
       },
       {
         id: 2,
-        ten: 'VNPay',
-        moTa: 'Thanh toán qua cổng VNPay',
-        icon: 'vnpay_icon.png',
+        ten: 'VietQR',
+        moTa: 'Thanh toán qua VietQR',
+        icon: 'vietqr.png',
         isActive: true,
         phiDichVu: 0
       }
@@ -180,7 +180,7 @@ class PaymentService {
   getDefaultPaymentIcon(methodId) {
     const iconMap = {
       1: 'cash_icon.png',
-      2: 'vnpay_icon.png'
+      2: 'vietqr.png'
     }
     return iconMap[methodId] || 'cash_icon.png'
   }
@@ -209,7 +209,7 @@ class PaymentService {
   getPaymentMethodText(methodId) {
     const methodMap = {
       1: 'COD',
-      2: 'VNPay'
+      2: 'VietQR'
     }
     return methodMap[methodId] || 'Không xác định'
   }

@@ -139,12 +139,13 @@
                           required
                           :class="{ 'is-invalid': errors.city }"
                         >
-                          <option value="">Chọn thành phố</option>
+                          <option value="">Chọn thành phố/tỉnh</option>
                           <option value="hanoi">Hà Nội</option>
                           <option value="hcm">TP. Hồ Chí Minh</option>
                           <option value="danang">Đà Nẵng</option>
                           <option value="haiphong">Hải Phòng</option>
                           <option value="cantho">Cần Thơ</option>
+                          <option value="other">Tỉnh khác</option>
                         </select>
                         <div v-if="errors.city" class="invalid-feedback">{{ errors.city }}</div>
                       </div>
@@ -379,9 +380,9 @@
                     
                   </div>
                   <div class="item-price">
-                    {{ formatPrice(item.price * item.quantity) }}
+                    {{ formatPrice(getItemPrice(item) * item.quantity) }}
                     <!-- Show original price if different -->
-                    <div v-if="item.originalPrice && item.originalPrice > item.price" class="original-price">
+                    <div v-if="item.originalPrice && item.originalPrice > getItemPrice(item)" class="original-price">
                       <small>{{ formatPrice(item.originalPrice * item.quantity) }}</small>
                     </div>
                   </div>
@@ -410,6 +411,13 @@
                 <p><i class="icon-truck"></i> Giao hàng trong 1-3 ngày làm việc</p>
                 <p><i class="icon-shield"></i> Đảm bảo chất lượng sản phẩm</p>
                 <p><i class="icon-undo"></i> Đổi trả miễn phí trong 7 ngày</p>
+                <div class="shipping-fee-info">
+                  <h5>Phí vận chuyển:</h5>
+                  <ul>
+                    <li><strong>Hà Nội:</strong> 30.000 ₫</li>
+                    <li><strong>Các tỉnh khác:</strong> 50.000 ₫</li>
+                  </ul>
+                </div>
               </div>
             </div>
           </div>
@@ -551,8 +559,18 @@ export default {
     // Tính tổng tiền từ dữ liệu đã cập nhật
     updatedCartTotal() {
       const total = this.displayCartItems.reduce((total, item) => {
-        const itemPrice = item.price || item.giaTien || 0
-        console.log(`💰 Item ${item.name}: price=${item.price}, giaTien=${item.giaTien}, quantity=${item.quantity}, total=${itemPrice * item.quantity}`)
+        // Ưu tiên giá từ updatedCartItems, sau đó từ cartItems gốc
+        let itemPrice = item.price || item.giaTien || 0
+        
+        // Nếu giá vẫn là 0, thử lấy từ cart gốc
+        if (itemPrice === 0 && this.cartItems.length > 0) {
+          const originalItem = this.cartItems.find(cartItem => cartItem.id === item.id)
+          if (originalItem) {
+            itemPrice = originalItem.price || originalItem.giaTien || 0
+          }
+        }
+        
+        console.log(`💰 Item ${item.name}: price=${item.price}, giaTien=${item.giaTien}, finalPrice=${itemPrice}, quantity=${item.quantity}, total=${itemPrice * item.quantity}`)
         return total + (itemPrice * item.quantity)
       }, 0)
       console.log(`💰 Total cart: ${total}`)
@@ -560,7 +578,12 @@ export default {
     },
     
     shippingFee() {
-      return this.updatedCartTotal > 2000000 ? 0 : 50000 // Free shipping over 2M
+      // Tính phí vận chuyển theo địa điểm
+      if (this.form.city === 'hanoi') {
+        return 30000 // Hà Nội: 30k
+      } else {
+        return 50000 // Các tỉnh khác: 50k
+      }
     },
     
     // Tổng tiền cuối cùng
@@ -609,11 +632,24 @@ export default {
       try {
         this.updatedCartItems = await productService.getCartItemsWithUpdatedPrices(this.cartItems)
         console.log('Updated cart items with API prices:', this.updatedCartItems)
+        
+        // Kiểm tra xem có item nào có giá không
+        const hasValidPrices = this.updatedCartItems.some(item => (item.price || item.giaTien || 0) > 0)
+        if (!hasValidPrices) {
+          console.warn('⚠️ API không trả về giá hợp lệ, sử dụng giá từ cart gốc')
+          this.updatedCartItems = this.cartItems.map(item => ({
+            ...item,
+            price: item.price || item.giaTien || 0
+          }))
+        }
       } catch (error) {
         console.error('Error loading updated prices:', error)
         this.priceError = 'Không thể cập nhật giá sản phẩm. Vui lòng kiểm tra kết nối mạng.'
         // Fallback to original cart items
-        this.updatedCartItems = [...this.cartItems]
+        this.updatedCartItems = this.cartItems.map(item => ({
+          ...item,
+          price: item.price || item.giaTien || 0
+        }))
       } finally {
         this.isLoadingPrices = false
       }
@@ -622,6 +658,21 @@ export default {
     // Refresh prices manually
     async refreshPrices() {
       await this.loadUpdatedPrices()
+    },
+    
+    // Lấy giá của một item, với fallback logic
+    getItemPrice(item) {
+      let price = item.price || item.giaTien || 0
+      
+      // Nếu giá là 0, thử lấy từ cart gốc
+      if (price === 0 && this.cartItems.length > 0) {
+        const originalItem = this.cartItems.find(cartItem => cartItem.id === item.id)
+        if (originalItem) {
+          price = originalItem.price || originalItem.giaTien || 0
+        }
+      }
+      
+      return price
     },
     
     // Debug và sửa giá nếu cần
@@ -637,9 +688,23 @@ export default {
         console.log('⚠️ Tất cả giá đều là 0, sử dụng giá gốc từ cart')
         this.updatedCartItems = this.cartItems.map(item => ({
           ...item,
-          price: item.price || 0
+          price: item.price || item.giaTien || 0
         }))
       }
+      
+      // Kiểm tra và đảm bảo mỗi item có giá hợp lệ
+      this.updatedCartItems = this.updatedCartItems.map(item => {
+        const price = item.price || item.giaTien || 0
+        if (price === 0 && this.cartItems.length > 0) {
+          // Tìm item tương ứng trong cart gốc
+          const originalItem = this.cartItems.find(cartItem => cartItem.id === item.id)
+          if (originalItem && originalItem.price > 0) {
+            console.log(`🔧 Sửa giá cho ${item.name}: ${price} -> ${originalItem.price}`)
+            return { ...item, price: originalItem.price }
+          }
+        }
+        return item
+      })
     },
     
     // Lưu thông tin đơn hàng vào store
@@ -1096,8 +1161,8 @@ export default {
           // COD - Thanh toán khi nhận hàng
           await this.processCODOrder()
         } else if (this.form.paymentMethod === '2') {
-          // VNPay
-          await this.processVNPayOrder(payment)
+        // VietQR
+        await this.processVietQROrder(payment)
         } else {
           throw new Error('Phương thức thanh toán không hợp lệ')
         }
@@ -1109,18 +1174,18 @@ export default {
       }
     },
     
-    async processVNPayOrder(payment) {
+    async processVietQROrder(payment) {
       try {
-        console.log('🔄 Processing VNPay order:', payment)
+        console.log('🔄 Processing VietQR order:', payment)
         
-        // Tạo VietQR cho VNPay
+        // Tạo VietQR
         await this.generateVietQR()
         
         // Hiển thị modal VietQR
         this.showVietQRModal = true
         
       } catch (error) {
-        console.error('❌ Error processing VNPay order:', error)
+        console.error('❌ Error processing VietQR order:', error)
         throw error
       }
     },
@@ -1152,7 +1217,7 @@ export default {
         case 1:
           return 'Thanh toán khi nhận hàng (COD)'
         case 2:
-          return 'VNPay'
+          return 'VietQR'
         default:
           return 'Phương thức thanh toán'
       }
@@ -1933,6 +1998,34 @@ export default {
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+.shipping-fee-info {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #007bff;
+}
+
+.shipping-fee-info h5 {
+  margin: 0 0 10px 0;
+  color: #333;
+  font-size: 16px;
+}
+
+.shipping-fee-info ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.shipping-fee-info li {
+  margin-bottom: 5px;
+  color: #666;
+}
+
+.shipping-fee-info strong {
+  color: #333;
 }
 
 @media (max-width: 768px) {
