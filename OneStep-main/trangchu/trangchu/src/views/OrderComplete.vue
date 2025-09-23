@@ -21,17 +21,35 @@
         <div class="row row-pb-lg">
           <div class="col-md-10 offset-md-1">
             <div class="process-wrap">
-              <div class="process text-center">
-                <p><span>01</span></p>
-                <h3>Giỏ hàng</h3>
+              <div class="process text-center completed">
+                <div class="process-icon">
+                  <i class="icon-check"></i>
+                </div>
+                <div class="process-content">
+                  <span class="process-number">01</span>
+                  <h3>Giỏ hàng</h3>
+                  <p class="process-desc">Chọn sản phẩm</p>
+                </div>
               </div>
-              <div class="process text-center">
-                <p><span>02</span></p>
-                <h3>Thanh toán</h3>
+              <div class="process text-center completed">
+                <div class="process-icon">
+                  <i class="icon-check"></i>
+                </div>
+                <div class="process-content">
+                  <span class="process-number">02</span>
+                  <h3>Thanh toán</h3>
+                  <p class="process-desc">Thông tin & thanh toán</p>
+                </div>
               </div>
               <div class="process text-center active">
-                <p><span>03</span></p>
-                <h3>Đặt hàng hoàn tất</h3>
+                <div class="process-icon">
+                  <i class="icon-check-circle"></i>
+                </div>
+                <div class="process-content">
+                  <span class="process-number">03</span>
+                  <h3>Hoàn tất</h3>
+                  <p class="process-desc">Đặt hàng thành công</p>
+                </div>
               </div>
             </div>
           </div>
@@ -334,45 +352,113 @@ export default {
 .process-wrap {
   display: flex;
   justify-content: center;
-  margin-bottom: 40px;
+  align-items: center;
+  margin-bottom: 50px;
+  padding: 30px 0;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
 }
 
 .process {
   flex: 1;
-  max-width: 200px;
+  max-width: 250px;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .process:not(:last-child)::after {
   content: '';
   position: absolute;
-  top: 20px;
+  top: 30px;
   right: -50%;
   width: 100%;
-  height: 2px;
-  background: #e9ecef;
+  height: 3px;
+  background: linear-gradient(90deg, #e9ecef 0%, #dee2e6 100%);
+  border-radius: 2px;
   z-index: 1;
 }
 
+.process.completed::after {
+  background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+}
+
 .process.active::after {
-  background: #007bff;
+  background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
 }
 
-.process p {
-  margin: 0;
-  font-size: 2rem;
+.process-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 15px;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 2;
+}
+
+.process.completed .process-icon {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.process.active .process-icon {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+  animation: pulse-success 2s infinite;
+}
+
+.process-content {
+  text-align: center;
+}
+
+.process-number {
+  display: block;
+  font-size: 1.2rem;
   font-weight: 700;
-  color: #e9ecef;
+  margin-bottom: 8px;
+  color: #6c757d;
 }
 
-.process.active p {
-  color: #007bff;
+.process.completed .process-number {
+  color: #28a745;
+}
+
+.process.active .process-number {
+  color: #28a745;
 }
 
 .process h3 {
-  margin: 10px 0 0;
-  font-size: 1rem;
-  color: #666;
+  margin: 0 0 5px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.process-desc {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6c757d;
+  font-weight: 400;
+}
+
+@keyframes pulse-success {
+  0% {
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 25px rgba(40, 167, 69, 0.5);
+  }
+  100% {
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+  }
 }
 
 .order-success {
@@ -688,11 +774,25 @@ export default {
   
   .process-wrap {
     flex-direction: column;
-    gap: 20px;
+    gap: 25px;
+    padding: 20px 0;
   }
   
   .process:not(:last-child)::after {
     display: none;
+  }
+  
+  .process-icon {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .process h3 {
+    font-size: 1rem;
+  }
+  
+  .process-desc {
+    font-size: 0.8rem;
   }
 }
 </style>
