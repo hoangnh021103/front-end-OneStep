@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Cart Quantity Controls</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+        }
+        .test-section h2 {
+            color: #007bff;
+            margin-top: 0;
+        }
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .quantity-controls .btn {
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            border: 1px solid #e9ecef;
+            background: white;
+            cursor: pointer;
+        }
+        .quantity-controls .btn:hover:not(:disabled) {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        .quantity-controls .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .quantity-input {
+            width: 60px;
+            text-align: center;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 5px;
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+        }
+        .quantity-input:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+        }
+        .success {
+            border-left-color: #28a745;
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .warning {
+            border-left-color: #ffc107;
+            background: #fff3cd;
+            color: #856404;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        .test-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 15px;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        .test-item img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        .test-item-info {
+            flex: 1;
+        }
+        .test-item-info h5 {
+            margin: 0 0 5px;
+            color: #333;
+        }
+        .test-item-info p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+        .test-item-price {
+            font-weight: bold;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Cart Quantity Controls</h1>
+        <p style="text-align: center; color: #666; margin-bottom: 30px;">
+            Test chức năng tăng/giảm số lượng sản phẩm trong giỏ hàng
+        </p>
+
+        <!-- Test Items -->
+        <div class="test-section">
+            <h2>1. Test Sản Phẩm Mẫu</h2>
+            
+            <div class="test-item">
+                <img src="/images/item-1.jpg" alt="Product 1" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjRjVGNUY1Ii8+Cjx0ZXh0IHg9IjMwIiB5PSIzNSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5JbWFnZTwvdGV4dD4KPC9zdmc+'">
+                <div class="test-item-info">
+                    <h5>Giày Nike Air Max</h5>
+                    <p>Thương hiệu: Nike</p>
+                    <div class="test-item-price">1,500,000 VND</div>
+                </div>
+                <div class="quantity-controls">
+                    <button onclick="updateQuantity('product1', -1)" id="btn-decrease-1">-</button>
+                    <input type="number" id="quantity-1" value="1" min="1" max="100" onchange="updateQuantity('product1', parseInt(this.value))">
+                    <button onclick="updateQuantity('product1', 1)" id="btn-increase-1">+</button>
+                </div>
+            </div>
+
+            <div class="test-item">
+                <img src="/images/item-2.jpg" alt="Product 2" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjRjVGNUY1Ii8+Cjx0ZXh0IHg9IjMwIiB5PSIzNSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5JbWFnZTwvdGV4dD4KPC9zdmc+'">
+                <div class="test-item-info">
+                    <h5>Giày Adidas Ultraboost</h5>
+                    <p>Thương hiệu: Adidas</p>
+                    <div class="test-item-price">2,200,000 VND</div>
+                </div>
+                <div class="quantity-controls">
+                    <button onclick="updateQuantity('product2', -1)" id="btn-decrease-2">-</button>
+                    <input type="number" id="quantity-2" value="2" min="1" max="100" onchange="updateQuantity('product2', parseInt(this.value))">
+                    <button onclick="updateQuantity('product2', 1)" id="btn-increase-2">+</button>
+                </div>
+            </div>
+
+            <div class="test-item">
+                <img src="/images/item-3.jpg" alt="Product 3" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjRjVGNUY1Ii8+Cjx0ZXh0IHg9IjMwIiB5PSIzNSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5JbWFnZTwvdGV4dD4KPC9zdmc+'">
+                <div class="test-item-info">
+                    <h5>Giày Converse Chuck Taylor</h5>
+                    <p>Thương hiệu: Converse</p>
+                    <div class="test-item-price">800,000 VND</div>
+                </div>
+                <div class="quantity-controls">
+                    <button onclick="updateQuantity('product3', -1)" id="btn-decrease-3">-</button>
+                    <input type="number" id="quantity-3" value="1" min="1" max="100" onchange="updateQuantity('product3', parseInt(this.value))">
+                    <button onclick="updateQuantity('product3', 1)" id="btn-increase-3">+</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Cases -->
+        <div class="test-section">
+            <h2>2. Test Cases</h2>
+            <button onclick="testIncreaseQuantity()">Test Tăng Số Lượng</button>
+            <button onclick="testDecreaseQuantity()">Test Giảm Số Lượng</button>
+            <button onclick="testInvalidInput()">Test Input Không Hợp Lệ</button>
+            <button onclick="testMaxQuantity()">Test Số Lượng Tối Đa</button>
+            <button onclick="testZeroQuantity()">Test Số Lượng = 0</button>
+            <div id="testResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Cart Summary -->
+        <div class="test-section">
+            <h2>3. Tóm Tắt Giỏ Hàng</h2>
+            <button onclick="calculateCartTotal()">Tính Tổng Giỏ Hàng</button>
+            <button onclick="clearCart()">Xóa Giỏ Hàng</button>
+            <div id="cartSummary" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Debug Info -->
+        <div class="test-section">
+            <h2>4. Debug Information</h2>
+            <button onclick="showDebugInfo()">Hiển Thị Debug Info</button>
+            <div id="debugInfo" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // Mock cart data
+        const cartData = {
+            'product1': { id: 'product1', name: 'Giày Nike Air Max', price: 1500000, quantity: 1 },
+            'product2': { id: 'product2', name: 'Giày Adidas Ultraboost', price: 2200000, quantity: 2 },
+            'product3': { id: 'product3', name: 'Giày Converse Chuck Taylor', price: 800000, quantity: 1 }
+        };
+
+        function showResult(elementId, content, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = `result ${type}`;
+            element.innerHTML = content;
+        }
+
+        function updateQuantity(productId, newQuantity) {
+            const input = document.getElementById(`quantity-${productId.slice(-1)}`);
+            const decreaseBtn = document.getElementById(`btn-decrease-${productId.slice(-1)}`);
+            
+            // Validate quantity
+            if (isNaN(newQuantity) || newQuantity < 0) {
+                showResult('testResult', '❌ Số lượng không hợp lệ!', 'error');
+                return;
+            }
+            
+            if (newQuantity === 0) {
+                // Remove from cart
+                cartData[productId].quantity = 0;
+                input.value = 0;
+                decreaseBtn.disabled = true;
+                showResult('testResult', `✅ Đã xóa ${cartData[productId].name} khỏi giỏ hàng`, 'success');
+                return;
+            }
+            
+            if (newQuantity > 100) {
+                showResult('testResult', '⚠️ Số lượng tối đa là 100 sản phẩm', 'warning');
+                newQuantity = 100;
+            }
+            
+            // Update quantity
+            cartData[productId].quantity = newQuantity;
+            input.value = newQuantity;
+            
+            // Update button states
+            decreaseBtn.disabled = newQuantity <= 1;
+            
+            console.log(`Updated ${productId} quantity to ${newQuantity}`);
+            showResult('testResult', `✅ Đã cập nhật số lượng ${cartData[productId].name} thành ${newQuantity}`, 'success');
+        }
+
+        function testIncreaseQuantity() {
+            showResult('testResult', '🔄 Testing tăng số lượng...', 'info');
+            
+            setTimeout(() => {
+                updateQuantity('product1', cartData['product1'].quantity + 1);
+            }, 500);
+        }
+
+        function testDecreaseQuantity() {
+            showResult('testResult', '🔄 Testing giảm số lượng...', 'info');
+            
+            setTimeout(() => {
+                updateQuantity('product1', cartData['product1'].quantity - 1);
+            }, 500);
+        }
+
+        function testInvalidInput() {
+            showResult('testResult', '🔄 Testing input không hợp lệ...', 'info');
+            
+            setTimeout(() => {
+                updateQuantity('product1', -5);
+            }, 500);
+        }
+
+        function testMaxQuantity() {
+            showResult('testResult', '🔄 Testing số lượng tối đa...', 'info');
+            
+            setTimeout(() => {
+                updateQuantity('product1', 150);
+            }, 500);
+        }
+
+        function testZeroQuantity() {
+            showResult('testResult', '🔄 Testing số lượng = 0...', 'info');
+            
+            setTimeout(() => {
+                updateQuantity('product1', 0);
+            }, 500);
+        }
+
+        function calculateCartTotal() {
+            let total = 0;
+            let itemCount = 0;
+            let summary = '<h4>📋 Tóm Tắt Giỏ Hàng:</h4><ul>';
+            
+            for (const [productId, product] of Object.entries(cartData)) {
+                if (product.quantity > 0) {
+                    const itemTotal = product.price * product.quantity;
+                    total += itemTotal;
+                    itemCount += product.quantity;
+                    summary += `<li>${product.name} x${product.quantity} = ${formatPrice(itemTotal)}</li>`;
+                }
+            }
+            
+            summary += '</ul>';
+            summary += `<p><strong>Tổng số sản phẩm:</strong> ${itemCount}</p>`;
+            summary += `<p><strong>Tổng tiền:</strong> ${formatPrice(total)}</p>`;
+            
+            showResult('cartSummary', summary, 'success');
+        }
+
+        function clearCart() {
+            for (const productId of Object.keys(cartData)) {
+                cartData[productId].quantity = 1;
+                document.getElementById(`quantity-${productId.slice(-1)}`).value = 1;
+                document.getElementById(`btn-decrease-${productId.slice(-1)}`).disabled = false;
+            }
+            
+            showResult('cartSummary', '✅ Đã xóa giỏ hàng', 'success');
+        }
+
+        function showDebugInfo() {
+            const debugInfo = `
+                <h4>🔍 Debug Information:</h4>
+                <h5>Cart Data:</h5>
+                <pre>${JSON.stringify(cartData, null, 2)}</pre>
+                <h5>Input Values:</h5>
+                <ul>
+                    <li>Product 1: ${document.getElementById('quantity-1').value}</li>
+                    <li>Product 2: ${document.getElementById('quantity-2').value}</li>
+                    <li>Product 3: ${document.getElementById('quantity-3').value}</li>
+                </ul>
+                <h5>Button States:</h5>
+                <ul>
+                    <li>Decrease 1: ${document.getElementById('btn-decrease-1').disabled ? 'Disabled' : 'Enabled'}</li>
+                    <li>Decrease 2: ${document.getElementById('btn-decrease-2').disabled ? 'Disabled' : 'Enabled'}</li>
+                    <li>Decrease 3: ${document.getElementById('btn-decrease-3').disabled ? 'Disabled' : 'Enabled'}</li>
+                </ul>
+            `;
+            
+            showResult('debugInfo', debugInfo, 'info');
+        }
+
+        function formatPrice(price) {
+            return new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND'
+            }).format(price);
+        }
+
+        // Initialize button states
+        window.onload = function() {
+            document.getElementById('btn-decrease-1').disabled = true;
+            document.getElementById('btn-decrease-3').disabled = true;
+        };
+    </script>
+</body>
+</html>

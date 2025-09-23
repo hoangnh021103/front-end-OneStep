@@ -209,7 +209,10 @@ export default {
     }
   },
   computed: {
-    ...mapGetters('products', ['allProducts'])
+    ...mapGetters('products', ['allProducts']),
+    ...mapGetters('payment', ['currentPayment']),
+    ...mapGetters('cart', ['cartTotal']),
+    ...mapGetters('order', ['currentOrder'])
   },
   mounted() {
     this.generateOrderInfo()
@@ -217,7 +220,23 @@ export default {
   },
   methods: {
     generateOrderInfo() {
-      // Generate order number
+      // Ưu tiên sử dụng thông tin từ order store
+      if (this.currentOrder && this.currentOrder.orderNumber) {
+        this.orderNumber = this.currentOrder.orderNumber
+        this.orderDate = new Date(this.currentOrder.orderDate).toLocaleDateString('vi-VN', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })
+        this.orderTotal = this.currentOrder.finalTotal || this.currentOrder.orderTotal
+        this.paymentMethod = this.currentOrder.paymentMethod
+        console.log('✅ Sử dụng thông tin từ order store:', this.currentOrder)
+        return
+      }
+      
+      // Fallback: Generate order number
       this.orderNumber = 'GD' + Date.now().toString().slice(-8)
       
       // Set order date
@@ -229,8 +248,27 @@ export default {
         minute: '2-digit'
       })
       
-      // Set order total (this would come from the order data in a real app)
-      this.orderTotal = 2500000
+      // Lấy tổng tiền từ payment hiện tại hoặc cart total
+      if (this.currentPayment && this.currentPayment.tongTien) {
+        this.orderTotal = this.currentPayment.tongTien
+        console.log('✅ Sử dụng tổng tiền từ payment:', this.orderTotal)
+      } else if (this.cartTotal > 0) {
+        // Tính tổng tiền bao gồm phí vận chuyển
+        const shippingFee = this.cartTotal > 2000000 ? 0 : 50000
+        this.orderTotal = this.cartTotal + shippingFee
+        console.log('✅ Sử dụng tổng tiền từ cart:', this.orderTotal)
+      } else {
+        // Fallback nếu không có dữ liệu
+        this.orderTotal = 0
+        console.warn('⚠️ Không có thông tin tổng tiền, sử dụng giá trị mặc định')
+      }
+      
+      // Cập nhật phương thức thanh toán từ payment hiện tại
+      if (this.currentPayment && this.currentPayment.phuongThucThanhToan) {
+        this.paymentMethod = this.currentPayment.phuongThucThanhToan.tenPhuongThuc || this.paymentMethod
+      } else if (this.currentPayment && this.currentPayment.phuongThucId) {
+        this.paymentMethod = this.getPaymentMethodName(this.currentPayment.phuongThucId)
+      }
     },
     
     loadRecommendedProducts() {
@@ -258,6 +296,19 @@ export default {
         document.body.removeChild(input)
         this.$toast?.success('Đã sao chép mã đơn hàng!')
       })
+    },
+    
+    // Lấy tên phương thức thanh toán theo ID
+    getPaymentMethodName(phuongThucId) {
+      // Fallback theo ID
+      switch (phuongThucId) {
+        case 1:
+          return 'Thanh toán khi nhận hàng (COD)'
+        case 2:
+          return 'VNPay'
+        default:
+          return 'Phương thức thanh toán'
+      }
     }
   }
 }

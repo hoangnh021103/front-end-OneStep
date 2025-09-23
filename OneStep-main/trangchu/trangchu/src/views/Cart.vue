@@ -85,7 +85,7 @@
                   <div class="quantity-controls">
                     <button 
                       class="btn btn-sm btn-outline-secondary" 
-                      @click="updateQuantity(item.id, item.quantity - 1)"
+                      @click="handleUpdateQuantity(item.id, item.quantity - 1)"
                       :disabled="item.quantity <= 1"
                     >
                       -
@@ -93,14 +93,16 @@
                     <input 
                       type="number" 
                       :value="item.quantity" 
-                      @change="updateQuantity(item.id, parseInt($event.target.value))"
+                      @change="handleUpdateQuantity(item.id, parseInt($event.target.value) || 1)"
+                      @blur="handleInputBlur(item.id, $event)"
+                      @keyup.enter="handleInputBlur(item.id, $event)"
                       class="form-control input-number text-center quantity-input"
                       min="1" 
                       max="100"
                     >
                     <button 
                       class="btn btn-sm btn-outline-secondary" 
-                      @click="updateQuantity(item.id, item.quantity + 1)"
+                      @click="handleUpdateQuantity(item.id, item.quantity + 1)"
                     >
                       +
                     </button>
@@ -234,11 +236,39 @@ export default {
   methods: {
     ...mapActions('cart', ['updateQuantity', 'removeFromCart', 'clearCart']),
     
-    updateQuantity(productId, quantity) {
-      if (quantity < 1) {
+    handleUpdateQuantity(productId, quantity) {
+      // Validate quantity
+      if (isNaN(quantity) || quantity < 0) {
+        console.warn('Invalid quantity:', quantity)
+        return
+      }
+      
+      if (quantity === 0) {
+        // Xóa sản phẩm khỏi giỏ hàng
         this.removeFromCart(productId)
+        this.$toast?.success('Đã xóa sản phẩm khỏi giỏ hàng')
+      } else if (quantity > 100) {
+        // Giới hạn số lượng tối đa
+        this.$toast?.warning('Số lượng tối đa là 100 sản phẩm')
+        this.updateQuantity({ productId, quantity: 100 })
       } else {
+        // Cập nhật số lượng bình thường
         this.updateQuantity({ productId, quantity })
+        console.log(`Updated quantity for product ${productId} to ${quantity}`)
+      }
+    },
+    
+    handleInputBlur(productId, event) {
+      const value = parseInt(event.target.value)
+      if (isNaN(value) || value < 1) {
+        // Reset về giá trị hợp lệ
+        const item = this.cartItems.find(item => item.id === productId)
+        if (item) {
+          event.target.value = item.quantity
+          this.$toast?.warning('Số lượng phải lớn hơn 0')
+        }
+      } else {
+        this.handleUpdateQuantity(productId, value)
       }
     },
     
@@ -382,12 +412,43 @@ export default {
   justify-content: center;
 }
 
+.quantity-controls .btn {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.quantity-controls .btn:hover:not(:disabled) {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.quantity-controls .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .quantity-input {
   width: 60px;
   text-align: center;
   border: 1px solid #e9ecef;
   border-radius: 4px;
   padding: 5px;
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.quantity-input:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
 
 .empty-cart {
