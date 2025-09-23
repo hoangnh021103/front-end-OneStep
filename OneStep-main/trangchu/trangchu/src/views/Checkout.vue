@@ -578,6 +578,11 @@ export default {
     },
     
     shippingFee() {
+      // Chỉ tính phí vận chuyển khi đã chọn thành phố
+      if (!this.form.city) {
+        return 0 // Chưa chọn địa chỉ
+      }
+      
       // Tính phí vận chuyển theo địa điểm
       if (this.form.city === 'hanoi') {
         return 30000 // Hà Nội: 30k
@@ -2026,6 +2031,15 @@ export default {
 
 .shipping-fee-info strong {
   color: #333;
+}
+
+.shipping-pending {
+  opacity: 0.7;
+}
+
+.shipping-pending .text-muted {
+  color: #6c757d;
+  font-style: italic;
 }
 
 @media (max-width: 768px) {
