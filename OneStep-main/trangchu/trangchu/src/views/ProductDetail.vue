@@ -16,9 +16,6 @@
         <div class="col-md-6">
           <h1 class="product-title">{{ product.name }}</h1>
           
-          <div class="product-description" v-if="product.description">
-            <p>{{ product.description }}</p>
-          </div>
 
           <div class="product-price">
             <span class="current-price">{{ formatPrice(currentPrice) }}</span>
@@ -26,8 +23,6 @@
             <div v-if="currentOriginalPrice > currentPrice" class="discount">
               Tiết kiệm {{ formatPrice(currentOriginalPrice - currentPrice) }}
             </div>
-            <div v-if="currentStock > 0" class="stock-info">Còn lại: <b>{{ currentStock }}</b></div>
-            <div v-else class="out-of-stock">Hết hàng</div>
           </div>
 
           <div class="product-options" v-if="productVariants.length">
