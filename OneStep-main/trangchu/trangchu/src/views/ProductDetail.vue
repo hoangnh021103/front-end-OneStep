@@ -51,7 +51,7 @@
                   :key="c.id"
                   :class="['btn', selectedColor===c.id?'btn-secondary':'btn-outline-secondary']"
                   @click="selectedColor = c.id; updateSelectedVariant()"
-                >{{ getColorName(c.id) }}</button>
+                >{{ c.name }}</button>
               </div>
             </div>
           </div>
@@ -109,12 +109,49 @@ export default {
     },
     
     availableColors() {
-      const ids = [...new Set(this.productVariants.map(v => v.colorId))].filter(Boolean)
-      return ids.map(id => ({ id }))
+      const colorMap = new Map()
+      
+      console.log('🎨 Processing availableColors with variants:', this.productVariants)
+      
+      this.productVariants.forEach(variant => {
+        // Sử dụng tên màu làm key thay vì ID để tránh duplicate
+        const colorKey = variant.colorName || this.getColorName(variant.colorId)
+        
+        console.log('🎨 Variant color processing:', {
+          colorId: variant.colorId,
+          colorName: variant.colorName,
+          colorKey: colorKey,
+          hasColorKey: !!colorKey,
+          colorMapHas: colorMap.has(colorKey)
+        })
+        
+        if (colorKey && !colorMap.has(colorKey)) {
+          colorMap.set(colorKey, {
+            id: variant.colorId,
+            name: colorKey
+          })
+          console.log('✅ Added color to map:', { id: variant.colorId, name: colorKey })
+        }
+      })
+      
+      const result = Array.from(colorMap.values())
+      console.log('🎨 Final availableColors:', result)
+      return result
     },
     availableSizes() {
-      const ids = [...new Set(this.productVariants.map(v => v.sizeId))].filter(Boolean)
-      return ids.map(id => ({ id, name: this.getSizeName(id) }))
+      const uniqueSizes = []
+      const sizeMap = new Map()
+      
+      this.productVariants.forEach(variant => {
+        if (variant.sizeId && !sizeMap.has(variant.sizeId)) {
+          sizeMap.set(variant.sizeId, {
+            id: variant.sizeId,
+            name: variant.sizeName || this.getSizeName(variant.sizeId)
+          })
+        }
+      })
+      
+      return Array.from(sizeMap.values())
     }
   },
   methods: {
@@ -125,164 +162,207 @@ export default {
         const productId = this.$route.params.id
         console.log('🔄 Loading product details for ID:', productId)
 
-        // Chỉ sử dụng API thực, không tạo demo data
+        // Sử dụng API /chi-tiet-san-pham/hien-thi với cấu trúc mới
         let response
         let apiData = null
         
         try {
-          // Thử API chính: /chi-tiet-san-pham/hien-thi
+          // Thử API chi-tiet-san-pham/hien-thi trước
+          console.log('🔄 Trying API /chi-tiet-san-pham/hien-thi...')
           response = await axios.get('/chi-tiet-san-pham/hien-thi')
           apiData = response.data
           console.log('✅ API /chi-tiet-san-pham/hien-thi success:', apiData)
         } catch (apiError) {
           console.warn('⚠️ API /chi-tiet-san-pham/hien-thi failed:', apiError.message)
           
-          // Fallback: Thử API san-pham
+          // Fallback: Thử API san-pham/hien-thi
           try {
+            console.log('🔄 Fallback: Trying API /san-pham/hien-thi...')
             response = await axios.get('/san-pham/hien-thi')
             apiData = response.data
             console.log('✅ Fallback API /san-pham/hien-thi success:', apiData)
           } catch (fallbackError) {
-            console.error('❌ All APIs failed:', fallbackError.message)
-            this.$toast?.error('Không thể tải dữ liệu sản phẩm')
+            console.error('❌ Both APIs failed:', fallbackError.message)
+            this.$toast?.error('Không thể tải dữ liệu sản phẩm từ API')
             this.$router.push('/products')
             return
           }
         }
         
-        // Xử lý dữ liệu từ API
+        // Xử lý dữ liệu từ API - hỗ trợ cả 2 cấu trúc
         if (Array.isArray(apiData) && apiData.length > 0) {
           console.log('📦 Processing API data array with', apiData.length, 'items')
           
-          // Tìm sản phẩm theo ID
-          let foundProduct = null
+          // Kiểm tra xem có phải dữ liệu từ API chi-tiet-san-pham không
+          const isChiTietAPI = apiData.some(item => item.hasOwnProperty('maChiTiet'))
+          
           let productVariants = []
           
-          // Tìm sản phẩm chính - ưu tiên sanPhamId trước
-          foundProduct = apiData.find(item => {
-            const itemSanPhamId = item.sanPhamId ? item.sanPhamId.toString() : null
-            const itemId = item.id ? item.id.toString() : null
-            const itemProductId = item.productId ? item.productId.toString() : null
-            const itemChiTietSanPhamId = item.chiTietSanPhamId ? item.chiTietSanPhamId.toString() : null
-            const searchId = productId.toString()
-            
-            console.log('🔍 Checking item:', {
-              sanPhamId: itemSanPhamId,
-              id: itemId,
-              productId: itemProductId,
-              chiTietSanPhamId: itemChiTietSanPhamId,
-              lookingFor: searchId,
-              tenSanPham: item.tenSanPham || item.tenChiTiet || item.name
-            })
-            
-            // Kiểm tra các trường có thể chứa ID sản phẩm theo thứ tự ưu tiên
-            const matches = (itemSanPhamId === searchId) ||
-                           (itemId === searchId) ||
-                           (itemProductId === searchId) ||
-                           (itemChiTietSanPhamId === searchId)
-            
-            if (matches) {
-              console.log('✅ Found exact matching product!')
-            }
-            
-            return matches
-          })
-          
-          // Nếu không tìm thấy exact match, thử tìm theo tên sản phẩm
-          if (!foundProduct) {
-            console.log('🔍 No exact match found, trying name-based matching...')
-            foundProduct = apiData.find(item => {
-              const itemName = (item.tenSanPham || item.tenChiTiet || item.name || '').toLowerCase()
-              const searchName = productId.toString().toLowerCase()
-              
-              // Tìm sản phẩm có tên chứa ID hoặc ID chứa tên
-              return itemName.includes(searchName) || searchName.includes(itemName)
-            })
-            
-            if (foundProduct) {
-              console.log('✅ Found name-based matching product!')
-            }
-          }
-          
-          if (foundProduct) {
-            console.log('✅ Found product:', foundProduct)
-            
-            // Lấy tất cả variants của sản phẩm này
-            const productIdToMatch = foundProduct.sanPhamId || foundProduct.id || foundProduct.productId
+          if (isChiTietAPI) {
+            // Xử lý dữ liệu từ API chi-tiet-san-pham/hien-thi
             productVariants = apiData.filter(item => {
-              const itemProductId = item.sanPhamId || item.id || item.productId
-              return itemProductId && itemProductId.toString() === productIdToMatch.toString()
-            })
-            
-            console.log('📦 Found', productVariants.length, 'variants for product')
-            
-            // Xử lý variants - chỉ lấy dữ liệu thực từ API
-            this.productVariants = productVariants.map(variant => {
-              const basePrice = variant.giaTien || variant.giaBan || variant.gia || 0
-              const discountAmount = variant.tienGiamGia || 0
-              const originalPrice = basePrice + discountAmount
+              const itemSanPhamId = item.sanPhamId ? item.sanPhamId.toString() : null
+              const searchId = productId.toString()
               
-              return {
-                id: variant.maChiTiet || variant.id || `${variant.sanPhamId}-${variant.kichCoId}-${variant.mauSacId}`,
-                productId: variant.sanPhamId || variant.productId || variant.id,
-                sizeId: variant.kichCoId || variant.sizeId || 1,
-                colorId: variant.mauSacId || variant.colorId || 1,
-                image: variant.duongDanAnh || variant.hinhAnh || variant.image || '/images/item-1.jpg',
-                price: basePrice,
-                originalPrice: originalPrice,
-                stock: variant.soLuongTon || variant.stock || 0,
-                status: variant.trangThai || 1,
-                isDeleted: variant.daXoa || false,
-                createdAt: variant.ngayCapNhat || variant.createdAt || new Date().toISOString()
-              }
-            })
-            
-            // Tạo thông tin sản phẩm chính - chỉ lấy dữ liệu thực từ API
-            const firstVariant = this.productVariants[0]
-            this.product = {
-              id: productIdToMatch,
-              name: foundProduct.tenSanPham || foundProduct.tenChiTiet || foundProduct.name || `Sản phẩm #${productIdToMatch}`,
-              image: firstVariant?.image || foundProduct.duongDanAnh || foundProduct.hinhAnh || '/images/item-1.jpg',
-              price: firstVariant?.price || foundProduct.giaTien || foundProduct.giaBan || 0,
-              originalPrice: firstVariant?.originalPrice || foundProduct.giaGoc || foundProduct.giaNiemYet || 0,
-              stock: firstVariant?.stock || foundProduct.soLuongTon || 0,
-              description: foundProduct.moTa || foundProduct.description || `Chi tiết sản phẩm ${foundProduct.tenSanPham || foundProduct.name}`
-            }
-            
-            console.log('✅ Product processed:', this.product)
-            console.log('✅ Variants processed:', this.productVariants)
-            
-          } else {
-            console.warn('⚠️ No product found for ID:', productId)
-            console.log('🔍 Available products in API:', apiData.map(item => ({
-              sanPhamId: item.sanPhamId,
-              id: item.id,
-              productId: item.productId,
-              chiTietSanPhamId: item.chiTietSanPhamId,
-              name: item.tenSanPham || item.tenChiTiet || item.name
-            })))
-            
-            // Thử tìm sản phẩm với ID gần giống (fuzzy matching)
-            const fuzzyMatch = this.findFuzzyMatch(apiData, productId)
-            if (fuzzyMatch) {
-              console.log('🔍 Found fuzzy match:', fuzzyMatch)
-              foundProduct = fuzzyMatch
-              
-              // Lấy tất cả variants của sản phẩm này
-              const productIdToMatch = foundProduct.sanPhamId || foundProduct.id || foundProduct.productId
-              productVariants = apiData.filter(item => {
-                const itemProductId = item.sanPhamId || item.id || item.productId
-                return itemProductId && itemProductId.toString() === productIdToMatch.toString()
+              console.log('🔍 Checking chi-tiet variant:', {
+                maChiTiet: item.maChiTiet,
+                sanPhamId: itemSanPhamId,
+                kichCoId: item.kichCoId,
+                mauSacId: item.mauSacId,
+                giaTien: item.giaTien,
+                soLuongTon: item.soLuongTon,
+                lookingFor: searchId
               })
               
-              console.log('📦 Found', productVariants.length, 'variants for fuzzy matched product')
-            } else {
-              console.error('❌ No product found even with fuzzy matching')
-              this.$toast?.error('Không tìm thấy sản phẩm với ID: ' + productId)
-              this.$router.push('/products')
-              return
-            }
+              return itemSanPhamId === searchId
+            })
+          } else {
+            // Xử lý dữ liệu từ API san-pham/hien-thi (fallback)
+            productVariants = apiData.filter(item => {
+              const itemSanPhamId = item.maSanPham ? item.maSanPham.toString() : null
+              const searchId = productId.toString()
+              
+              console.log('🔍 Checking san-pham variant:', {
+                maSanPham: item.maSanPham,
+                tenSanPham: item.tenSanPham,
+                giaBan: item.giaBan,
+                soLuongTon: item.soLuongTon,
+                lookingFor: searchId
+              })
+              
+              return itemSanPhamId === searchId
+            })
           }
+          
+          console.log('📦 Found', productVariants.length, 'variants for product ID:', productId)
+          console.log('🔍 Raw variants data:', productVariants)
+          
+          // Validate và sửa dữ liệu màu sắc
+          const validatedVariants = this.validateAndFixColorData(productVariants, isChiTietAPI ? 'chi-tiet' : 'san-pham')
+          console.log('✅ Validated variants:', validatedVariants)
+          
+          if (validatedVariants.length === 0) {
+            console.warn('⚠️ No variants found for product ID:', productId)
+            console.log('🔍 Available product IDs:', [...new Set(apiData.map(item => 
+              isChiTietAPI ? item.sanPhamId : item.maSanPham
+            ))].filter(Boolean))
+            this.$toast?.error('Không tìm thấy sản phẩm với ID: ' + productId)
+            this.$router.push('/products')
+            return
+          }
+          
+          // Xử lý variants theo cấu trúc API tương ứng
+          console.log('🔄 Processing variants with API type:', isChiTietAPI ? 'chi-tiet' : 'san-pham')
+          this.productVariants = validatedVariants.map(variant => {
+            if (isChiTietAPI) {
+              // Xử lý từ API chi-tiet-san-pham/hien-thi
+              const basePrice = variant.giaTien || 0
+              const originalPrice = basePrice
+              
+              console.log('🎨 Chi-tiet variant:', {
+                mauSacId: variant.mauSacId,
+                kichCoId: variant.kichCoId,
+                colorName: this.getColorName(variant.mauSacId),
+                sizeName: this.getSizeName(variant.kichCoId),
+                rawVariant: variant
+              })
+              
+              // Xử lý màu sắc và kích cỡ với fallback
+              const colorId = variant.mauSacId || 1
+              const sizeId = variant.kichCoId || 1
+              const colorName = this.getColorName(colorId)
+              const sizeName = this.getSizeName(sizeId)
+              
+              console.log('🎨 Processed chi-tiet:', {
+                originalMauSacId: variant.mauSacId,
+                originalKichCoId: variant.kichCoId,
+                finalColorId: colorId,
+                finalSizeId: sizeId,
+                colorName: colorName,
+                sizeName: sizeName
+              })
+              
+              return {
+                id: variant.maChiTiet || `${variant.sanPhamId}-${sizeId}-${colorId}`,
+                productId: variant.sanPhamId,
+                sizeId: sizeId,
+                colorId: colorId,
+                image: variant.duongDanAnh || '/images/item-1.jpg',
+                price: basePrice,
+                originalPrice: originalPrice,
+                stock: variant.soLuongTon || 0,
+                status: 1,
+                isDeleted: false,
+                createdAt: new Date().toISOString(),
+                // Lưu tên từ mapping cho chi-tiet API
+                sizeName: sizeName,
+                colorName: colorName
+              }
+            } else {
+              // Xử lý từ API san-pham/hien-thi (fallback)
+              const basePrice = variant.giaBan || 0
+              const originalPrice = basePrice
+              
+              // Tạo unique ID cho size và color từ tên
+              const sizeId = variant.tenKichThuoc ? this.generateIdFromName(variant.tenKichThuoc) : 1
+              const colorId = variant.tenMauSac ? this.generateIdFromName(variant.tenMauSac) : 1
+              
+              console.log('🎨 San-pham variant:', {
+                tenMauSac: variant.tenMauSac,
+                tenKichThuoc: variant.tenKichThuoc,
+                generatedColorId: colorId,
+                generatedSizeId: sizeId
+              })
+              
+              return {
+                id: variant.maSanPham || `${variant.maSanPham}-${sizeId}-${colorId}`,
+                productId: variant.maSanPham,
+                sizeId: sizeId,
+                colorId: colorId,
+                image: variant.duongDanAnh || '/images/item-1.jpg',
+                price: basePrice,
+                originalPrice: originalPrice,
+                stock: variant.soLuongTon || 0,
+                status: 1,
+                isDeleted: false,
+                createdAt: new Date().toISOString(),
+                // Lưu tên gốc để hiển thị
+                sizeName: variant.tenKichThuoc,
+                colorName: variant.tenMauSac
+              }
+            }
+          })
+          
+          // Tạo thông tin sản phẩm chính từ variant đầu tiên
+          const firstVariant = this.productVariants[0]
+          const firstProductData = productVariants[0]
+          
+          // Lấy tên sản phẩm từ API data
+          let productName = `Sản phẩm #${productId}` // Default fallback
+          let productDescription = `Mô tả sản phẩm #${productId}` // Default fallback
+          
+          if (isChiTietAPI) {
+            // Từ API chi-tiet-san-pham, có thể có tên sản phẩm
+            productName = firstProductData.tenSanPham || firstProductData.tenChiTiet || productName
+            productDescription = firstProductData.moTa || productDescription
+          } else {
+            // Từ API san-pham
+            productName = firstProductData.tenSanPham || productName
+            productDescription = firstProductData.moTa || productDescription
+          }
+          
+          this.product = {
+            id: productId,
+            name: productName,
+            image: firstVariant?.image || '/images/item-1.jpg',
+            price: firstVariant?.price || 0,
+            originalPrice: firstVariant?.originalPrice || 0,
+            stock: firstVariant?.stock || 0,
+            description: productDescription
+          }
+          
+          console.log('✅ Product processed:', this.product)
+          console.log('✅ Variants processed:', this.productVariants)
           
         } else {
           console.warn('⚠️ API returned empty data')
@@ -339,7 +419,11 @@ export default {
     },
     setMainImage(img) { this.mainImage = img },
     getColorName(id) {
-      const map = { 1:'Đen',2:'Trắng',3:'Xám',4:'Xanh',5:'Đỏ',6:'Vàng',7:'Hồng',8:'Nâu' }
+      const map = { 
+        1:'Đen', 2:'Trắng', 3:'Xám', 4:'Xanh dương', 5:'Đỏ', 
+        6:'Vàng', 7:'Hồng', 8:'Nâu', 9:'Xanh lá', 10:'Cam',
+        11:'Tím', 12:'Bạc', 13:'Vàng kim', 14:'Xanh navy', 15:'Be'
+      }
       return map[id] || `Màu ${id}`
     },
     getSizeName(id) {
@@ -350,41 +434,69 @@ export default {
       return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v || 0)
     },
     
-    findFuzzyMatch(apiData, productId) {
-      console.log('🔍 Attempting fuzzy match for ID:', productId)
+    generateIdFromName(name) {
+      // Tạo ID từ tên bằng cách hash string
+      if (!name) return 1
       
-      // Thử tìm sản phẩm với ID gần giống
-      const searchId = productId.toString().toLowerCase()
+      let hash = 0
+      for (let i = 0; i < name.length; i++) {
+        const char = name.charCodeAt(i)
+        hash = ((hash << 5) - hash) + char
+        hash = hash & hash // Convert to 32bit integer
+      }
+      return Math.abs(hash) + 1 // Đảm bảo ID > 0
+    },
+    
+    // Method để kiểm tra và sửa dữ liệu màu sắc từ API
+    validateAndFixColorData(variants, apiType) {
+      console.log('🔍 Validating color data for API type:', apiType)
       
-      for (let item of apiData) {
-        const itemSanPhamId = item.sanPhamId ? item.sanPhamId.toString().toLowerCase() : ''
-        const itemId = item.id ? item.id.toString().toLowerCase() : ''
-        const itemProductId = item.productId ? item.productId.toString().toLowerCase() : ''
-        const itemChiTietSanPhamId = item.chiTietSanPhamId ? item.chiTietSanPhamId.toString().toLowerCase() : ''
+      return variants.map((variant, index) => {
+        let fixedVariant = { ...variant }
         
-        // Kiểm tra các trường ID có chứa searchId không
-        if (itemSanPhamId.includes(searchId) || 
-            itemId.includes(searchId) || 
-            itemProductId.includes(searchId) || 
-            itemChiTietSanPhamId.includes(searchId)) {
-          console.log('✅ Fuzzy match found:', {
-            sanPhamId: item.sanPhamId,
-            id: item.id,
-            productId: item.productId,
-            chiTietSanPhamId: item.chiTietSanPhamId,
-            name: item.tenSanPham || item.tenChiTiet || item.name
-          })
-          return item
+        if (apiType === 'chi-tiet') {
+          // Kiểm tra mauSacId và kichCoId
+          if (!variant.mauSacId || variant.mauSacId === null || variant.mauSacId === undefined) {
+            console.warn(`⚠️ Variant ${index}: mauSacId is invalid:`, variant.mauSacId)
+            fixedVariant.mauSacId = 1 // Default color
+          }
+          
+          if (!variant.kichCoId || variant.kichCoId === null || variant.kichCoId === undefined) {
+            console.warn(`⚠️ Variant ${index}: kichCoId is invalid:`, variant.kichCoId)
+            fixedVariant.kichCoId = 1 // Default size
+          }
+          
+          // Kiểm tra giá trị hợp lệ
+          if (variant.mauSacId < 1 || variant.mauSacId > 15) {
+            console.warn(`⚠️ Variant ${index}: mauSacId out of range:`, variant.mauSacId)
+            fixedVariant.mauSacId = Math.max(1, Math.min(15, variant.mauSacId))
+          }
+          
+          if (variant.kichCoId < 1 || variant.kichCoId > 10) {
+            console.warn(`⚠️ Variant ${index}: kichCoId out of range:`, variant.kichCoId)
+            fixedVariant.kichCoId = Math.max(1, Math.min(10, variant.kichCoId))
+          }
+          
+        } else if (apiType === 'san-pham') {
+          // Kiểm tra tenMauSac và tenKichThuoc
+          if (!variant.tenMauSac || variant.tenMauSac === null || variant.tenMauSac === undefined) {
+            console.warn(`⚠️ Variant ${index}: tenMauSac is invalid:`, variant.tenMauSac)
+            fixedVariant.tenMauSac = 'Đen' // Default color
+          }
+          
+          if (!variant.tenKichThuoc || variant.tenKichThuoc === null || variant.tenKichThuoc === undefined) {
+            console.warn(`⚠️ Variant ${index}: tenKichThuoc is invalid:`, variant.tenKichThuoc)
+            fixedVariant.tenKichThuoc = '42' // Default size
+          }
         }
-      }
-      
-      // Nếu không tìm thấy, thử lấy sản phẩm đầu tiên
-      if (apiData.length > 0) {
-        console.log('⚠️ No fuzzy match found, using first product as fallback')
-        return apiData[0]
-      }
-      
-      return null
+        
+        console.log(`✅ Variant ${index} validated:`, {
+          original: variant,
+          fixed: fixedVariant
+        })
+        
+        return fixedVariant
+      })
     }
     
   }

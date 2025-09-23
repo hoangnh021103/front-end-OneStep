@@ -16,11 +16,11 @@ const mutations = {
 
 const actions = {
   async fetchProducts({ commit, dispatch }) {
-    console.log('🔄 Store - Bắt đầu fetch products...')
+    console.log('🔄 Store - Bắt đầu fetch products từ API /san-pham/hien-thi...')
     
     try {
-      const response = await axios.get('/chi-tiet-san-pham/hien-thi')
-      console.log('✅ Store - Chi-tiet-san-pham API Response:', response.data)
+      const response = await axios.get('/san-pham/hien-thi')
+      console.log('✅ Store - San-pham API Response:', response.data)
       
       // Normalize common Spring payload shapes
       const body = response && response.data
@@ -35,8 +35,10 @@ const actions = {
       const apiProducts = Array.isArray(body) ? body : firstArray(body)
       
       if (apiProducts.length === 0) {
-        console.log('⚠️ Store - Chi-tiet-san-pham API trả về dữ liệu rỗng, thử fallback...')
-        throw new Error('No data from chi-tiet-san-pham API')
+        console.log('⚠️ Store - San-pham API trả về dữ liệu rỗng')
+        commit('SET_PRODUCTS', [])
+        dispatch('filterProducts', {})
+        return
       }
       
       const baseURL = (axios && axios.defaults && axios.defaults.baseURL) ? axios.defaults.baseURL.replace(/\/$/, '') : ''
@@ -48,96 +50,119 @@ const actions = {
       }
       
       const mapped = apiProducts.map(p => {
-        // Lấy giá từ ChiTietSanPhamResponse
-        const basePrice = p.giaTien || p.giaBan || p.gia || 0
-        const discountAmount = p.tienGiamGia || 0
-        const originalPrice = basePrice + discountAmount
-        
-        const discountPercent = discountAmount > 0 ? Math.floor((discountAmount / originalPrice) * 100) : 0
+        // Xử lý dữ liệu theo cấu trúc API mới
+        const basePrice = p.giaBan || 0
+        const originalPrice = p.giaBan || 0 // Có thể thêm logic tính giá gốc nếu cần
+        const discountPercent = 0 // Có thể tính từ dữ liệu khác nếu có
         const tags = []
-        if (discountPercent > 0) {
-          tags.push(`-${discountPercent}%`)
-        }
+        
+        // Tạo mảng màu sắc và kích thước từ dữ liệu API
+        const colors = p.tenMauSac ? [p.tenMauSac] : []
+        const sizes = p.tenKichThuoc ? [p.tenKichThuoc] : []
         
         return {
-          // Ưu tiên sanPhamId làm ID chính, sau đó id, cuối cùng là chiTietSanPhamId
-          id: p.sanPhamId || p.id || p.chiTietSanPhamId || Math.random().toString(),
-          code: p.maCode || p.code,
-          name: p.tenSanPham || p.tenChiTiet || 'Unknown Product',
-          description: p.moTa || p.description || '',
-          brand: p.thuongHieuTen || (p.thuongHieu && p.thuongHieu.ten) || '',
+          // Sử dụng maSanPham làm ID chính
+          id: p.maSanPham || p.id || Math.random().toString(),
+          code: p.maCode || '',
+          name: p.tenSanPham || 'Unknown Product',
+          description: p.moTa || '',
+          brand: '', // Có thể lấy từ API khác nếu cần
           price: basePrice,
           originalPrice: originalPrice,
-          image: buildImageUrl(p.duongDanAnh || p.image),
-          rating: p.rating || 5,
-          colors: Array.isArray(p.mauSacList) ? p.mauSacList : (p.colors || []),
-          sizes: Array.isArray(p.kichCoList) ? p.kichCoList : (p.sizes || []),
+          image: buildImageUrl(p.duongDanAnh),
+          rating: 5, // Mặc định rating
+          colors: colors,
+          sizes: sizes,
           tags: tags,
-          category: p.danhMuc || p.category || '',
-          status: p.trangThai || p.status,
-          materialId: p.chatLieuId,
-          soleId: p.deGiayId,
-          styleId: p.kieuDangId,
-          stock: p.soLuongTon || p.tonKho || 0,
-          // Thông tin bổ sung từ chi tiết sản phẩm
-          sanPhamId: p.sanPhamId,
-          chiTietSanPhamId: p.chiTietSanPhamId,
-          productId: p.productId || p.id,
-          giaTien: p.giaTien,
-          tienGiamGia: p.tienGiamGia,
-          soLuongTon: p.soLuongTon
+          category: '', // Có thể lấy từ API khác nếu cần
+          status: 'active', // Mặc định status
+          stock: p.soLuongTon || 0,
+          // Thông tin bổ sung từ API mới
+          maSanPham: p.maSanPham,
+          maCode: p.maCode,
+          tenSanPham: p.tenSanPham,
+          moTa: p.moTa,
+          deGiayId: p.deGiayId,
+          duongDanAnh: p.duongDanAnh,
+          giaBan: p.giaBan,
+          soLuongTon: p.soLuongTon,
+          tenKichThuoc: p.tenKichThuoc,
+          tenMauSac: p.tenMauSac
         }
       })
       
-      console.log('✅ Store - Processed products from chi-tiet-san-pham:', mapped.length)
+      console.log('✅ Store - Processed products from san-pham:', mapped.length)
       
       commit('SET_PRODUCTS', mapped)
       dispatch('filterProducts', {})
     } catch (error) {
-      console.error('❌ Store - Failed to fetch products from chi-tiet-san-pham:', error)
+      console.error('❌ Store - Failed to fetch products from san-pham:', error)
       
-      // Fallback: try to fetch from san-pham if chi-tiet-san-pham fails
+      // Fallback: thử API chi-tiet-san-pham nếu san-pham fails
       try {
-        console.log('📡 Store - Fallback: Gọi API san-pham/hien-thi...')
-        const fallbackResponse = await axios.get('/san-pham/hien-thi')
-        console.log('✅ Store - San-pham API Response:', fallbackResponse.data)
+        console.log('📡 Store - Fallback: Gọi API chi-tiet-san-pham/hien-thi...')
+        const fallbackResponse = await axios.get('/chi-tiet-san-pham/hien-thi')
+        console.log('✅ Store - Chi-tiet-san-pham API Response:', fallbackResponse.data)
         
-        // Process fallback data - chỉ sử dụng dữ liệu thực từ API
-        const fallbackProducts = fallbackResponse.data.map(p => {
-          const basePrice = p.giaBan || p.gia || 0
-          const originalPrice = p.giaGoc || p.giaNiemYet || basePrice
-          const discountPercent = originalPrice > basePrice ? Math.floor(((originalPrice - basePrice) / originalPrice) * 100) : 0
-          const tags = p.tags || []
+        // Process fallback data từ chi-tiet-san-pham
+        const fallbackBody = fallbackResponse && fallbackResponse.data
+        const firstArray = (obj) => {
+          if (!obj || typeof obj !== 'object') return []
+          for (const key of ['data', 'content', 'items', 'result', 'rows', 'list']) {
+            if (Array.isArray(obj[key])) return obj[key]
+          }
+          const anyArray = Object.values(obj).find(v => Array.isArray(v))
+          return Array.isArray(anyArray) ? anyArray : []
+        }
+        const fallbackProducts = Array.isArray(fallbackBody) ? fallbackBody : firstArray(fallbackBody)
+        
+        const baseURL = (axios && axios.defaults && axios.defaults.baseURL) ? axios.defaults.baseURL.replace(/\/$/, '') : ''
+        const buildImageUrl = (imgPath) => {
+          if (!imgPath || typeof imgPath !== 'string') return '/images/item-1.jpg'
+          if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) return imgPath
+          const normalized = imgPath.startsWith('/') ? imgPath : `/${imgPath}`
+          return baseURL ? `${baseURL}${normalized}` : normalized
+        }
+        
+        const mappedFallback = fallbackProducts.map(p => {
+          const basePrice = p.giaTien || p.giaBan || p.gia || 0
+          const discountAmount = p.tienGiamGia || 0
+          const originalPrice = basePrice + discountAmount
+          
+          const discountPercent = discountAmount > 0 ? Math.floor((discountAmount / originalPrice) * 100) : 0
+          const tags = []
           if (discountPercent > 0) {
             tags.push(`-${discountPercent}%`)
           }
           
           return {
-            // Đảm bảo có ID chính
-            id: p.productId || p.id || p.sanPhamId || Math.random().toString(),
+            id: p.sanPhamId || p.id || p.chiTietSanPhamId || Math.random().toString(),
             code: p.maCode || p.code,
-            name: p.tenSanPham || 'Unknown Product',
+            name: p.tenSanPham || p.tenChiTiet || 'Unknown Product',
             description: p.moTa || p.description || '',
             brand: p.thuongHieuTen || (p.thuongHieu && p.thuongHieu.ten) || '',
             price: basePrice,
             originalPrice: originalPrice,
-            image: p.duongDanAnh || '/images/item-1.jpg',
+            image: buildImageUrl(p.duongDanAnh || p.image),
             rating: p.rating || 5,
             colors: Array.isArray(p.mauSacList) ? p.mauSacList : (p.colors || []),
             sizes: Array.isArray(p.kichCoList) ? p.kichCoList : (p.sizes || []),
             tags: tags,
             category: p.danhMuc || p.category || '',
             status: p.trangThai || p.status,
-            stock: p.soLuongTon || 0,
+            stock: p.soLuongTon || p.tonKho || 0,
             // Thông tin bổ sung
             sanPhamId: p.sanPhamId,
+            chiTietSanPhamId: p.chiTietSanPhamId,
             productId: p.productId || p.id,
-            chiTietSanPhamId: p.chiTietSanPhamId
+            giaTien: p.giaTien,
+            tienGiamGia: p.tienGiamGia,
+            soLuongTon: p.soLuongTon
           }
         })
         
-        console.log('✅ Store - Processed products from san-pham fallback:', fallbackProducts.length)
-        commit('SET_PRODUCTS', fallbackProducts)
+        console.log('✅ Store - Processed products from chi-tiet-san-pham fallback:', mappedFallback.length)
+        commit('SET_PRODUCTS', mappedFallback)
         dispatch('filterProducts', {})
         
       } catch (fallbackError) {

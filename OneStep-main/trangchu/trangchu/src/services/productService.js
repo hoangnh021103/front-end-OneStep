@@ -2,11 +2,12 @@ import axios from 'axios'
 
 class ProductService {
   constructor() {
-    this.baseURL = '/chi-tiet-san-pham'
+    this.baseURL = '/san-pham'
+    this.detailBaseURL = '/chi-tiet-san-pham'
   }
 
   /**
-   * Lấy danh sách tất cả sản phẩm từ API
+   * Lấy danh sách tất cả sản phẩm từ API /san-pham/hien-thi
    * @returns {Promise<Array>} Danh sách sản phẩm
    */
   async getAllProducts() {
@@ -14,8 +15,17 @@ class ProductService {
       const response = await axios.get(`${this.baseURL}/hien-thi`)
       return this.normalizeProducts(response.data)
     } catch (error) {
-      console.error('Error fetching products:', error)
-      throw new Error('Không thể tải danh sách sản phẩm')
+      console.error('Error fetching products from san-pham:', error)
+      
+      // Fallback to chi-tiet-san-pham API
+      try {
+        console.log('Fallback: Trying chi-tiet-san-pham API...')
+        const fallbackResponse = await axios.get(`${this.detailBaseURL}/hien-thi`)
+        return this.normalizeProducts(fallbackResponse.data)
+      } catch (fallbackError) {
+        console.error('Error fetching products from chi-tiet-san-pham:', fallbackError)
+        throw new Error('Không thể tải danh sách sản phẩm')
+      }
     }
   }
 
@@ -41,7 +51,7 @@ class ProductService {
    */
   async getProductDetailsBySanPhamId(sanPhamId) {
     try {
-      const response = await axios.get(`${this.baseURL}/hien-thi-theo-san-pham/${sanPhamId}`)
+      const response = await axios.get(`${this.detailBaseURL}/hien-thi-theo-san-pham/${sanPhamId}`)
       console.log(`Chi tiết sản phẩm cho ID ${sanPhamId}:`, response.data)
       return response.data
     } catch (error) {
@@ -169,8 +179,8 @@ class ProductService {
   }
 
   /**
-   * Chuẩn hóa dữ liệu một sản phẩm từ ChiTietSanPhamResponse
-   * @param {Object} product - Sản phẩm thô từ API chi tiết sản phẩm
+   * Chuẩn hóa dữ liệu một sản phẩm từ API
+   * @param {Object} product - Sản phẩm thô từ API
    * @param {Function} buildImageUrl - Hàm xây dựng URL hình ảnh
    * @returns {Object} Sản phẩm đã chuẩn hóa
    */
@@ -185,42 +195,86 @@ class ProductService {
       }
     }
 
-    // Lấy giá từ ChiTietSanPhamResponse
-    const basePrice = product.giaTien || product.giaBan || product.gia || 0
-    const discountAmount = product.tienGiamGia || 0
-    const originalPrice = basePrice + discountAmount
+    // Kiểm tra xem có phải dữ liệu từ API /san-pham/hien-thi không
+    const isSanPhamAPI = product.hasOwnProperty('maSanPham') && product.hasOwnProperty('tenSanPham')
     
-    const discountPercent = discountAmount > 0 ? Math.floor((discountAmount / originalPrice) * 100) : 0
-    const tags = []
-    if (discountPercent > 0) {
-      tags.push(`-${discountPercent}%`)
-    }
+    if (isSanPhamAPI) {
+      // Xử lý dữ liệu từ API /san-pham/hien-thi
+      const basePrice = product.giaBan || 0
+      const originalPrice = product.giaBan || 0
+      const discountPercent = 0
+      const tags = []
+      
+      // Tạo mảng màu sắc và kích thước từ dữ liệu API
+      const colors = product.tenMauSac ? [product.tenMauSac] : []
+      const sizes = product.tenKichThuoc ? [product.tenKichThuoc] : []
+      
+      return {
+        id: product.maSanPham || product.id || Math.random().toString(),
+        code: product.maCode || '',
+        name: product.tenSanPham || 'Unknown Product',
+        description: product.moTa || '',
+        brand: '', // Có thể lấy từ API khác nếu cần
+        price: basePrice,
+        originalPrice: originalPrice,
+        image: buildImageUrl(product.duongDanAnh),
+        rating: 5, // Mặc định rating
+        colors: colors,
+        sizes: sizes,
+        tags: tags,
+        category: '', // Có thể lấy từ API khác nếu cần
+        status: 'active', // Mặc định status
+        stock: product.soLuongTon || 0,
+        // Thông tin bổ sung từ API mới
+        maSanPham: product.maSanPham,
+        maCode: product.maCode,
+        tenSanPham: product.tenSanPham,
+        moTa: product.moTa,
+        deGiayId: product.deGiayId,
+        duongDanAnh: product.duongDanAnh,
+        giaBan: product.giaBan,
+        soLuongTon: product.soLuongTon,
+        tenKichThuoc: product.tenKichThuoc,
+        tenMauSac: product.tenMauSac
+      }
+    } else {
+      // Xử lý dữ liệu từ API chi-tiet-san-pham (fallback)
+      const basePrice = product.giaTien || product.giaBan || product.gia || 0
+      const discountAmount = product.tienGiamGia || 0
+      const originalPrice = basePrice + discountAmount
+      
+      const discountPercent = discountAmount > 0 ? Math.floor((discountAmount / originalPrice) * 100) : 0
+      const tags = []
+      if (discountPercent > 0) {
+        tags.push(`-${discountPercent}%`)
+      }
 
-    return {
-      id: product.id || product.chiTietSanPhamId || Math.random().toString(),
-      code: product.maCode || product.code,
-      name: product.tenSanPham || product.tenChiTiet || 'Unknown Product',
-      description: product.moTa || product.description || '',
-      brand: product.thuongHieuTen || (product.thuongHieu && product.thuongHieu.ten) || '',
-      price: basePrice,
-      originalPrice: originalPrice,
-      image: buildImageUrl(product.duongDanAnh || product.image),
-      rating: product.rating || 5,
-      colors: Array.isArray(product.mauSacList) ? product.mauSacList : (product.colors || []),
-      sizes: Array.isArray(product.kichCoList) ? product.kichCoList : (product.sizes || []),
-      tags: tags,
-      category: product.danhMuc || product.category || '',
-      status: product.trangThai || product.status,
-      materialId: product.chatLieuId,
-      soleId: product.deGiayId,
-      styleId: product.kieuDangId,
-      stock: product.soLuongTon || product.tonKho || 0,
-      // Thông tin bổ sung từ chi tiết sản phẩm
-      sanPhamId: product.sanPhamId,
-      chiTietSanPhamId: product.chiTietSanPhamId,
-      giaTien: product.giaTien,
-      tienGiamGia: product.tienGiamGia,
-      soLuongTon: product.soLuongTon
+      return {
+        id: product.id || product.chiTietSanPhamId || Math.random().toString(),
+        code: product.maCode || product.code,
+        name: product.tenSanPham || product.tenChiTiet || 'Unknown Product',
+        description: product.moTa || product.description || '',
+        brand: product.thuongHieuTen || (product.thuongHieu && product.thuongHieu.ten) || '',
+        price: basePrice,
+        originalPrice: originalPrice,
+        image: buildImageUrl(product.duongDanAnh || product.image),
+        rating: product.rating || 5,
+        colors: Array.isArray(product.mauSacList) ? product.mauSacList : (product.colors || []),
+        sizes: Array.isArray(product.kichCoList) ? product.kichCoList : (product.sizes || []),
+        tags: tags,
+        category: product.danhMuc || product.category || '',
+        status: product.trangThai || product.status,
+        materialId: product.chatLieuId,
+        soleId: product.deGiayId,
+        styleId: product.kieuDangId,
+        stock: product.soLuongTon || product.tonKho || 0,
+        // Thông tin bổ sung từ chi tiết sản phẩm
+        sanPhamId: product.sanPhamId,
+        chiTietSanPhamId: product.chiTietSanPhamId,
+        giaTien: product.giaTien,
+        tienGiamGia: product.tienGiamGia,
+        soLuongTon: product.soLuongTon
+      }
     }
   }
 }

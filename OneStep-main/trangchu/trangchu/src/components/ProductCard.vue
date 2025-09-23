@@ -49,10 +49,11 @@ export default {
     
     goToProductDetail() {
       // Chuyển đến trang chi tiết sản phẩm
-      // Ưu tiên sanPhamId, sau đó id, cuối cùng là chiTietSanPhamId
-      const productId = this.product.sanPhamId || this.product.id || this.product.chiTietSanPhamId
+      // Ưu tiên maSanPham, sau đó sanPhamId, sau đó id, cuối cùng là chiTietSanPhamId
+      const productId = this.product.maSanPham || this.product.sanPhamId || this.product.id || this.product.chiTietSanPhamId
       console.log('🔄 Navigating to product detail:', productId, 'Product:', this.product)
       console.log('🔍 Available IDs:', {
+        maSanPham: this.product.maSanPham,
         sanPhamId: this.product.sanPhamId,
         id: this.product.id,
         chiTietSanPhamId: this.product.chiTietSanPhamId

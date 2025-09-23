@@ -45,9 +45,9 @@
         
         
         <!-- Products Grid -->
-        <div v-if="filteredProducts.length" class="row row-pb-md">
+        <div v-if="paginatedProducts.length" class="row row-pb-md">
           <ProductCard
-            v-for="product in filteredProducts"
+            v-for="product in paginatedProducts"
             :key="product.id"
             :product="product"
             @product-added="handleProductAdded"
@@ -231,29 +231,8 @@ export default {
         category: category || null,
         search: search || null
       };
-      this.applyFilters();
+      this.applyCurrentFilters();
     },
-    handleFilterChanged(filters) {
-      this.currentFilters = { ...this.currentFilters, ...filters };
-      this.applyFilters();
-    },
-    applyFilters() {
-      let filtered = [...this.allProducts];
-      if (this.currentFilters.search) {
-        filtered = filtered.filter(product =>
-          product.name.toLowerCase().includes(this.currentFilters.search.toLowerCase())
-        );
-      }
-      if (this.currentFilters.category) {
-        filtered = filtered.filter(product => product.category === this.currentFilters.category);
-      }
-      filtered = filtered.filter(p => {
-        const price = p.price || 0
-        return price >= this.priceMin && price <= this.priceMax
-      })
-      this.filteredProducts = filtered;
-    },
-    
     handleFilterChanged(filters) {
       console.log('🔍 Filter changed:', filters);
       this.currentFilters = { ...this.currentFilters, ...filters };
