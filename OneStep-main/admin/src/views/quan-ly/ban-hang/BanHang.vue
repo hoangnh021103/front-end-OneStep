@@ -408,7 +408,9 @@
               <span class="font-weight-medium">{{ formatCurrency(deliveryFee) }}</span>
             </div>
             <div v-if="discountAmount > 0" class="d-flex justify-space-between mb-2">
-              <span class="text-body-2">Giảm giá:</span>
+              <span class="text-body-2">
+                Giảm giá{{ selectedVoucher ? ` (${selectedVoucher.ten})` : '' }}:
+              </span>
               <span class="font-weight-medium text-success">-{{ formatCurrency(discountAmount) }}</span>
             </div>
             <v-divider class="my-2"></v-divider>
@@ -475,6 +477,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { khachHangApi } from '@/api/khachHangApi'
 import thanhToanApi from '@/api/thanhToanApi'
+import { voucherApi } from '@/api/voucherApi'
 import { toast } from 'vue3-toastify'
 
 const generateOrderId = () => {
@@ -491,6 +494,7 @@ const searchQuery = ref('')
 const showProductModal = ref(false)
 const discountInfo = ref('')
 const discountType = ref<'success' | 'error' | 'info' | 'warning'>('info')
+const selectedVoucher = ref<any | null>(null)
 
 // Đặt đường dẫn ảnh QR cố định trong thư mục public
 const fixedBankQrUrl = ref<string>('/qr-vcb.png')
@@ -726,10 +730,26 @@ const shippingInfo = computed(() => {
 })
 
 const discountAmount = computed(() => {
-  if (discountCode.value) {
-    if (discountCode.value === 'GIAM10') return subtotal.value * 0.1
-    if (discountCode.value === 'GIAM20') return subtotal.value * 0.2
-    if (discountCode.value === 'GIAM50K') return Math.min(50000, subtotal.value)
+  if (selectedVoucher.value) {
+    const voucher = selectedVoucher.value
+    
+    // Theo database: loai = 0 là phần trăm, loai = 1 là tiền mặt
+    if (voucher.loai === 0) {
+      // Giảm theo phần trăm
+      return subtotal.value * (voucher.giaTri / 100)
+    } else if (voucher.loai === 1) {
+      // Giảm theo số tiền cố định
+      return Math.min(voucher.giaTri, subtotal.value)
+    } else {
+      // Fallback - nếu không rõ loại, thử đoán từ giá trị
+      if (voucher.giaTri <= 100) {
+        // Có thể là phần trăm
+        return subtotal.value * (voucher.giaTri / 100)
+      } else {
+        // Có thể là số tiền cố định
+        return Math.min(voucher.giaTri, subtotal.value)
+      }
+    }
   }
   return 0
 })
@@ -941,33 +961,86 @@ const clearCart = () => {
   }
 }
 
-const applyDiscount = () => {
-  const code = (discountCode.value || '').trim().toUpperCase()
+
+const applyDiscount = async () => {
+  const code = (discountCode.value || '').trim()
   if (!code) {
     discountInfo.value = ''
     discountType.value = 'info'
+    selectedVoucher.value = null
     saveOrderState()
     showToast('Đã xóa mã giảm giá', 'info')
     return
   }
   
-  if (code === 'GIAM10') {
-    discountInfo.value = 'Áp dụng giảm giá 10%'
-    discountType.value = 'success'
-    showToast('✅ Áp dụng mã giảm giá 10% thành công!', 'success')
-  } else if (code === 'GIAM20') {
-    discountInfo.value = 'Áp dụng giảm giá 20%'
-    discountType.value = 'success'
-    showToast('✅ Áp dụng mã giảm giá 20% thành công!', 'success')
-  } else if (code === 'GIAM50K') {
-    discountInfo.value = 'Áp dụng giảm giá 50.000 VNĐ'
-    discountType.value = 'success'
-    showToast('✅ Áp dụng mã giảm giá 50.000đ thành công!', 'success')
-  } else {
-    discountInfo.value = 'Mã giảm giá không hợp lệ'
+  try {
+    showToast('Đang kiểm tra mã giảm giá...', 'info')
+    
+    // Gọi API validate voucher
+    const result = await voucherApi.validate(code)
+    
+    if (result.success && result.voucher) {
+      const voucher = result.voucher
+      
+      // Kiểm tra điều kiện đơn hàng tối thiểu
+      const totalOrderAmount = cartItems.value.reduce((sum, item) => sum + item.tongTien, 0)
+      if (voucher.dieuKien && voucher.dieuKien > totalOrderAmount) {
+        discountInfo.value = `Đơn hàng tối thiểu ${formatCurrency(voucher.dieuKien)}`
+        discountType.value = 'warning'
+        showToast(`❌ Đơn hàng chưa đạt điều kiện tối thiểu ${formatCurrency(voucher.dieuKien)}!`, 'warning')
+        selectedVoucher.value = null
+        saveOrderState()
+        return
+      }
+      
+      // Validation bổ sung cho voucher
+      if (!voucher.giaTri || voucher.giaTri <= 0) {
+        discountInfo.value = 'Voucher có giá trị không hợp lệ'
+        discountType.value = 'error'
+        selectedVoucher.value = null
+        showToast('❌ Voucher có giá trị không hợp lệ!', 'error')
+        saveOrderState()
+        return
+      }
+      
+      // Lưu thông tin voucher
+      selectedVoucher.value = voucher
+      
+      // Hiển thị thông tin voucher chi tiết
+      let discountText = ''
+      if (voucher.loai === 0) {
+        // Giảm theo phần trăm
+        discountText = `${voucher.giaTri}%`
+      } else if (voucher.loai === 1) {
+        // Giảm theo số tiền cố định
+        discountText = formatCurrency(voucher.giaTri)
+      } else {
+        // Fallback - nếu không rõ loại, thử đoán từ giá trị
+        if (voucher.giaTri <= 100) {
+          discountText = `${voucher.giaTri}%`
+        } else {
+          discountText = formatCurrency(voucher.giaTri)
+        }
+      }
+      discountInfo.value = `✅ ${voucher.ten} - Giảm ${discountText} (Còn ${voucher.soLuong} lượt)`
+      discountType.value = 'success'
+      showToast(`✅ Áp dụng mã giảm giá "${voucher.ten}" thành công!`, 'success')
+      
+    } else {
+      discountInfo.value = 'Mã giảm giá không hợp lệ hoặc đã hết hạn'
+      discountType.value = 'error'
+      selectedVoucher.value = null
+      showToast('❌ Mã giảm giá không hợp lệ hoặc đã hết hạn!', 'error')
+    }
+    
+  } catch (error) {
+    console.error('Lỗi khi validate voucher:', error)
+    discountInfo.value = 'Lỗi khi kiểm tra mã giảm giá'
     discountType.value = 'error'
-    showToast('❌ Mã giảm giá không hợp lệ!', 'error')
+    selectedVoucher.value = null
+    showToast('❌ Lỗi khi kiểm tra mã giảm giá!', 'error')
   }
+  
   saveOrderState()
 }
 
@@ -1054,6 +1127,17 @@ const processPayment = async () => {
     // Gửi lên server
     const result = await thanhToanApi.taoHoaDon(orderData)
     console.log('Kết quả từ server:', result)
+    
+    // Nếu có voucher được sử dụng, trừ số lượng voucher
+    if (selectedVoucher.value && discountCode.value) {
+      try {
+        await voucherApi.use(discountCode.value)
+        console.log('✅ Đã trừ số lượng voucher:', discountCode.value)
+      } catch (voucherError) {
+        console.error('Lỗi khi trừ số lượng voucher:', voucherError)
+        // Không throw error vì đơn hàng đã thành công, chỉ log lỗi
+      }
+    }
     
     // Thông báo thành công và hiển thị dialog hỏi in hóa đơn
     showToast(`✅ Thanh toán thành công! Mã đơn hàng: ${orderId.value}`, 'success')
@@ -1239,6 +1323,8 @@ const resetForm = () => {
   wards.value = []
   discountCode.value = ''
   discountInfo.value = ''
+  discountType.value = 'info'
+  selectedVoucher.value = null
   isDelivery.value = false
   paymentMethod.value = 'cash'
   orderId.value = generateOrderId()
