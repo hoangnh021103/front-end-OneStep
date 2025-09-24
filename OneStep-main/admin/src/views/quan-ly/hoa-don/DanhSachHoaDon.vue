@@ -146,6 +146,15 @@
               <span class="error-message" v-if="errors.tongTien">{{ errors.tongTien }}</span>
             </div>
             <div class="form-group">
+              <label>Ngày Tạo</label>
+              <input
+                v-model="newInvoice.ngayCapNhat"
+                type="date"
+                readonly
+                style="background-color: #f5f5f5; cursor: not-allowed;"
+              />
+            </div>
+            <div class="form-group">
               <label>Ngày Xác Nhận *</label>
               <input
                 v-model="newInvoice.ngayXacNhan"
@@ -555,14 +564,15 @@ export default {
         this.errors.hoTen = "Tên khách hàng là bắt buộc.";
         isValid = false;
       }
-      if (!this.newInvoice.soDienThoai.trim()) {
-        this.errors.soDienThoai = "Số điện thoại là bắt buộc.";
-        isValid = false;
-      }
-      if (this.newInvoice.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.newInvoice.email)) {
-        this.errors.email = "Email không hợp lệ.";
-        isValid = false;
-      }
+      // Bỏ validation SĐT và Email
+      // if (!this.newInvoice.soDienThoai.trim()) {
+      //   this.errors.soDienThoai = "Số điện thoại là bắt buộc.";
+      //   isValid = false;
+      // }
+      // if (this.newInvoice.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.newInvoice.email)) {
+      //   this.errors.email = "Email không hợp lệ.";
+      //   isValid = false;
+      // }
       if (this.newInvoice.tongTien <= 0) {
         this.errors.tongTien = "Tổng tiền phải lớn hơn 0.";
         isValid = false;
@@ -757,6 +767,23 @@ export default {
       // Ghi đè lại status để đảm bảo đúng
       this.newInvoice.status = displayStatus;
       this.newInvoice.originalTrangThai = originalTrangThai;
+      
+      // Đảm bảo ngày tạo được format đúng cho input date
+      if (this.newInvoice.ngayCapNhat) {
+        // Chuyển đổi ngày từ format database sang format YYYY-MM-DD cho input date
+        const date = new Date(this.newInvoice.ngayCapNhat);
+        if (!isNaN(date.getTime())) {
+          this.newInvoice.ngayCapNhat = date.toISOString().split('T')[0];
+        }
+      }
+      
+      // Đảm bảo ngày xác nhận được format đúng nếu có
+      if (this.newInvoice.ngayXacNhan) {
+        const date = new Date(this.newInvoice.ngayXacNhan);
+        if (!isNaN(date.getTime())) {
+          this.newInvoice.ngayXacNhan = date.toISOString().split('T')[0];
+        }
+      }
       
       console.log('📋 NewInvoice sau khi set:', {
         id: this.newInvoice.id,
