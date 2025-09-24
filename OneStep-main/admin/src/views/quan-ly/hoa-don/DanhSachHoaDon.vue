@@ -22,13 +22,13 @@
       </div>
       <!-- Tabs -->
       <div class="tab-section">
-        <span :class="['tab', {active: tab==='all'}]" @click="tab='all'">Tất cả <span class="tab-badge">{{ filteredInvoices.length }}</span></span>
-        <span :class="['tab', {active: tab==='pending'}]" @click="tab='pending'">Chờ xác nhận <span class="tab-badge">{{ countByStatus('pending') }}</span></span>
-        <span :class="['tab', {active: tab==='confirmed'}]" @click="tab='confirmed'">Đã xác nhận <span class="tab-badge">{{ countByStatus('confirmed') }}</span></span>
-        <span :class="['tab', {active: tab==='shipping'}]" @click="tab='shipping'">Chờ giao <span class="tab-badge">{{ countByStatus('shipping') }}</span></span>
-        <span :class="['tab', {active: tab==='delivering'}]" @click="tab='delivering'">Đang giao <span class="tab-badge">{{ countByStatus('delivering') }}</span></span>
-        <span :class="['tab', {active: tab==='done'}]" @click="tab='done'">Hoàn thành <span class="tab-badge">{{ countByStatus('done') }}</span></span>
-        <span :class="['tab', {active: tab==='cancel'}]" @click="tab='cancel'">Đã hủy <span class="tab-badge">{{ countByStatus('cancel') }}</span></span>
+        <span :class="['tab', {active: tab==='all'}]" @click="changeTab('all')">Tất cả <span class="tab-badge">{{ filteredInvoices.length }}</span></span>
+        <span :class="['tab', {active: tab==='pending'}]" @click="changeTab('pending')">Chờ xác nhận <span class="tab-badge">{{ countByStatus('pending') }}</span></span>
+        <span :class="['tab', {active: tab==='confirmed'}]" @click="changeTab('confirmed')">Đã xác nhận <span class="tab-badge">{{ countByStatus('confirmed') }}</span></span>
+        <span :class="['tab', {active: tab==='shipping'}]" @click="changeTab('shipping')">Chờ giao <span class="tab-badge">{{ countByStatus('shipping') }}</span></span>
+        <span :class="['tab', {active: tab==='delivering'}]" @click="changeTab('delivering')">Đang giao <span class="tab-badge">{{ countByStatus('delivering') }}</span></span>
+        <span :class="['tab', {active: tab==='done'}]" @click="changeTab('done')">Hoàn thành <span class="tab-badge">{{ countByStatus('done') }}</span></span>
+        <span :class="['tab', {active: tab==='cancel'}]" @click="changeTab('cancel')">Đã hủy <span class="tab-badge">{{ countByStatus('cancel') }}</span></span>
       </div>
       <!-- Table -->
       <div class="table-section">
@@ -67,7 +67,7 @@
               </td>
               <td>{{ inv.email }}</td>
               <td>{{ formatCurrency(inv.tongTien) }}</td>
-              <td>{{ formatDate(inv.ngayXacNhan) }}</td>
+              <td>{{ formatDate(inv.ngayCapNhat) }}</td>
               <td>
                 <span :class="['status-badge', inv.statusClass]">{{ inv.statusLabel }}</span>
               </td>
@@ -223,12 +223,13 @@ export default {
         loaiDon: 0,
         ghiChu: "",
         maDon: "",
-        trangThai: 1, // Thay thế cho status
+        trangThai: 1, // Giá trị gốc từ database
         ngayCapNhat: "",
         nguoiTao: "",
         nguoiCapNhat: "",
         daXoa: 0,
-        status: "pending" // Chỉ dùng cho form UI
+        status: "pending", // Chỉ dùng cho form UI
+        originalTrangThai: 1 // Giữ lại giá trị gốc để debug
       },
       errors: {
         maDon: "",
@@ -245,41 +246,127 @@ export default {
   computed: {
     filteredInvoices() {
       const keyword = this.search.toLowerCase();
-      return this.invoices
+      const filtered = this.invoices
         .filter(inv => {
           const matchSearch = this.search === '' ||
             (inv.hoTen && inv.hoTen.toLowerCase().includes(keyword)) ||
             (inv.soDienThoai && inv.soDienThoai.includes(keyword)) ||
             (inv.maDon && inv.maDon.toLowerCase().includes(keyword)) ||
             (inv.email && inv.email.toLowerCase().includes(keyword));
-          const matchFrom = !this.fromDate || inv.ngayXacNhan >= this.fromDate;
-          const matchTo = !this.toDate || inv.ngayXacNhan <= this.toDate;
+          const matchFrom = !this.fromDate || inv.ngayCapNhat >= this.fromDate;
+          const matchTo = !this.toDate || inv.ngayCapNhat <= this.toDate;
           return matchSearch && matchFrom && matchTo;
         })
-        .map(inv => ({
-          ...inv,
-          status: this.mapTrangThaiToStatus(inv.trangThai || 1), // Chuyển từ số sang string
-          statusLabel: this.statusLabel(this.mapTrangThaiToStatus(inv.trangThai || 1)),
-          statusClass: this.mapTrangThaiToStatus(inv.trangThai || 1)
-        }));
+        .map(inv => {
+          console.log('🔍 Processing invoice in filteredInvoices:', {
+            id: inv.id,
+            maDon: inv.maDon,
+            trangThai: inv.trangThai,
+            trangThaiType: typeof inv.trangThai
+          });
+          
+          const status = this.mapTrangThaiToStatus(inv.trangThai || 1);
+          const result = {
+            ...inv,
+            status: status, // Chuyển từ số sang string
+            statusLabel: this.statusLabel(status),
+            statusClass: status,
+            originalTrangThai: inv.trangThai // Giữ lại giá trị gốc từ database
+          };
+          
+          // Debug: Kiểm tra xem originalTrangThai có được set đúng không
+          console.log('🔍 Setting originalTrangThai:', {
+            'inv.trangThai': inv.trangThai,
+            'result.originalTrangThai': result.originalTrangThai,
+            'result.trangThai': result.trangThai
+          });
+          
+          // Debug đặc biệt cho trạng thái chờ xác nhận
+          if (inv.trangThai === 1) {
+            console.log('🚨 DEBUG CHỜ XÁC NHẬN trong filteredInvoices:', {
+              'inv.trangThai': inv.trangThai,
+              'status': status,
+              'statusLabel': this.statusLabel(status),
+              'result.originalTrangThai': result.originalTrangThai,
+              'inv.maDon': inv.maDon
+            });
+          }
+          
+          // Debug đặc biệt cho trạng thái đã xác nhận
+          if (inv.trangThai === 2) {
+            console.log('🚨 DEBUG ĐÃ XÁC NHẬN trong filteredInvoices:', {
+              'inv.trangThai': inv.trangThai,
+              'status': status,
+              'statusLabel': this.statusLabel(status),
+              'result.originalTrangThai': result.originalTrangThai,
+              'inv.maDon': inv.maDon
+            });
+          }
+          
+          console.log('🔍 Result after mapping:', {
+            id: result.id,
+            maDon: result.maDon,
+            trangThai: result.trangThai,
+            originalTrangThai: result.originalTrangThai,
+            status: result.status
+          });
+          
+          return result;
+        });
+      
+      console.log('🔍 Filtered invoices:', filtered.length, 'items');
+      console.log('📋 Status mapping:', filtered.map(inv => ({ 
+        id: inv.id, 
+        maDon: inv.maDon, 
+        trangThai: inv.trangThai,
+        originalTrangThai: inv.originalTrangThai, 
+        status: inv.status,
+        statusLabel: inv.statusLabel
+      })));
+      
+      return filtered;
     },
     tabInvoices() {
-      if (this.tab === 'all') return this.filteredInvoices;
-      return this.filteredInvoices.filter(inv => inv.status === this.tab);
+      console.log('🔍 tabInvoices computed:', {
+        'tab': this.tab,
+        'filteredInvoices.length': this.filteredInvoices.length
+      });
+      
+      let result;
+      if (this.tab === 'all') {
+        result = this.filteredInvoices;
+      } else {
+        result = this.filteredInvoices.filter(inv => inv.status === this.tab);
+      }
+      
+      console.log('🔍 tabInvoices result:', {
+        'result.length': result.length,
+        'first few invoices': result.slice(0, 3).map(inv => ({
+          id: inv.id,
+          maDon: inv.maDon,
+          status: inv.status
+        }))
+      });
+      
+      return result;
     }
   },
   methods: {
     // Map từ số trạng thái API sang string cho UI
     mapTrangThaiToStatus(trangThai) {
+      console.log('🔍 mapTrangThaiToStatus called with:', trangThai, 'type:', typeof trangThai);
+      let result;
       switch (trangThai) {
-        case 1: return 'pending';    // Chờ xác nhận
-        case 2: return 'confirmed';  // Đã xác nhận
-        case 3: return 'shipping';   // Chờ giao
-        case 4: return 'delivering'; // Đang giao
-        case 5: return 'done';       // Hoàn thành
-        case 6: return 'cancel';     // Đã hủy
-        default: return 'pending';
+        case 1: result = 'pending'; break;    // Chờ xác nhận
+        case 2: result = 'confirmed'; break;  // Đã xác nhận
+        case 3: result = 'shipping'; break;   // Chờ giao
+        case 4: result = 'delivering'; break; // Đang giao
+        case 5: result = 'done'; break;       // Hoàn thành
+        case 6: result = 'cancel'; break;     // Đã hủy
+        default: result = 'pending'; break;
       }
+      console.log('🔍 mapTrangThaiToStatus result:', result);
+      return result;
     },
     
     // Map từ string UI sang số cho API
@@ -297,11 +384,46 @@ export default {
 
     async fetchInvoices() {
       try {
+        console.log('🔄 Đang tải danh sách hóa đơn...');
         const res = await axios.get("http://localhost:8080/don-hang/hien-thi");
         this.invoices = Array.isArray(res.data) ? res.data : res.data.data || [];
-        console.log('API Response:', this.invoices);
+        console.log('✅ Đã tải danh sách hóa đơn:', this.invoices.length, 'hóa đơn');
+        console.log('📊 Chi tiết hóa đơn từ API:', this.invoices);
+        
+        // Debug: Kiểm tra trạng thái của từng hóa đơn
+        this.invoices.forEach((inv, index) => {
+          console.log(`📄 Invoice ${index + 1}:`, {
+            id: inv.id,
+            maDon: inv.maDon,
+            trangThai: inv.trangThai,
+            trangThaiType: typeof inv.trangThai
+          });
+          
+          // Debug đặc biệt cho trạng thái chờ xác nhận
+          if (inv.trangThai === 1) {
+            console.log('🚨 DEBUG CHỜ XÁC NHẬN trong fetchInvoices:', {
+              'inv.trangThai': inv.trangThai,
+              'inv.maDon': inv.maDon,
+              'inv.id': inv.id
+            });
+          }
+          
+          // Debug đặc biệt cho trạng thái đã xác nhận
+          if (inv.trangThai === 2) {
+            console.log('🚨 DEBUG ĐÃ XÁC NHẬN trong fetchInvoices:', {
+              'inv.trangThai': inv.trangThai,
+              'inv.maDon': inv.maDon,
+              'inv.id': inv.id
+            });
+          }
+        });
+        
+        // Force update để đảm bảo UI được refresh
+        this.$nextTick(() => {
+          this.$forceUpdate();
+        });
       } catch (err) {
-        console.error('Error fetching invoices:', err);
+        console.error('❌ Error fetching invoices:', err);
         toast.error('Không thể tải danh sách hóa đơn');
       }
     },
@@ -328,7 +450,47 @@ export default {
     },
 
     countByStatus(status) {
-      return this.filteredInvoices.filter(inv => inv.status === status).length;
+      const count = this.filteredInvoices.filter(inv => inv.status === status).length;
+      console.log(`📊 Count for status "${status}":`, count);
+      return count;
+    },
+
+    // Method để debug trạng thái hóa đơn
+    debugInvoiceStatus() {
+      console.log('🔍 === DEBUG INVOICE STATUS ===');
+      console.log('📋 Total invoices:', this.invoices.length);
+      console.log('🔍 Filtered invoices:', this.filteredInvoices.length);
+      console.log('📊 Tab invoices:', this.tabInvoices.length);
+      console.log('🏷️ Current tab:', this.tab);
+      
+      const statusCounts = {};
+      this.filteredInvoices.forEach(inv => {
+        const status = inv.status;
+        statusCounts[status] = (statusCounts[status] || 0) + 1;
+      });
+      console.log('📈 Status counts:', statusCounts);
+      
+      // Hiển thị chi tiết từng hóa đơn
+      this.filteredInvoices.forEach(inv => {
+        console.log(`📄 Invoice ${inv.maDon}:`, {
+          id: inv.id,
+          trangThai: inv.originalTrangThai || inv.trangThai,
+          status: inv.status,
+          statusLabel: inv.statusLabel
+        });
+      });
+    },
+
+    // Method để thay đổi tab và refresh
+    changeTab(newTab) {
+      console.log('🔄 Changing tab from', this.tab, 'to', newTab);
+      this.tab = newTab;
+      
+      // Force update để đảm bảo UI được refresh
+      this.$nextTick(() => {
+        this.$forceUpdate();
+        console.log('✅ Tab changed to:', newTab, 'with', this.tabInvoices.length, 'invoices');
+      });
     },
 
     formatDate(date) {
@@ -425,18 +587,83 @@ export default {
         const updatedInvoice = { ...this.newInvoice };
         
         // Chuyển đổi status string thành trangThai number cho API
-        updatedInvoice.trangThai = this.mapStatusToTrangThai(updatedInvoice.status);
-        delete updatedInvoice.status; // Xóa trường status không cần thiết cho API
+        const originalTrangThai = updatedInvoice.originalTrangThai || updatedInvoice.trangThai;
+        const newTrangThai = this.mapStatusToTrangThai(updatedInvoice.status);
         
-        await axios.put(`http://localhost:8080/don-hang/update/${updatedInvoice.id}`, updatedInvoice);
+        console.log('🔄 Chuyển đổi trạng thái:');
+        console.log('  - Trạng thái gốc:', originalTrangThai, 'type:', typeof originalTrangThai);
+        console.log('  - Status trong form:', updatedInvoice.status, 'type:', typeof updatedInvoice.status);
+        console.log('  - Trạng thái mới:', newTrangThai, 'type:', typeof newTrangThai);
+        console.log('  - Mã đơn:', updatedInvoice.maDon);
+        console.log('  - ID:', updatedInvoice.id);
+        
+        // Debug đặc biệt cho trạng thái chờ xác nhận
+        if (originalTrangThai === 1) {
+          console.log('🚨 DEBUG CHỜ XÁC NHẬN trong handleSubmit:', {
+            'originalTrangThai': originalTrangThai,
+            'newTrangThai': newTrangThai,
+            'status': updatedInvoice.status,
+            'maDon': updatedInvoice.maDon
+          });
+        }
+        
+        // Đảm bảo newTrangThai là Integer, không phải String
+        updatedInvoice.trangThai = parseInt(newTrangThai);
+        delete updatedInvoice.status; // Xóa trường status không cần thiết cho API
+        delete updatedInvoice.originalTrangThai; // Xóa trường debug không cần thiết cho API
+        
+        // Đảm bảo các field bắt buộc có giá trị
+        if (!updatedInvoice.ngayCapNhat) {
+          updatedInvoice.ngayCapNhat = new Date().toISOString().split('T')[0];
+        }
+        if (!updatedInvoice.daXoa) {
+          updatedInvoice.daXoa = 0;
+        }
+        
+        // Đảm bảo các field số là Integer
+        updatedInvoice.khachHangId = parseInt(updatedInvoice.khachHangId) || 0;
+        updatedInvoice.nhanVienId = parseInt(updatedInvoice.nhanVienId) || 0;
+        updatedInvoice.voucherId = parseInt(updatedInvoice.voucherId) || 0;
+        updatedInvoice.diaChiId = parseInt(updatedInvoice.diaChiId) || 0;
+        updatedInvoice.tongTienGoc = parseFloat(updatedInvoice.tongTienGoc) || 0;
+        updatedInvoice.tienGiam = parseFloat(updatedInvoice.tienGiam) || 0;
+        updatedInvoice.tongTien = parseFloat(updatedInvoice.tongTien) || 0;
+        updatedInvoice.tienShip = parseFloat(updatedInvoice.tienShip) || 0;
+        updatedInvoice.loaiDon = parseInt(updatedInvoice.loaiDon) || 0;
+        updatedInvoice.daXoa = parseInt(updatedInvoice.daXoa) || 0;
+        
+        console.log('🔄 Đang cập nhật hóa đơn:', updatedInvoice);
+        console.log('🔍 Trạng thái cuối cùng:', updatedInvoice.trangThai, 'type:', typeof updatedInvoice.trangThai);
+        
+        const response = await axios.put(`http://localhost:8080/don-hang/update/${updatedInvoice.id}`, updatedInvoice);
+        console.log('✅ Cập nhật thành công:', response.data);
         
         // Refresh danh sách sau khi update
         await this.fetchInvoices();
+        
+        // Đảm bảo tab hiện tại được refresh
+        this.$forceUpdate();
+        
         toast.success("Cập nhật hóa đơn thành công!");
         this.closeModal();
       } catch (err) {
-        console.error('Error updating invoice:', err);
-        toast.error("Lỗi khi cập nhật hóa đơn!");
+        console.error('❌ Error updating invoice:', err);
+        console.error('❌ Error response:', err.response?.data);
+        console.error('❌ Error status:', err.response?.status);
+        
+        // Hiển thị thông báo lỗi chi tiết hơn
+        let errorMessage = "Lỗi khi cập nhật hóa đơn!";
+        if (err.response?.status === 400) {
+          if (err.response?.data?.message) {
+            errorMessage = err.response.data.message;
+          } else {
+            errorMessage = "Không thể chuyển đổi trạng thái này. Vui lòng kiểm tra quy tắc chuyển đổi trạng thái.";
+          }
+        } else if (err.response?.data?.message) {
+          errorMessage = err.response.data.message;
+        }
+        
+        toast.error(errorMessage);
       } finally {
         this.isSubmitting = false;
       }
@@ -444,12 +671,118 @@ export default {
 
     editInvoice(index) {
       this.editIndex = index;
-      const invoice = { ...this.filteredInvoices[index] };
       
-      // Chuyển đổi trangThai thành status string cho form
-      invoice.status = this.mapTrangThaiToStatus(invoice.trangThai || 1);
+      // Sử dụng tabInvoices thay vì filteredInvoices để đảm bảo đúng index
+      const invoice = { ...this.tabInvoices[index] };
       
-      this.newInvoice = invoice;
+      console.log('✏️ Editing invoice:', invoice);
+      console.log('📊 Index được truyền:', index);
+      console.log('📊 Tab hiện tại:', this.tab);
+      console.log('📊 Số lượng tabInvoices:', this.tabInvoices.length);
+      console.log('📊 Số lượng filteredInvoices:', this.filteredInvoices.length);
+      console.log('📊 Original trangThai:', invoice.originalTrangThai);
+      console.log('📊 Current trangThai:', invoice.trangThai);
+      
+      // Sử dụng originalTrangThai để đảm bảo lấy đúng giá trị gốc từ database
+      // Nếu không có originalTrangThai, sử dụng trangThai từ invoice gốc
+      const originalTrangThai = invoice.originalTrangThai || invoice.trangThai || 1;
+      const displayStatus = this.mapTrangThaiToStatus(originalTrangThai);
+      
+      console.log('🔍 Debug originalTrangThai:', {
+        'invoice.originalTrangThai': invoice.originalTrangThai,
+        'invoice.trangThai': invoice.trangThai,
+        'final originalTrangThai': originalTrangThai,
+        'displayStatus': displayStatus
+      });
+      
+      // Debug đặc biệt cho trạng thái chờ xác nhận
+      if (originalTrangThai === 1) {
+        console.log('🚨 DEBUG CHỜ XÁC NHẬN:', {
+          'originalTrangThai': originalTrangThai,
+          'displayStatus': displayStatus,
+          'statusLabel': this.statusLabel(displayStatus),
+          'invoice.statusLabel': invoice.statusLabel,
+          'invoice.maDon': invoice.maDon
+        });
+      }
+      
+      // Debug đặc biệt cho trạng thái đã xác nhận
+      if (originalTrangThai === 2) {
+        console.log('🚨 DEBUG ĐÃ XÁC NHẬN:', {
+          'originalTrangThai': originalTrangThai,
+          'displayStatus': displayStatus,
+          'statusLabel': this.statusLabel(displayStatus),
+          'invoice.statusLabel': invoice.statusLabel,
+          'invoice.maDon': invoice.maDon
+        });
+      }
+      
+      console.log('🔄 Modal hiển thị trạng thái:', displayStatus, 'từ originalTrangThai:', originalTrangThai);
+      console.log('🔍 Status mapping check:', {
+        originalTrangThai: originalTrangThai,
+        mappedStatus: displayStatus,
+        statusLabel: this.statusLabel(displayStatus)
+      });
+      
+      // Reset newInvoice về trạng thái ban đầu
+      this.newInvoice = {
+        khachHangId: 0,
+        nhanVienId: 0,
+        voucherId: 0,
+        diaChiId: 0,
+        soDienThoai: "",
+        hoTen: "",
+        email: "",
+        tongTienGoc: 0,
+        tienGiam: 0,
+        tongTien: 0,
+        tienShip: 0,
+        ngayXacNhan: "",
+        ngayDuKien: "",
+        ngayNhan: "",
+        loaiDon: 0,
+        ghiChu: "",
+        maDon: "",
+        trangThai: originalTrangThai,
+        ngayCapNhat: "",
+        nguoiTao: "",
+        nguoiCapNhat: "",
+        daXoa: 0,
+        status: displayStatus, // Set đúng status từ mapping
+        originalTrangThai: originalTrangThai
+      };
+      
+      // Copy tất cả thông tin từ invoice gốc
+      Object.assign(this.newInvoice, invoice);
+      // Ghi đè lại status để đảm bảo đúng
+      this.newInvoice.status = displayStatus;
+      this.newInvoice.originalTrangThai = originalTrangThai;
+      
+      console.log('📋 NewInvoice sau khi set:', {
+        id: this.newInvoice.id,
+        maDon: this.newInvoice.maDon,
+        trangThai: this.newInvoice.trangThai,
+        originalTrangThai: this.newInvoice.originalTrangThai,
+        status: this.newInvoice.status
+      });
+      
+      // Debug: So sánh trạng thái trong danh sách vs modal
+      console.log('🔍 So sánh trạng thái:', {
+        'Trong danh sách (statusLabel)': invoice.statusLabel,
+        'Trong danh sách (status)': invoice.status,
+        'Trong modal (status)': this.newInvoice.status,
+        'Trong modal (statusLabel)': this.statusLabel(this.newInvoice.status)
+      });
+      
+      // Debug: Kiểm tra xem có đúng hóa đơn không
+      console.log('🔍 Kiểm tra hóa đơn:', {
+        'Index được click': index,
+        'Mã đơn trong danh sách': invoice.maDon,
+        'ID trong danh sách': invoice.id,
+        'Mã đơn trong modal': this.newInvoice.maDon,
+        'ID trong modal': this.newInvoice.id
+      });
+      
       this.errors = {
         maDon: "",
         hoTen: "",
@@ -460,6 +793,13 @@ export default {
         ngayXacNhan: "",
         status: ""
       };
+      
+      // Force update để đảm bảo UI được refresh
+      this.$nextTick(() => {
+        this.$forceUpdate();
+        console.log('🔄 Force update completed, status should be:', this.newInvoice.status);
+      });
+      
       this.showModal = true;
     }
   },

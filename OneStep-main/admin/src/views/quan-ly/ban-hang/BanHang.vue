@@ -60,7 +60,11 @@
             <h4 class="text-subtitle-1 font-weight-bold mb-2">Kết quả tìm kiếm:</h4>
             <v-row>
               <v-col v-for="product in searchResults" :key="product.id" cols="12" md="6" lg="4">
-                <v-card elevation="1" class="product-card" @click="addToCart(product)">
+                <v-card 
+                  elevation="1" 
+                  class="product-card" 
+                  :class="{ 'disabled-card': product.trangThai === 0 || product.tonKho <= 0 }"
+                  @click="addToCart(product)">
                   <v-img :src="product.anh" height="120" cover></v-img>
                   <v-card-text class="pa-3">
                     <h4 class="text-subtitle-2 font-weight-bold">{{ product.tenSanPham }}</h4>
@@ -75,6 +79,14 @@
                     </div>
                     <div class="mt-1 text-caption text-grey-darken-1">
                       Tồn kho: {{ product.tonKho !== null ? product.tonKho : 'Chưa có' }}
+                    </div>
+                    <div class="mt-1">
+                      <v-chip 
+                        size="small" 
+                        :color="(product.trangThai === 1 && product.tonKho > 0) ? 'success' : 'error'"
+                        variant="flat">
+                        {{ (product.trangThai === 1 && product.tonKho > 0) ? 'Còn hàng' : 'Hết hàng' }}
+                      </v-chip>
                     </div>
                   </v-card-text>
                 </v-card>
@@ -197,6 +209,7 @@
                   <div class="text-caption text-grey-darken-1 mt-1">Phí ship được tính theo khoảng cách thực tế</div>
                 </v-card>
               </div>
+
             </div>
           </div>
 
@@ -226,13 +239,6 @@
             <div class="d-flex justify-space-between">
               <span>Phí giao hàng:</span>
               <span class="font-weight-medium">{{ formatCurrency(deliveryFee) }}</span>
-            </div>
-            <div v-if="shippingInfo" class="shipping-info-highlight">
-              <div class="d-flex align-center mb-1">
-                <v-icon size="small" class="mr-2">mdi-truck-delivery</v-icon>
-                <span class="text-caption font-weight-bold">{{ shippingInfo.zone }}</span>
-              </div>
-              <div class="text-caption">Từ {{ shippingInfo.from }} → {{ shippingInfo.distance }}km</div>
             </div>
           </div>
           <div class="mb-2">
@@ -316,10 +322,21 @@
                 {{ item.tonKho !== null ? item.tonKho : 'Chưa có' }}
               </span>
             </template>
+            <template #item.trangThai="{ item }">
+              <v-chip :color="(item.trangThai === 1 && item.tonKho > 0) ? 'success' : 'error'" size="small" variant="flat">
+                {{ (item.trangThai === 1 && item.tonKho > 0) ? 'Còn hàng' : 'Hết hàng' }}
+              </v-chip>
+            </template>
             <template #item.thaoTac="{ item }">
-              <v-btn color="success" variant="elevated" size="small" @click="addToCart(item); showProductModal = false" class="action-btn">
+              <v-btn 
+                :color="(item.trangThai === 1 && item.tonKho > 0) ? 'success' : 'grey'" 
+                :disabled="item.trangThai === 0 || item.tonKho <= 0"
+                variant="elevated" 
+                size="small" 
+                @click="addToCart(item); showProductModal = false" 
+                class="action-btn">
                 <v-icon size="small" class="mr-1">mdi-plus</v-icon>
-                Thêm
+                {{ (item.trangThai === 1 && item.tonKho > 0) ? 'Thêm' : 'Hết hàng' }}
               </v-btn>
             </template>
           </v-data-table>
@@ -600,6 +617,7 @@ const productModalHeaders = [
   { title: 'Tên sản phẩm', key: 'tenSanPham', sortable: false },
   { title: 'Giá bán', key: 'giaBan', sortable: false, width: '120px' },
   { title: 'Tồn kho', key: 'tonKho', sortable: false, width: '100px' },
+  { title: 'Trạng thái', key: 'trangThai', sortable: false, width: '100px' },
   { title: 'Thao tác', key: 'thaoTac', sortable: false, width: '100px' }
 ]
 
@@ -612,8 +630,7 @@ const customerHeaders = [
 ]
 
 const detailAddressRules = [
-  (v: string) => !!v || 'Vui lòng nhập địa chỉ chi tiết',
-  (v: string) => v.length >= 10 || 'Địa chỉ chi tiết phải có ít nhất 10 ký tự'
+  (v: string) => !!v || 'Vui lòng nhập địa chỉ chi tiết'
 ]
 
 const subtotal = computed(() => {
@@ -664,61 +681,152 @@ const warehouseLocation = {
 }
 
 const calculateDistanceFromWarehouse = (provinceCode: string) => {
-  const distances: { [key: string]: number } = {
-    'HN': 0,
-    'HP': 70,
-    'HD': 45,
-    'NB': 45,
-    'TH': 70,
-    'NA': 120,
-    'DN': 450,
-    'HCM': 900
+  // Kiểm tra nếu là Hà Nội thì miễn phí ship
+  if (provinceCode === '01' || provinceCode === '1' || provinceCode === 'Hà Nội' || provinceCode === 'Thành phố Hà Nội') {
+    console.log(`Hanoi detected: ${provinceCode} -> 0km (Free shipping)`)
+    return 0
   }
-  return distances[provinceCode] || 400
+  
+  // Sử dụng mã tỉnh từ API provinces.open-api.vn (dạng số)
+  const distances: { [key: string]: number } = {
+    // Miền Bắc
+    '01': 0,      // Hà Nội
+    '1': 0,       // Hà Nội (alternative code)
+    '31': 70,     // Hải Phòng
+    '30': 45,     // Hải Dương
+    '67': 45,     // Nam Định
+    '34': 70,     // Thái Bình
+    '18': 120,    // Ninh Bình
+    '24': 50,     // Bắc Giang
+    '06': 60,     // Bắc Ninh
+    '22': 80,     // Quảng Ninh
+    '38': 90,     // Lào Cai
+    '15': 100,    // Yên Bái
+    '19': 110,    // Thái Nguyên
+    '08': 120,    // Tuyên Quang
+    '03': 130,    // Hà Giang
+    '04': 140,    // Cao Bằng
+    '05': 150,    // Bắc Kạn
+    '25': 160,    // Phú Thọ
+    '26': 170,    // Vĩnh Phúc
+    '14': 180,    // Sơn La
+    '11': 190,    // Điện Biên
+    '12': 200,    // Lai Châu
+    '17': 210,    // Hòa Bình
+    
+    // Miền Trung
+    '35': 250,    // Thanh Hóa
+    '40': 300,    // Nghệ An
+    '23': 350,    // Hà Tĩnh
+    '44': 400,    // Quảng Bình
+    '45': 450,    // Quảng Trị
+    '46': 500,    // Thừa Thiên Huế
+    '48': 550,    // Đà Nẵng
+    '49': 600,    // Quảng Nam
+    '51': 650,    // Quảng Ngãi
+    '52': 700,    // Bình Định
+    '54': 750,    // Phú Yên
+    '56': 800,    // Khánh Hòa
+    '58': 850,    // Ninh Thuận
+    '60': 900,    // Bình Thuận
+    
+    // Miền Nam
+    '79': 950,    // TP. Hồ Chí Minh
+    '74': 1000,   // Bình Dương
+    '75': 1050,   // Đồng Nai
+    '77': 1100,   // Bà Rịa - Vũng Tàu
+    '82': 1150,   // Tiền Giang
+    '83': 1200,   // Bến Tre
+    '84': 1250,   // Trà Vinh
+    '86': 1300,   // Vĩnh Long
+    '89': 1350,   // An Giang
+    '91': 1400,   // Kiên Giang
+    '96': 1450,   // Cà Mau
+    '87': 1500,   // Đồng Tháp
+    '93': 1550,   // Hậu Giang
+    '94': 1600,   // Sóc Trăng
+    '95': 1650,   // Bạc Liêu
+    '92': 1700,   // Cần Thơ
+    '68': 1750,   // Lâm Đồng
+    '70': 1800,   // Bình Phước
+    '72': 1850,   // Tây Ninh
+    '80': 1900,   // Long An
+    '93': 1550    // Hậu Giang
+  }
+  
+  // Debug: Log để kiểm tra
+  console.log(`Province code: ${provinceCode}, Distance: ${distances[provinceCode] || 'not found'}`)
+  
+  // Nếu không tìm thấy tỉnh, tính khoảng cách mặc định
+  if (!distances[provinceCode]) {
+    return 200
+  }
+  
+  return distances[provinceCode]
 }
 
 const calculateShippingFee = (distance: number) => {
-  // Hệ thống tính phí ship theo khoảng cách giống Shopee
-  if (distance <= 3) return 0        // Miễn phí nội thành gần
-  if (distance <= 5) return 8000     // Nội thành (3-5km)
-  if (distance <= 10) return 12000   // Nội thành xa (5-10km)
-  if (distance <= 15) return 15000   // Ngoại thành gần (10-15km)
-  if (distance <= 20) return 18000   // Ngoại thành (15-20km)
-  if (distance <= 30) return 22000   // Ngoại thành xa (20-30km)
-  if (distance <= 50) return 25000   // Tỉnh lân cận gần (30-50km)
-  if (distance <= 80) return 28000   // Tỉnh lân cận (50-80km)
-  if (distance <= 120) return 32000  // Tỉnh lân cận xa (80-120km)
-  if (distance <= 200) return 35000  // Miền gần (120-200km)
-  if (distance <= 300) return 38000  // Miền trung bình (200-300km)
-  if (distance <= 500) return 42000  // Miền xa (300-500km)
-  if (distance <= 700) return 45000  // Toàn quốc gần (500-700km)
-  if (distance <= 1000) return 48000 // Toàn quốc xa (700-1000km)
-  return 52000                       // Toàn quốc rất xa (>1000km)
+  // Bảng phí ship theo khoảng cách
+  if (distance <= 3) return 0        // 0-3km: Miễn phí
+  if (distance <= 5) return 8000     // 3-5km: 8k
+  if (distance <= 10) return 12000    // 5-10km: 12k
+  if (distance <= 15) return 15000    // 10-15km: 15k
+  if (distance <= 20) return 18000   // 15-20km: 18k
+  if (distance <= 30) return 22000   // 20-30km: 22k
+  if (distance <= 50) return 25000   // 30-50km: 25k
+  if (distance <= 80) return 28000    // 50-80km: 28k
+  if (distance <= 120) return 32000  // 80-120km: 32k
+  if (distance <= 200) return 35000   // 120-200km: 35k
+  if (distance <= 300) return 38000  // 200-300km: 38k
+  if (distance <= 500) return 42000  // 300-500km: 42k
+  if (distance <= 700) return 45000  // 500-700km: 45k
+  if (distance <= 1000) return 48000 // 700-1000km: 48k
+  return 52000                        // >1000km: 52k
 }
 
 const getShippingZone = (distance: number) => {
-  // Cập nhật zones theo hệ thống phí ship mới
+  // Cập nhật zones theo bảng phí ship mới
   if (distance <= 3) return 'Nội thành (miễn phí)'
-  if (distance <= 5) return 'Nội thành gần'
-  if (distance <= 10) return 'Nội thành xa'
-  if (distance <= 15) return 'Ngoại thành gần'
-  if (distance <= 20) return 'Ngoại thành'
-  if (distance <= 30) return 'Ngoại thành xa'
-  if (distance <= 50) return 'Tỉnh lân cận gần'
-  if (distance <= 80) return 'Tỉnh lân cận'
-  if (distance <= 120) return 'Tỉnh lân cận xa'
-  if (distance <= 200) return 'Miền gần'
-  if (distance <= 300) return 'Miền trung bình'
-  if (distance <= 500) return 'Miền xa'
-  if (distance <= 700) return 'Toàn quốc gần'
-  if (distance <= 1000) return 'Toàn quốc xa'
-  return 'Toàn quốc rất xa'
+  if (distance <= 5) return 'Nội thành gần (8k)'
+  if (distance <= 10) return 'Nội thành xa (12k)'
+  if (distance <= 15) return 'Ngoại thành gần (15k)'
+  if (distance <= 20) return 'Ngoại thành (18k)'
+  if (distance <= 30) return 'Ngoại thành xa (22k)'
+  if (distance <= 50) return 'Tỉnh lân cận gần (25k)'
+  if (distance <= 80) return 'Tỉnh lân cận (28k)'
+  if (distance <= 120) return 'Tỉnh lân cận xa (32k)'
+  if (distance <= 200) return 'Miền gần (35k)'
+  if (distance <= 300) return 'Miền trung bình (38k)'
+  if (distance <= 500) return 'Miền xa (42k)'
+  if (distance <= 700) return 'Toàn quốc gần (45k)'
+  if (distance <= 1000) return 'Toàn quốc xa (48k)'
+  return 'Toàn quốc rất xa (52k)'
+}
+
+const getEstimatedDeliveryTime = (distance: number) => {
+  let baseDays = 1
+  
+  // Tính số ngày cơ bản theo khoảng cách
+  if (distance <= 20) baseDays = 1
+  else if (distance <= 50) baseDays = 2
+  else if (distance <= 120) baseDays = 3
+  else if (distance <= 300) baseDays = 4
+  else if (distance <= 500) baseDays = 5
+  else baseDays = 6
+
+  return `${baseDays} ngày`
 }
 
 const deliveryFee = computed(() => {
   if (!isDelivery.value || !selectedProvince.value) return 0
   const distance = calculateDistanceFromWarehouse(selectedProvince.value)
-  return calculateShippingFee(distance)
+  const fee = calculateShippingFee(distance)
+  console.log(`=== SHIPPING DEBUG ===`)
+  console.log(`Selected Province: ${selectedProvince.value}`)
+  console.log(`Distance: ${distance}km`)
+  console.log(`Fee: ${fee}đ`)
+  console.log(`=====================`)
+  return fee
 })
 
 const shippingInfo = computed(() => {
@@ -726,7 +834,14 @@ const shippingInfo = computed(() => {
   const distance = calculateDistanceFromWarehouse(selectedProvince.value)
   const fee = calculateShippingFee(distance)
   const zone = getShippingZone(distance)
-  return { zone, distance, fee, from: warehouseLocation.name }
+  const estimatedTime = getEstimatedDeliveryTime(distance)
+  return { 
+    zone, 
+    distance, 
+    fee, 
+    from: warehouseLocation.name,
+    estimatedTime
+  }
 })
 
 const discountAmount = computed(() => {
@@ -920,6 +1035,12 @@ const saveQuickCustomer = async () => {
 }
 
 const addToCart = (product: any) => {
+  // Kiểm tra tồn kho trước khi thêm vào giỏ hàng
+  if (product.trangThai === 0 || product.tonKho <= 0) {
+    showToast(`Sản phẩm ${product.tenSanPham} đã hết hàng!`, 'error')
+    return
+  }
+  
   // Điều hướng sang trang chọn size/màu
   sessionStorage.setItem('selectedProduct', JSON.stringify(product))
   showToast(`Đã chọn sản phẩm: ${product.tenSanPham}`, 'info')
@@ -1095,24 +1216,24 @@ const processPayment = async () => {
       chiTietDonHang: cartItems.value.map(item => {
         console.log('🔍 Item để gửi:', item)
         
-        // Lấy chiTietSanPhamId từ item (đã được set khi thêm vào giỏ)
-        const sanPhamId = item.chiTietSanPhamId || item.id
+        // Sử dụng chiTietSanPhamId từ item (đã được set đúng từ API thanh-toan/san-pham)
+        const chiTietSanPhamId = item.chiTietSanPhamId || item.id
         
-        console.log('🔍 sanPhamId được chọn:', sanPhamId)
+        console.log('🔍 chiTietSanPhamId được chọn:', chiTietSanPhamId)
         console.log('🔍 Item data:', {
           chiTietSanPhamId: item.chiTietSanPhamId,
           id: item.id,
           maSanPham: item.maSanPham
         })
         
-        const finalSanPhamId = parseInt(String(sanPhamId))
+        const finalChiTietSanPhamId = parseInt(String(chiTietSanPhamId))
         
-        if (!finalSanPhamId || isNaN(finalSanPhamId)) {
+        if (!finalChiTietSanPhamId || isNaN(finalChiTietSanPhamId)) {
           throw new Error(`Sản phẩm "${item.tenSanPham}" không có ID hợp lệ`)
         }
         
         return {
-          sanPhamId: finalSanPhamId,
+          sanPhamId: finalChiTietSanPhamId, // Gửi chiTietSanPhamId qua sanPhamId
           soLuong: parseInt(String(item.soLuong)) || 1,
           donGia: parseFloat(String(item.giaBan)) || 0.0,
           thanhTien: parseFloat(String(item.tongTien)) || 0.0,
@@ -1141,6 +1262,11 @@ const processPayment = async () => {
     
     // Thông báo thành công và hiển thị dialog hỏi in hóa đơn
     showToast(`✅ Thanh toán thành công! Mã đơn hàng: ${orderId.value}`, 'success')
+    
+    // Refresh danh sách sản phẩm để cập nhật trạng thái hết hàng
+    if (allProducts.value.length > 0) {
+      await fetchProducts()
+    }
     
     // Hiển thị dialog hỏi có muốn in hóa đơn không
     setTimeout(() => {
@@ -1248,11 +1374,7 @@ const generateReceiptContent = () => {
         ${isDelivery.value ? `
         <div class="shipping-detail">
           <div class="item"><span>Phí giao hàng:</span><span>${formatCurrency(deliveryFee.value)}</span></div>
-          ${shippingInfo.value ? `
-          <p><strong>Khu vực:</strong> ${shippingInfo.value.zone}</p>
-          <p><strong>Khoảng cách:</strong> Từ ${shippingInfo.value.from} → ${shippingInfo.value.distance}km</p>
           <p><strong>Phí ship được tính theo khoảng cách thực tế</strong></p>
-          ` : ''}
         </div>
         ` : ''}
         ${discountAmount.value > 0 ? `
@@ -1353,10 +1475,10 @@ const fetchProducts = async () => {
   allProducts.value = [] // Reset dữ liệu cũ
   
   try {
-    // Gọi API sản phẩm chung với đầy đủ thông tin từ database
-    console.log('📞 Gọi API SẢN PHẨM: http://localhost:8080/san-pham/hien-thi')
+    // Gọi API chi tiết sản phẩm cho bán hàng (có chiTietSanPhamId)
+    console.log('📞 Gọi API SẢN PHẨM: http://localhost:8080/thanh-toan/san-pham')
     
-    const response = await fetch('http://localhost:8080/san-pham/hien-thi', {
+    const response = await fetch('http://localhost:8080/thanh-toan/san-pham', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -1385,18 +1507,19 @@ const fetchProducts = async () => {
       return
     }
     
-    // Map dữ liệu từ API san-pham/hien-thi (đã bổ sung thông tin chi tiết)
+    // Map dữ liệu từ API thanh-toan/san-pham (có chiTietSanPhamId)
     const mappedProducts = products.map((item, index) => {
-      console.log(`🔄 Mapping SAN PHAM ${index + 1}:`, item)
+      console.log(`🔄 Mapping CHI TIET SAN PHAM ${index + 1}:`, item)
       return {
-        id: item.maSanPham, // Sử dụng maSanPham làm ID
-        maSanPham: item.maCode,
+        id: item.id, // Đây là chiTietSanPhamId
+        chiTietSanPhamId: item.chiTietSanPhamId, // Chi tiết sản phẩm ID
+        maSanPham: item.maCode, // Mã sản phẩm
         tenSanPham: item.tenSanPham,
         anh: item.duongDanAnh,
-        giaBan: item.giaBan, // Từ chi tiết sản phẩm
-        mauSac: item.tenMauSac, // Từ chi tiết sản phẩm
-        kichThuoc: item.tenKichThuoc, // Từ chi tiết sản phẩm
-        tonKho: item.soLuongTon, // Từ chi tiết sản phẩm
+        giaBan: item.giaBan,
+        mauSac: item.tenMauSac,
+        kichThuoc: item.tenKichThuoc,
+        tonKho: item.soLuongTon,
         trangThai: item.trangThai
       }
     })
@@ -1436,8 +1559,8 @@ onMounted(async () => {
       } else {
         const newItem = { 
           stt: cartItemId++, 
-          id: chosen.id, 
-          chiTietSanPhamId: chosen.chiTietSanPhamId || chosen.id,
+          id: chosen.id, // chiTietSanPhamId
+          chiTietSanPhamId: chosen.id, // chiTietSanPhamId từ API thanh-toan/san-pham
           maSanPham: chosen.maSanPham, 
           tenSanPham: chosen.tenSanPham, 
           anh: chosen.anh, 
@@ -1477,6 +1600,16 @@ onMounted(async () => {
   transition: all 0.3s ease;
   border-radius: 12px;
   overflow: hidden;
+}
+
+.disabled-card {
+  opacity: 0.6;
+  cursor: not-allowed;
+  filter: grayscale(50%);
+}
+
+.disabled-card:hover {
+  transform: none !important;
 }
 
 .product-card:hover {

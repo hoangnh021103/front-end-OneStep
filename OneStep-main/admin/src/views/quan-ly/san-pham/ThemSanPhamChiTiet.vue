@@ -207,7 +207,7 @@ export default {
             mauSacId: chiTiet.mauSacId || 0,
             giaTien: chiTiet.giaTien || 0,
             soLuongTon: chiTiet.soLuongTon || 0,
-            trangThai: chiTiet.trangThai || 1,
+            trangThai: chiTiet.trangThai !== null && chiTiet.trangThai !== undefined ? chiTiet.trangThai : 1,
           };
           this.isEditing = true; // Đảm bảo isEditing được đặt thành true khi sửa
           console.log('Đang chỉnh sửa sản phẩm chi tiết, isEditing:', this.isEditing);

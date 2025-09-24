@@ -199,7 +199,7 @@ export default {
             chatLieuId: sanPham.chatLieuId || 0,
             deGiayId: sanPham.deGiayId || 0,
             duongDanAnh: null, // Không set file vào form
-            trangThai: sanPham.trangThai || 1,
+            trangThai: sanPham.trangThai !== null && sanPham.trangThai !== undefined ? sanPham.trangThai : 1,
             ngayCapNhat: sanPham.ngayCapNhat || new Date().toISOString().split('T')[0],
             daXoa: sanPham.daXoa || 0,
           };
