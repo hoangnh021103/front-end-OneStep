@@ -7,6 +7,7 @@ import Contact from '../views/Contact.vue'
 import ProductDetail from '../views/ProductDetail.vue'
 import Checkout from '../views/Checkout.vue'
 import OrderComplete from '../views/OrderComplete.vue'
+import OrderTracking from '../views/OrderTracking.vue'
 import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
 
@@ -51,6 +52,11 @@ const routes = [
     path: '/order-complete',
     name: 'OrderComplete',
     component: OrderComplete
+  },
+  {
+    path: '/orders',
+    name: 'OrderTracking',
+    component: OrderTracking
   },
   {
     path: '/login',

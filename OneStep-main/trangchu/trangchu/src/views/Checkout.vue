@@ -644,6 +644,7 @@ export default {
     ...mapActions('cart', ['clearCart']),
     ...mapActions('payment', ['createPayment', 'fetchPaymentMethods', 'setPendingPayment', 'updatePayment']),
     ...mapActions('order', ['setCurrentOrder']),
+    ...mapActions('orders', ['createOrderFromCheckout']),
     
     // Load updated prices from API
     async loadUpdatedPrices() {
@@ -731,9 +732,9 @@ export default {
     },
     
     // Lưu thông tin đơn hàng vào store
-    saveOrderInfo() {
+    async saveOrderInfo() {
       const orderData = {
-        orderNumber: 'GD' + Date.now().toString().slice(-8),
+        orderNumber: 'ORD' + Date.now().toString().slice(-8),
         orderDate: new Date().toISOString(),
         orderTotal: this.updatedCartTotal,
         shippingFee: this.shippingFee,
@@ -747,7 +748,7 @@ export default {
           address: this.form.address,
           city: this.form.city,
           district: this.form.district,
-          note: this.form.note
+          note: this.form.notes
         },
         items: this.displayCartItems.map(item => ({
           id: item.id,
@@ -766,7 +767,17 @@ export default {
       }
       
       console.log('💾 Lưu thông tin đơn hàng:', orderData)
+      
+      // Lưu vào order store (cũ)
       this.setCurrentOrder(orderData)
+      
+      // Tạo đơn hàng mới trong orders store
+      try {
+        await this.createOrderFromCheckout(orderData)
+        console.log('✅ Đơn hàng mới đã được tạo thành công!')
+      } catch (error) {
+        console.error('❌ Lỗi khi tạo đơn hàng mới:', error)
+      }
     },
     
     async submitOrder() {
@@ -865,7 +876,7 @@ export default {
         }
         
         // Lưu thông tin đơn hàng vào store
-        this.saveOrderInfo()
+        await this.saveOrderInfo()
         
         // Hoàn tất thanh toán
         this.isSubmitting = false
@@ -928,7 +939,7 @@ export default {
         }
         
         // Lưu thông tin đơn hàng vào store
-        this.saveOrderInfo()
+        await this.saveOrderInfo()
         
         // Hoàn tất đơn hàng
         this.isSubmitting = false

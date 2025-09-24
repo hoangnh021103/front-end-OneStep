@@ -6,6 +6,7 @@ import productDetails from './modules/productDetails'
 import auth from './modules/auth'
 import payment from './modules/payment'
 import order from './modules/order'
+import orders from './modules/orders'
 
 export default createStore({
   modules: {
@@ -15,6 +16,7 @@ export default createStore({
     productDetails,
     auth,
     payment,
-    order
+    order,
+    orders
   }
 })

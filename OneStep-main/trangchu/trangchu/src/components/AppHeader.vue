@@ -45,6 +45,10 @@
                 </template>
               </div>
               <div class="cart-section">
+                <router-link to="/orders" class="order-tracking-link">
+                  <i class="icon-truck"></i> 
+                  <span class="order-text">Theo dõi đơn hàng</span>
+                </router-link>
                 <router-link to="/cart" class="cart-link">
                   <i class="icon-shopping-cart"></i> 
                   <span class="cart-text">Giỏ hàng</span>
@@ -183,7 +187,33 @@ export default {
 .cart-section {
   display: flex;
   align-items: center;
+  gap: 10px;
   flex-shrink: 0;
+}
+
+.order-tracking-link {
+  background: #28a745;
+  color: white !important;
+  padding: 12px 20px;
+  border-radius: 8px;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.order-tracking-link:hover {
+  background: #218838;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+  color: white !important;
+}
+
+.order-text {
+  font-size: 14px;
 }
 
 .cart-link {
@@ -389,6 +419,17 @@ export default {
   
   .cart-section {
     justify-content: center;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .order-tracking-link {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+  
+  .order-text {
+    display: none;
   }
   
   .cart-link {

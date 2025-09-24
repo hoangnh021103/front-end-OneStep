@@ -394,8 +394,8 @@ export default {
       }
     },
     addProductToCart() {
-      if (!this.selectedVariant) return this.$toast?.error('Chọn màu và size!')
-      if (this.currentStock <= 0) return this.$toast?.error('Hết hàng!')
+      if (!this.selectedVariant) return this.showErrorToast('Vui lòng chọn màu và kích thước!')
+      if (this.currentStock <= 0) return this.showErrorToast('Sản phẩm đã hết hàng!')
 
       const item = {
         ...this.product,
@@ -409,8 +409,146 @@ export default {
         stock: this.currentStock
       }
       this.addToCart(item)
-      this.$toast?.success('Đã thêm vào giỏ hàng')
-      this.$router.push('/cart')
+      this.showSuccessToast()
+      
+      // Chuyển đến giỏ hàng sau 1.5 giây
+      setTimeout(() => {
+        this.$router.push('/cart')
+      }, 1500)
+    },
+    
+    showSuccessToast() {
+      console.log('🛒 Showing success toast for product detail')
+      
+      // Tạo toast notification thành công với inline styles
+      const toast = document.createElement('div')
+      toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #4CAF50, #45a049);
+        color: white;
+        padding: 20px 24px;
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        z-index: 99999;
+        max-width: 400px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        cursor: pointer;
+        transform: translateX(100%);
+        opacity: 0;
+        transition: all 0.4s ease-out;
+      `
+      
+      toast.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <span style="font-size: 24px; animation: bounce 0.6s ease-in-out;">🛒</span>
+          <div style="flex: 1;">
+            <div style="font-size: 16px; font-weight: 600; margin-bottom: 4px;">Thêm vào giỏ hàng thành công!</div>
+            <div style="font-size: 14px; opacity: 0.9;">Đang chuyển đến giỏ hàng...</div>
+          </div>
+        </div>
+      `
+      
+      // Thêm toast vào body
+      document.body.appendChild(toast)
+      
+      // Trigger animation
+      setTimeout(() => {
+        toast.style.transform = 'translateX(0)'
+        toast.style.opacity = '1'
+      }, 10)
+      
+      // Tự động xóa toast sau 2 giây
+      setTimeout(() => {
+        toast.style.transform = 'translateX(100%)'
+        toast.style.opacity = '0'
+        setTimeout(() => {
+          if (toast.parentNode) {
+            toast.parentNode.removeChild(toast)
+          }
+        }, 400)
+      }, 2000)
+      
+      // Click để đóng toast
+      toast.addEventListener('click', () => {
+        toast.style.transform = 'translateX(100%)'
+        toast.style.opacity = '0'
+        setTimeout(() => {
+          if (toast.parentNode) {
+            toast.parentNode.removeChild(toast)
+          }
+        }, 400)
+      })
+      
+      console.log('✅ Product detail toast created and added to DOM')
+    },
+    
+    showErrorToast(message) {
+      console.log('⚠️ Showing error toast:', message)
+      
+      // Tạo toast notification lỗi với inline styles
+      const toast = document.createElement('div')
+      toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #f44336, #d32f2f);
+        color: white;
+        padding: 20px 24px;
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        z-index: 99999;
+        max-width: 400px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        cursor: pointer;
+        transform: translateX(100%);
+        opacity: 0;
+        transition: all 0.4s ease-out;
+      `
+      
+      toast.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <span style="font-size: 24px;">⚠️</span>
+          <div style="flex: 1;">
+            <div style="font-size: 16px; font-weight: 600; margin-bottom: 4px;">Có lỗi xảy ra!</div>
+            <div style="font-size: 14px; opacity: 0.9;">${message}</div>
+          </div>
+        </div>
+      `
+      
+      // Thêm toast vào body
+      document.body.appendChild(toast)
+      
+      // Trigger animation
+      setTimeout(() => {
+        toast.style.transform = 'translateX(0)'
+        toast.style.opacity = '1'
+      }, 10)
+      
+      // Tự động xóa toast sau 4 giây
+      setTimeout(() => {
+        toast.style.transform = 'translateX(100%)'
+        toast.style.opacity = '0'
+        setTimeout(() => {
+          if (toast.parentNode) {
+            toast.parentNode.removeChild(toast)
+          }
+        }, 400)
+      }, 4000)
+      
+      // Click để đóng toast
+      toast.addEventListener('click', () => {
+        toast.style.transform = 'translateX(100%)'
+        toast.style.opacity = '0'
+        setTimeout(() => {
+          if (toast.parentNode) {
+            toast.parentNode.removeChild(toast)
+          }
+        }, 400)
+      })
+      
+      console.log('✅ Error toast created and added to DOM')
     },
     setMainImage(img) { this.mainImage = img },
     getColorName(id) {

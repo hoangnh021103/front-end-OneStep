@@ -162,6 +162,12 @@
                     <i class="icon-copy"></i> Sao chép
                   </button>
                 </div>
+                
+                <div class="tracking-actions">
+                  <router-link to="/orders" class="btn btn-primary">
+                    <i class="icon-truck"></i> Xem đơn hàng của tôi
+                  </router-link>
+                </div>
               </div>
               
               <div class="tracking-info">
@@ -213,7 +219,7 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
 
 export default {
   name: 'OrderComplete',
@@ -230,14 +236,19 @@ export default {
     ...mapGetters('products', ['allProducts']),
     ...mapGetters('payment', ['currentPayment']),
     ...mapGetters('cart', ['cartTotal']),
-    ...mapGetters('order', ['currentOrder'])
+    ...mapGetters('order', ['currentOrder']),
+    ...mapGetters('orders', ['orders'])
   },
   mounted() {
     this.generateOrderInfo()
     this.loadRecommendedProducts()
   },
   methods: {
-    generateOrderInfo() {
+    ...mapActions('orders', ['loadOrders']),
+
+    async generateOrderInfo() {
+      // Load orders để đảm bảo có dữ liệu mới nhất
+      await this.loadOrders()
       // Ưu tiên sử dụng thông tin từ order store
       if (this.currentOrder && this.currentOrder.orderNumber) {
         this.orderNumber = this.currentOrder.orderNumber
@@ -643,6 +654,16 @@ export default {
 .input-group .form-control {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
+}
+
+.tracking-actions {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.tracking-actions .btn {
+  padding: 12px 24px;
+  font-weight: 600;
 }
 
 .tracking-info {

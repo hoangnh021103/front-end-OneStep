@@ -164,6 +164,7 @@ const actions = {
 const getters = {
   isAuthenticated: state => state.isAuthenticated,
   currentUser: state => state.user,
+  userId: state => state.user?.id || null,
   userFullName: state => state.user?.fullName || '',
   userEmail: state => state.user?.email || '',
   userPhone: state => state.user?.phone || ''

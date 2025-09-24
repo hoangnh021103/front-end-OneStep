@@ -1,9 +1,6 @@
 <template>
   <div class="col-lg-3 mb-4 text-center">
     <div class="product-entry border animate-fade-in-up">
-      <div class="product-tags" :data-colors="product.colors.join(',')" :data-sizes="product.sizes.join(',')">
-        <span v-for="tag in product.tags" :key="tag" :class="getTagClass(tag)">{{ tag }}</span>
-      </div>
       <a href="#" class="prod-img" @click.prevent="goToProductDetail">
         <img :src="product.image" class="img-fluid" :alt="product.name">
       </a>
@@ -78,8 +75,80 @@ export default {
     addToCart() {
       // Gọi action addToCart từ store với tham số là sản phẩm hiện tại
       this.$store.dispatch('cart/addToCart', this.product)
-      // Show success message
+      
+      // Hiển thị thông báo thành công
+      this.showSuccessToast()
+      
+      // Emit event cho parent component
       this.$emit('product-added', this.product)
+    },
+    
+    showSuccessToast() {
+      console.log('🛒 Showing success toast for:', this.product.name || this.product.tenSanPham)
+      
+      // Tạo toast notification với inline styles để đảm bảo hiển thị
+      const toast = document.createElement('div')
+      toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #4CAF50;
+        color: white;
+        padding: 16px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 99999;
+        max-width: 350px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.4;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transform: translateX(100%);
+        opacity: 0;
+        transition: all 0.3s ease-out;
+        cursor: pointer;
+      `
+      
+      toast.innerHTML = `
+        <span style="font-size: 20px;">✅</span>
+        <span>Đã thêm "${this.product.name || this.product.tenSanPham || 'Sản phẩm'}" vào giỏ hàng!</span>
+      `
+      
+      // Thêm toast vào body
+      document.body.appendChild(toast)
+      
+      // Trigger animation
+      setTimeout(() => {
+        toast.style.transform = 'translateX(0)'
+        toast.style.opacity = '1'
+      }, 10)
+      
+      // Tự động xóa toast sau 3 giây
+      setTimeout(() => {
+        toast.style.transform = 'translateX(100%)'
+        toast.style.opacity = '0'
+        setTimeout(() => {
+          if (toast.parentNode) {
+            toast.parentNode.removeChild(toast)
+          }
+        }, 300)
+      }, 3000)
+      
+      // Click để đóng toast
+      toast.addEventListener('click', () => {
+        toast.style.transform = 'translateX(100%)'
+        toast.style.opacity = '0'
+        setTimeout(() => {
+          if (toast.parentNode) {
+            toast.parentNode.removeChild(toast)
+          }
+        }, 300)
+      })
+      
+      console.log('✅ Toast created and added to DOM')
     },
     
     
@@ -87,13 +156,6 @@ export default {
       return '★'.repeat(rating) + '☆'.repeat(5 - rating)
     },
     
-    getTagClass(tag) {
-      if (tag.includes('SALE')) return 'tag'
-      if (tag.includes('MỚI')) return 'tag tag-new'
-      if (tag.includes('QUYỀN')) return 'tag tag-exclusive'
-      if (tag.includes('-')) return 'tag'
-      return 'tag'
-    },
     
     formatPrice(price) {
       return new Intl.NumberFormat('vi-VN', {
@@ -120,42 +182,6 @@ export default {
   box-shadow: 0 10px 25px rgba(0,0,0,0.1);
 }
 
-.product-tags {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 2;
-}
-
-.tag {
-  display: inline-block;
-  padding: 4px 8px;
-  margin: 2px;
-  border-radius: 12px;
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.tag-sale {
-  background: #ff4757;
-  color: white;
-}
-
-.tag-new {
-  background: #2ed573;
-  color: white;
-}
-
-.tag-exclusive {
-  background: #ffa502;
-  color: white;
-}
-
-.tag-discount {
-  background: #ff6348;
-  color: white;
-}
 
 .prod-img {
   display: block;
@@ -230,18 +256,6 @@ export default {
   margin-right: 10px;
 }
 
-.discount-badge {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  background: #ff4757;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 600;
-  z-index: 3;
-}
 
 .stock-info {
   margin-bottom: 10px;
