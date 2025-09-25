@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Hệ thống Đơn hàng Mới - Onestep Shoes</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f8f9fa;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+        }
+        
+        .success-banner {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .success-banner h2 {
+            margin: 0 0 10px 0;
+            font-size: 1.5rem;
+        }
+        
+        .success-banner p {
+            margin: 0;
+            opacity: 0.9;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .feature-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .feature-card h3 {
+            color: #007bff;
+            margin-top: 0;
+        }
+        
+        .test-section {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .test-section h3 {
+            color: #1976d2;
+            margin-top: 0;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .btn-warning:hover {
+            background: #e0a800;
+            transform: translateY(-2px);
+        }
+        
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        .btn-info:hover {
+            background: #138496;
+            transform: translateY(-2px);
+        }
+        
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+            margin: 5px;
+        }
+        
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-confirmed {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .status-shipping {
+            background: #cce5ff;
+            color: #004085;
+        }
+        
+        .status-delivered {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .order-preview {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .order-id {
+            font-weight: 700;
+            color: #333;
+            margin: 0;
+        }
+        
+        .order-amount {
+            font-weight: 700;
+            color: #007bff;
+            font-size: 1.2rem;
+        }
+        
+        .order-details {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .highlight {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #ffc107;
+            margin: 20px 0;
+        }
+        
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        
+        .step-list {
+            counter-reset: step-counter;
+            list-style: none;
+            padding: 0;
+        }
+        
+        .step-list li {
+            counter-increment: step-counter;
+            margin-bottom: 15px;
+            padding-left: 40px;
+            position: relative;
+        }
+        
+        .step-list li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: #007bff;
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛒 Hệ thống Đơn hàng Mới</h1>
+        
+        <div class="success-banner">
+            <h2>✅ Hoàn thành cập nhật!</h2>
+            <p>Đã xóa các đơn hàng cũ và tạo hệ thống đơn hàng mới hoàn chỉnh</p>
+        </div>
+        
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>🗑️ Xóa dữ liệu cũ</h3>
+                <p>Đã xóa tất cả đơn hàng mock cũ trong hệ thống để bắt đầu với danh sách trống.</p>
+            </div>
+            
+            <div class="feature-card">
+                <h3>🆕 Tạo đơn hàng mới</h3>
+                <p>Khi đặt hàng thành công, hệ thống sẽ tự động tạo đơn hàng mới với trạng thái "Chờ xử lý".</p>
+            </div>
+            
+            <div class="feature-card">
+                <h3>💾 Lưu trữ persistent</h3>
+                <p>Đơn hàng được lưu vào localStorage để duy trì dữ liệu giữa các phiên làm việc.</p>
+            </div>
+            
+            <div class="feature-card">
+                <h3>🔄 Đồng bộ real-time</h3>
+                <p>Đơn hàng mới sẽ hiển thị ngay lập tức trong trang "Theo dõi đơn hàng".</p>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🧪 Cách test hệ thống mới</h3>
+            <ol class="step-list">
+                <li><strong>Truy cập trang sản phẩm:</strong> Chọn một số sản phẩm và thêm vào giỏ hàng</li>
+                <li><strong>Thanh toán:</strong> Điền thông tin và hoàn tất đặt hàng</li>
+                <li><strong>Kiểm tra đơn hàng:</strong> Sau khi đặt hàng thành công, click "Xem đơn hàng của tôi"</li>
+                <li><strong>Xác nhận:</strong> Đơn hàng mới sẽ hiển thị với trạng thái "Chờ xử lý"</li>
+            </ol>
+        </div>
+        
+        <div class="test-section">
+            <h3>🎯 Demo luồng đặt hàng</h3>
+            <div class="button-group">
+                <a href="http://localhost:5173/products" class="btn btn-primary">
+                    🛍️ Mua sắm sản phẩm
+                </a>
+                <a href="http://localhost:5173/cart" class="btn btn-info">
+                    🛒 Xem giỏ hàng
+                </a>
+                <a href="http://localhost:5173/checkout" class="btn btn-warning">
+                    💳 Thanh toán
+                </a>
+                <a href="http://localhost:5173/orders" class="btn btn-success">
+                    📦 Theo dõi đơn hàng
+                </a>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>📋 Thông tin kỹ thuật</h3>
+            <p><strong>Các thay đổi chính:</strong></p>
+            <div class="code-block">
+✅ orderService.js - Xóa mock data cũ, thêm createOrderFromCheckout()
+✅ orders.js store - Thêm action createOrderFromCheckout()
+✅ Checkout.vue - Tích hợp tạo đơn hàng mới khi thanh toán thành công
+✅ OrderComplete.vue - Thêm nút "Xem đơn hàng của tôi"
+✅ localStorage - Lưu trữ đơn hàng persistent
+            </div>
+            
+            <p><strong>Tính năng mới:</strong></p>
+            <ul>
+                <li>✅ Danh sách đơn hàng bắt đầu từ trống</li>
+                <li>✅ Tự động tạo đơn hàng mới khi checkout thành công</li>
+                <li>✅ Lưu trữ đơn hàng trong localStorage</li>
+                <li>✅ Hiển thị đơn hàng mới ngay lập tức</li>
+                <li>✅ Trạng thái đơn hàng mới: "Chờ xử lý"</li>
+                <li>✅ Thông tin đầy đủ: khách hàng, sản phẩm, thanh toán</li>
+            </ul>
+        </div>
+        
+        <div class="highlight">
+            <strong>🎉 Kết quả:</strong> Bây giờ khi bạn đặt hàng thành công, đơn hàng mới sẽ xuất hiện trong trang "Theo dõi đơn hàng" với trạng thái "Chờ xử lý". Hệ thống đã được làm sạch và sẵn sàng cho việc sử dụng thực tế!
+        </div>
+        
+        <div class="test-section">
+            <h3>🔍 Kiểm tra localStorage</h3>
+            <p>Để kiểm tra dữ liệu đơn hàng được lưu:</p>
+            <ol>
+                <li>Mở Developer Tools (F12)</li>
+                <li>Vào tab "Application" hoặc "Storage"</li>
+                <li>Chọn "Local Storage" → "localhost:5173"</li>
+                <li>Tìm key "userOrders" để xem danh sách đơn hàng</li>
+            </ol>
+        </div>
+    </div>
+</body>
+</html>

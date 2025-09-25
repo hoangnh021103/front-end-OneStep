@@ -18,6 +18,7 @@
           <input type="date" v-model="fromDate" />
           <input type="date" v-model="toDate" />
           <button @click="resetFilter"><i class="fa fa-undo"></i> Đặt lại bộ lọc</button>
+          <button @click="manualRefresh" class="refresh-btn"><i class="fa fa-sync-alt"></i> Làm mới</button>
         </div>
       </div>
       <!-- Tabs -->
@@ -41,6 +42,7 @@
               <th>SĐT Khách Hàng</th>
               <th>Loại Đơn</th>
               <th>Email</th>
+              <th>Sản Phẩm</th>
               <th>Tổng Tiền</th>
               <th>Ngày Tạo</th>
               <th>Trạng Thái</th>
@@ -49,7 +51,7 @@
           </thead>
           <tbody>
             <tr v-if="tabInvoices.length === 0">
-              <td colspan="10" class="no-data">
+              <td colspan="11" class="no-data">
                 <div class="empty-state">
                   <div class="empty-icon"><i class="fa fa-file-invoice"></i></div>
                   <div class="empty-text">Chưa có hóa đơn nào</div>
@@ -66,13 +68,42 @@
                 <span class="type-badge">{{ formatType(inv.loaiDon) }}</span>
               </td>
               <td>{{ inv.email }}</td>
+              <td>
+                <div class="product-info">
+                  <div class="product-count">
+                    <i class="fa fa-box"></i>
+                    {{ inv.soLuongSanPham || 0 }} sản phẩm
+                  </div>
+                  <div class="product-types">
+                    <i class="fa fa-tags"></i>
+                    {{ inv.soLoaiSanPham || 0 }} loại
+                  </div>
+                </div>
+              </td>
               <td>{{ formatCurrency(inv.tongTien) }}</td>
-              <td>{{ formatDate(inv.ngayCapNhat) }}</td>
+              <td>{{ formatDateTime(inv.ngayCapNhat) }}</td>
               <td>
                 <span :class="['status-badge', inv.statusClass]">{{ inv.statusLabel }}</span>
               </td>
               <td>
-                <button class="action-btn edit-btn" title="Chỉnh sửa" @click="editInvoice(idx)"><i class="fa fa-edit"></i></button>
+                <!-- Nút chỉnh sửa cho tất cả đơn hàng, nhưng có validation bên trong -->
+                <button 
+                  class="action-btn edit-btn" 
+                  title="Chỉnh sửa" 
+                  @click="editInvoice(idx)"
+                >
+                  <i class="fa fa-edit"></i>
+                </button>
+                
+                <!-- Nút xem chi tiết hóa đơn -->
+                <button 
+                  class="action-btn detail-btn" 
+                  title="Xem chi tiết hóa đơn" 
+                  @click="viewInvoiceDetail(inv)"
+                >
+                  <i class="fa fa-eye"></i>
+                </button>
+                
                 <button class="action-btn delete-btn" title="Xóa" @click="deleteInvoice(inv.id)"><i class="fa fa-trash"></i></button>
               </td>
             </tr>
@@ -194,6 +225,176 @@
           </div>
         </div>
       </div>
+      
+      <!-- Modal for Invoice Detail -->
+      <div v-if="showDetailModal" class="modal-overlay">
+        <div class="detail-modal">
+          <div class="detail-header">
+            <h2><i class="fa fa-file-invoice"></i> Chi tiết hóa đơn</h2>
+            <button @click="showDetailModal = false" class="close-btn">
+              <i class="fa fa-times"></i>
+            </button>
+          </div>
+          
+          <div class="detail-content" v-if="selectedInvoice">
+            <div class="detail-section">
+              <h3><i class="fa fa-info-circle"></i> Thông tin chung</h3>
+              <div class="detail-grid">
+                <div class="detail-item">
+                  <label>Mã đơn:</label>
+                  <span class="value">{{ selectedInvoice.maDon }}</span>
+                </div>
+                <div class="detail-item">
+                  <label>Loại đơn:</label>
+                  <span :class="['value', 'type-badge', selectedInvoice.loaiDon === 0 ? 'offline' : 'online']">
+                    {{ formatType(selectedInvoice.loaiDon) }}
+                  </span>
+                </div>
+                <div class="detail-item">
+                  <label>Trạng thái:</label>
+                  <span :class="['value', 'status-badge', selectedInvoice.statusClass]">
+                    {{ selectedInvoice.statusLabel }}
+                  </span>
+                </div>
+                <div class="detail-item">
+                  <label>Ngày tạo:</label>
+                  <span class="value">{{ formatDateTime(selectedInvoice.ngayCapNhat) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <h3><i class="fa fa-user"></i> Thông tin khách hàng</h3>
+              <div class="detail-grid">
+                <div class="detail-item">
+                  <label>Họ tên:</label>
+                  <span class="value">{{ selectedInvoice.hoTen || 'Chưa có thông tin' }}</span>
+                </div>
+                <div class="detail-item">
+                  <label>Số điện thoại:</label>
+                  <span class="value">{{ selectedInvoice.soDienThoai || 'Chưa có thông tin' }}</span>
+                </div>
+                <div class="detail-item">
+                  <label>Email:</label>
+                  <span class="value">{{ selectedInvoice.email || 'Chưa có thông tin' }}</span>
+                </div>
+                <div class="detail-item">
+                  <label>ID khách hàng:</label>
+                  <span class="value">{{ selectedInvoice.khachHangId || 'N/A' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <h3><i class="fa fa-shopping-cart"></i> Thông tin sản phẩm</h3>
+              
+              <div v-if="isLoadingDetail" class="loading-products">
+                <i class="fa fa-spinner fa-spin"></i> Đang tải thông tin sản phẩm...
+              </div>
+              
+              <div v-else-if="selectedInvoiceProducts.length === 0" class="no-products">
+                <i class="fa fa-box-open"></i> Chưa có sản phẩm nào trong đơn hàng này
+              </div>
+              
+              <div v-else class="products-list">
+                <div class="products-summary">
+                  <div class="summary-item">
+                    <label>Tổng số sản phẩm:</label>
+                    <span class="value">{{ getTotalQuantity() }} sản phẩm</span>
+                  </div>
+                  <div class="summary-item">
+                    <label>Số loại sản phẩm:</label>
+                    <span class="value">{{ selectedInvoiceProducts.length }} loại</span>
+                  </div>
+                </div>
+                
+                <div class="product-items">
+                  <div v-for="(product, index) in selectedInvoiceProducts" :key="index" class="product-item">
+                    <div class="product-image">
+                      <img v-if="product.chiTietSanPham?.duongDanAnh" 
+                           :src="product.chiTietSanPham.duongDanAnh" 
+                           :alt="product.chiTietSanPham?.sanPham?.tenSanPham || 'Sản phẩm'"
+                           @error="handleImageError($event)">
+                      <div v-else class="no-image">
+                        <i class="fa fa-image"></i>
+                      </div>
+                    </div>
+                    
+                    <div class="product-info">
+                      <div class="product-name">
+                        {{ product.chiTietSanPham?.sanPham?.tenSanPham || 'Tên sản phẩm không xác định' }}
+                      </div>
+                      <div class="product-code">
+                        Mã: {{ product.chiTietSanPham?.sanPham?.maCode || 'N/A' }}
+                      </div>
+                      <div class="product-details">
+                        <span class="detail-tag">Size: {{ product.chiTietSanPham?.kichCo?.ten || 'N/A' }}</span>
+                        <span class="detail-tag">Màu: {{ product.chiTietSanPham?.mauSac?.ten || 'N/A' }}</span>
+                      </div>
+                      <div class="product-brand">
+                        Thương hiệu: {{ product.chiTietSanPham?.sanPham?.thuongHieu?.ten || 'N/A' }}
+                      </div>
+                      <div class="product-material">
+                        Chất liệu: {{ product.chiTietSanPham?.sanPham?.chatLieu?.ten || 'N/A' }}
+                      </div>
+                    </div>
+                    
+                    <div class="product-pricing">
+                      <div class="quantity">
+                        <label>Số lượng:</label>
+                        <span class="value">{{ product.soLuong }}</span>
+                      </div>
+                      <div class="unit-price">
+                        <label>Đơn giá:</label>
+                        <span class="value price">{{ formatCurrency(product.donGia) }}</span>
+                      </div>
+                      <div class="total-price">
+                        <label>Thành tiền:</label>
+                        <span class="value price total">{{ formatCurrency(product.tongTien) }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <h3><i class="fa fa-money-bill-wave"></i> Thông tin thanh toán</h3>
+              <div class="detail-grid">
+                <div class="detail-item">
+                  <label>Tổng tiền gốc:</label>
+                  <span class="value price">{{ formatCurrency(selectedInvoice.tongTienGoc) }}</span>
+                </div>
+                <div class="detail-item">
+                  <label>Tiền giảm:</label>
+                  <span class="value price discount">{{ formatCurrency(selectedInvoice.tienGiam) }}</span>
+                </div>
+                <div class="detail-item">
+                  <label>Tiền ship:</label>
+                  <span class="value price">{{ formatCurrency(selectedInvoice.tienShip) }}</span>
+                </div>
+                <div class="detail-item total">
+                  <label>Tổng tiền:</label>
+                  <span class="value price total-price">{{ formatCurrency(selectedInvoice.tongTien) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-section" v-if="selectedInvoice.ghiChu">
+              <h3><i class="fa fa-sticky-note"></i> Ghi chú</h3>
+              <div class="note-content">
+                {{ selectedInvoice.ghiChu }}
+              </div>
+            </div>
+          </div>
+          
+          <div class="detail-actions">
+            <button @click="showDetailModal = false" class="btn-secondary">
+              <i class="fa fa-times"></i> Đóng
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -212,6 +413,10 @@ export default {
       toDate: "",
       tab: "all",
       showModal: false,
+      showDetailModal: false,
+      selectedInvoice: null,
+      selectedInvoiceProducts: [],
+      isLoadingDetail: false,
       isSubmitting: false,
       editIndex: null,
       newInvoice: {
@@ -267,115 +472,60 @@ export default {
           return matchSearch && matchFrom && matchTo;
         })
         .map(inv => {
-          console.log('🔍 Processing invoice in filteredInvoices:', {
-            id: inv.id,
-            maDon: inv.maDon,
-            trangThai: inv.trangThai,
-            trangThaiType: typeof inv.trangThai
-          });
+          // ✅ LOGIC MỚI: Đơn hàng tại quầy luôn hiển thị trạng thái "hoàn thành"
+          let effectiveTrangThai = inv.trangThai || 1;
+          if (inv.loaiDon === 0) {
+            // Đơn hàng tại quầy - force về trạng thái hoàn thành
+            effectiveTrangThai = 5;
+            console.log('🏪 Đơn hàng tại quầy ' + inv.maDon + ' - Force hiển thị trạng thái = 5 (Hoàn thành)');
+          }
           
-          const status = this.mapTrangThaiToStatus(inv.trangThai || 1);
-          const result = {
+          const status = this.mapTrangThaiToStatus(effectiveTrangThai);
+          return {
             ...inv,
             status: status, // Chuyển từ số sang string
             statusLabel: this.statusLabel(status),
             statusClass: status,
-            originalTrangThai: inv.trangThai // Giữ lại giá trị gốc từ database
+            originalTrangThai: inv.trangThai, // Giữ lại giá trị gốc từ database
+            effectiveTrangThai: effectiveTrangThai // Trạng thái hiệu lực để hiển thị
           };
-          
-          // Debug: Kiểm tra xem originalTrangThai có được set đúng không
-          console.log('🔍 Setting originalTrangThai:', {
-            'inv.trangThai': inv.trangThai,
-            'result.originalTrangThai': result.originalTrangThai,
-            'result.trangThai': result.trangThai
-          });
-          
-          // Debug đặc biệt cho trạng thái chờ xác nhận
-          if (inv.trangThai === 1) {
-            console.log('🚨 DEBUG CHỜ XÁC NHẬN trong filteredInvoices:', {
-              'inv.trangThai': inv.trangThai,
-              'status': status,
-              'statusLabel': this.statusLabel(status),
-              'result.originalTrangThai': result.originalTrangThai,
-              'inv.maDon': inv.maDon
-            });
+        })
+        .sort((a, b) => {
+          // Sắp xếp theo ngày cập nhật mới nhất trước, sau đó theo ID giảm dần
+          if (a.ngayCapNhat && b.ngayCapNhat) {
+            const dateA = new Date(a.ngayCapNhat);
+            const dateB = new Date(b.ngayCapNhat);
+            const dateComparison = dateB - dateA; // Mới nhất trước
+            if (dateComparison !== 0) {
+              return dateComparison;
+            }
           }
-          
-          // Debug đặc biệt cho trạng thái đã xác nhận
-          if (inv.trangThai === 2) {
-            console.log('🚨 DEBUG ĐÃ XÁC NHẬN trong filteredInvoices:', {
-              'inv.trangThai': inv.trangThai,
-              'status': status,
-              'statusLabel': this.statusLabel(status),
-              'result.originalTrangThai': result.originalTrangThai,
-              'inv.maDon': inv.maDon
-            });
-          }
-          
-          console.log('🔍 Result after mapping:', {
-            id: result.id,
-            maDon: result.maDon,
-            trangThai: result.trangThai,
-            originalTrangThai: result.originalTrangThai,
-            status: result.status
-          });
-          
-          return result;
+          // Nếu ngày bằng nhau hoặc null, sắp xếp theo ID giảm dần
+          return (b.id || 0) - (a.id || 0);
         });
-      
-      console.log('🔍 Filtered invoices:', filtered.length, 'items');
-      console.log('📋 Status mapping:', filtered.map(inv => ({ 
-        id: inv.id, 
-        maDon: inv.maDon, 
-        trangThai: inv.trangThai,
-        originalTrangThai: inv.originalTrangThai, 
-        status: inv.status,
-        statusLabel: inv.statusLabel
-      })));
       
       return filtered;
     },
     tabInvoices() {
-      console.log('🔍 tabInvoices computed:', {
-        'tab': this.tab,
-        'filteredInvoices.length': this.filteredInvoices.length
-      });
-      
-      let result;
       if (this.tab === 'all') {
-        result = this.filteredInvoices;
+        return this.filteredInvoices;
       } else {
-        result = this.filteredInvoices.filter(inv => inv.status === this.tab);
+        return this.filteredInvoices.filter(inv => inv.status === this.tab);
       }
-      
-      console.log('🔍 tabInvoices result:', {
-        'result.length': result.length,
-        'first few invoices': result.slice(0, 3).map(inv => ({
-          id: inv.id,
-          maDon: inv.maDon,
-          status: inv.status
-        }))
-      });
-      
-      return result;
     }
   },
   methods: {
     // Map từ số trạng thái API sang string cho UI
     mapTrangThaiToStatus(trangThai) {
-      console.log('🔍 mapTrangThaiToStatus called with:', trangThai, 'type:', typeof trangThai);
-      let result;
       switch (trangThai) {
-        case 1: result = 'pending'; break;    // Chờ xác nhận
-        case 2: result = 'confirmed'; break;  // Đã xác nhận
-        case 3: result = 'shipping'; break;   // Chờ giao
-        case 4: result = 'delivering'; break; // Đang giao
-        case 5: result = 'done'; break;       // Hoàn thành
-        case 6: result = 'cancel'; break;     // Đã hủy
-        default: result = 'pending'; break;
+        case 1: return 'pending';    // Chờ xác nhận
+        case 2: return 'confirmed';  // Đã xác nhận
+        case 3: return 'shipping';   // Chờ giao
+        case 4: return 'delivering'; // Đang giao
+        case 5: return 'done';       // Hoàn thành
+        case 6: return 'cancel';     // Đã hủy
+        default: return 'pending';
       }
-      console.log('🔍 mapTrangThaiToStatus result:', result);
-      return result;
     },
     
     // Map từ string UI sang số cho API
@@ -391,49 +541,74 @@ export default {
       }
     },
 
-    async fetchInvoices() {
+    async fetchInvoices(isAutoRefresh = false) {
       try {
-        console.log('🔄 Đang tải danh sách hóa đơn...');
-        const res = await axios.get("http://localhost:8080/don-hang/hien-thi");
-        this.invoices = Array.isArray(res.data) ? res.data : res.data.data || [];
-        console.log('✅ Đã tải danh sách hóa đơn:', this.invoices.length, 'hóa đơn');
-        console.log('📊 Chi tiết hóa đơn từ API:', this.invoices);
+        if (!isAutoRefresh) {
+          console.log('🔄 Đang tải danh sách hóa đơn từ TẤT CẢ nguồn...');
+        }
         
-        // Debug: Kiểm tra trạng thái của từng hóa đơn
-        this.invoices.forEach((inv, index) => {
-          console.log(`📄 Invoice ${index + 1}:`, {
-            id: inv.id,
-            maDon: inv.maDon,
-            trangThai: inv.trangThai,
-            trangThaiType: typeof inv.trangThai
+        const res = await axios.get("http://localhost:8080/don-hang/hien-thi", {
+          timeout: 10000,
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        let allInvoices = Array.isArray(res.data) ? res.data : res.data.data || [];
+        
+        // Chỉ cập nhật nếu có thay đổi thực sự để tránh jumping
+        const hasChanges = this.hasSignificantChanges(this.invoices, allInvoices);
+        
+        if (!hasChanges && isAutoRefresh) {
+          // Không có thay đổi trong auto-refresh, bỏ qua cập nhật
+          if (!isAutoRefresh) {
+            console.log('🔄 Không có thay đổi, bỏ qua cập nhật');
+          }
+          return;
+        }
+        
+        // Đánh dấu rõ ràng loại đơn hàng
+        this.invoices = allInvoices.map((inv) => {
+          return {
+            ...inv,
+            isOnline: inv.loaiDon === 1, // Đơn hàng từ trangchu (ONLINE)
+            isOffline: inv.loaiDon === 0, // Đơn hàng từ admin (OFFLINE)
+            displayType: inv.loaiDon === 1 ? 'Online' : 'Tại quầy',
+            displayMaDon: inv.maDon || inv.maDonHang || 'N/A'
+          };
+        });
+        
+        if (!isAutoRefresh) {
+          console.log('✅ Đã tải TẤT CẢ hóa đơn:', this.invoices.length, 'hóa đơn');
+          console.log(`📊 Thống kê: ${this.invoices.filter(i => i.isOnline).length} đơn online (từ trangchu), ${this.invoices.filter(i => i.isOffline).length} đơn offline (từ admin)`);
+        }
+        
+        // Force update chỉ khi cần thiết
+        if (hasChanges) {
+          this.$nextTick(() => {
+            this.$forceUpdate();
           });
-          
-          // Debug đặc biệt cho trạng thái chờ xác nhận
-          if (inv.trangThai === 1) {
-            console.log('🚨 DEBUG CHỜ XÁC NHẬN trong fetchInvoices:', {
-              'inv.trangThai': inv.trangThai,
-              'inv.maDon': inv.maDon,
-              'inv.id': inv.id
-            });
-          }
-          
-          // Debug đặc biệt cho trạng thái đã xác nhận
-          if (inv.trangThai === 2) {
-            console.log('🚨 DEBUG ĐÃ XÁC NHẬN trong fetchInvoices:', {
-              'inv.trangThai': inv.trangThai,
-              'inv.maDon': inv.maDon,
-              'inv.id': inv.id
-            });
-          }
-        });
-        
-        // Force update để đảm bảo UI được refresh
-        this.$nextTick(() => {
-          this.$forceUpdate();
-        });
+        }
       } catch (err) {
-        console.error('❌ Error fetching invoices:', err);
-        toast.error('Không thể tải danh sách hóa đơn');
+        // Chỉ hiển thị lỗi khi không phải auto-refresh để tránh spam notification
+        if (!isAutoRefresh) {
+          console.error('❌ Error fetching invoices:', err);
+          
+          // Hiển thị thông báo lỗi chi tiết hơn
+          let errorMessage = 'Không thể tải danh sách hóa đơn';
+          if (err.response?.status === 500) {
+            errorMessage += ' - Lỗi server backend';
+          } else if (err.code === 'NETWORK_ERROR') {
+            errorMessage += ' - Không thể kết nối đến server';
+          } else if (err.response?.data?.message) {
+            errorMessage += ': ' + err.response.data.message;
+          }
+          
+          toast.error(errorMessage);
+          
+          // Đặt danh sách rỗng nếu có lỗi
+          this.invoices = [];
+        }
       }
     },
 
@@ -458,10 +633,13 @@ export default {
       this.fetchInvoices();
     },
 
+    manualRefresh() {
+      console.log('🔄 Manual refresh triggered by user');
+      this.fetchInvoices(false); // Force refresh không phải auto-refresh
+    },
+
     countByStatus(status) {
-      const count = this.filteredInvoices.filter(inv => inv.status === status).length;
-      console.log(`📊 Count for status "${status}":`, count);
-      return count;
+      return this.filteredInvoices.filter(inv => inv.status === status).length;
     },
 
     // Method để debug trạng thái hóa đơn
@@ -490,22 +668,99 @@ export default {
       });
     },
 
+    // Method để kiểm tra có thay đổi đáng kể không
+    hasSignificantChanges(currentInvoices, newInvoices) {
+      // Kiểm tra số lượng đơn hàng
+      if (currentInvoices.length !== newInvoices.length) {
+        console.log('📊 Thay đổi số lượng đơn hàng:', currentInvoices.length, '->', newInvoices.length);
+        return true;
+      }
+      
+      // Tạo map của đơn hàng hiện tại để so sánh nhanh
+      const currentMap = new Map();
+      currentInvoices.forEach(inv => {
+        currentMap.set(inv.id, {
+          trangThai: inv.trangThai,
+          ngayCapNhat: inv.ngayCapNhat,
+          tongTien: inv.tongTien,
+          maDon: inv.maDon
+        });
+      });
+      
+      // Kiểm tra từng đơn hàng mới
+      for (const newInv of newInvoices) {
+        const current = currentMap.get(newInv.id);
+        
+        // Đơn hàng mới
+        if (!current) {
+          console.log('📊 Đơn hàng mới:', newInv.maDon);
+          return true;
+        }
+        
+        // Kiểm tra thay đổi trạng thái
+        if (current.trangThai !== newInv.trangThai) {
+          console.log('📊 Thay đổi trạng thái đơn', newInv.maDon, ':', current.trangThai, '->', newInv.trangThai);
+          return true;
+        }
+        
+        // Kiểm tra thay đổi tổng tiền
+        if (current.tongTien !== newInv.tongTien) {
+          console.log('📊 Thay đổi tổng tiền đơn', newInv.maDon, ':', current.tongTien, '->', newInv.tongTien);
+          return true;
+        }
+        
+        // Kiểm tra thay đổi thời gian cập nhật (chỉ so sánh đến phút để tránh thay đổi nhỏ)
+        const currentTime = new Date(current.ngayCapNhat).getTime();
+        const newTime = new Date(newInv.ngayCapNhat).getTime();
+        const timeDiff = Math.abs(newTime - currentTime);
+        
+        // Nếu chênh lệch > 1 phút thì coi như có thay đổi
+        if (timeDiff > 60000) {
+          console.log('📊 Thay đổi thời gian đơn', newInv.maDon, ':', new Date(currentTime), '->', new Date(newTime));
+          return true;
+        }
+      }
+      
+      // Không có thay đổi đáng kể
+      return false;
+    },
+
     // Method để thay đổi tab và refresh
     changeTab(newTab) {
-      console.log('🔄 Changing tab from', this.tab, 'to', newTab);
       this.tab = newTab;
-      
-      // Force update để đảm bảo UI được refresh
-      this.$nextTick(() => {
-        this.$forceUpdate();
-        console.log('✅ Tab changed to:', newTab, 'with', this.tabInvoices.length, 'invoices');
-      });
     },
 
     formatDate(date) {
       if (!date) return "";
       const d = new Date(date);
       return d.toLocaleDateString("vi-VN");
+    },
+
+    formatDateTime(dateTime) {
+      if (!dateTime) return "";
+      const d = new Date(dateTime);
+      
+      // Kiểm tra nếu ngày không hợp lệ
+      if (isNaN(d.getTime())) {
+        console.warn('⚠️ Invalid date:', dateTime);
+        return "Ngày không hợp lệ";
+      }
+      
+      // Format với độ chính xác cao hơn
+      const date = d.toLocaleDateString("vi-VN", {
+        day: '2-digit',
+        month: '2-digit', 
+        year: 'numeric'
+      });
+      
+      const time = d.toLocaleTimeString("vi-VN", { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+      
+      return `lúc ${time} ${date}`;
     },
 
     formatCurrency(amount) {
@@ -526,7 +781,13 @@ export default {
     },
 
     formatType(loaiDon) {
-      return loaiDon === 0 ? "OFFLINE" : "ONLINE";
+      // Hiển thị loại đơn hàng với style khác nhau
+      if (loaiDon === 0) {
+        return "Tại quầy"; // OFFLINE - Đơn hàng từ admin
+      } else if (loaiDon === 1) {
+        return "Online"; // ONLINE - Đơn hàng từ trangchu
+      }
+      return "Không xác định";
     },
 
     closeModal() {
@@ -624,28 +885,56 @@ export default {
         
         // Đảm bảo các field bắt buộc có giá trị
         if (!updatedInvoice.ngayCapNhat) {
-          updatedInvoice.ngayCapNhat = new Date().toISOString().split('T')[0];
+          updatedInvoice.ngayCapNhat = new Date().toISOString().slice(0, 19); // Format: yyyy-MM-ddTHH:mm:ss
+        } else {
+          // Đảm bảo format ngày đúng cho LocalDateTime
+          const date = new Date(updatedInvoice.ngayCapNhat);
+          updatedInvoice.ngayCapNhat = date.toISOString().slice(0, 19); // Format: yyyy-MM-ddTHH:mm:ss
         }
+        
+        // Xử lý ngayXacNhan - chỉ cần ngày, không cần time vì là LocalDate
+        if (updatedInvoice.ngayXacNhan) {
+          // Đảm bảo format đúng cho LocalDate: yyyy-MM-dd
+          const xacNhanDate = new Date(updatedInvoice.ngayXacNhan + 'T00:00:00');
+          updatedInvoice.ngayXacNhan = xacNhanDate.toISOString().slice(0, 10); // Chỉ lấy phần ngày yyyy-MM-dd
+        }
+        
         if (!updatedInvoice.daXoa) {
           updatedInvoice.daXoa = 0;
         }
         
-        // Đảm bảo các field số là Integer
+        // Đảm bảo các field số là Integer hoặc Float
+        updatedInvoice.id = parseInt(updatedInvoice.id);
         updatedInvoice.khachHangId = parseInt(updatedInvoice.khachHangId) || 0;
         updatedInvoice.nhanVienId = parseInt(updatedInvoice.nhanVienId) || 0;
         updatedInvoice.voucherId = parseInt(updatedInvoice.voucherId) || 0;
         updatedInvoice.diaChiId = parseInt(updatedInvoice.diaChiId) || 0;
-        updatedInvoice.tongTienGoc = parseFloat(updatedInvoice.tongTienGoc) || 0;
-        updatedInvoice.tienGiam = parseFloat(updatedInvoice.tienGiam) || 0;
-        updatedInvoice.tongTien = parseFloat(updatedInvoice.tongTien) || 0;
-        updatedInvoice.tienShip = parseFloat(updatedInvoice.tienShip) || 0;
+        updatedInvoice.tongTienGoc = parseFloat(updatedInvoice.tongTienGoc) || 0.0;
+        updatedInvoice.tienGiam = parseFloat(updatedInvoice.tienGiam) || 0.0;
+        updatedInvoice.tongTien = parseFloat(updatedInvoice.tongTien) || 0.0;
+        updatedInvoice.tienShip = parseFloat(updatedInvoice.tienShip) || 0.0;
         updatedInvoice.loaiDon = parseInt(updatedInvoice.loaiDon) || 0;
         updatedInvoice.daXoa = parseInt(updatedInvoice.daXoa) || 0;
         
+        // Đảm bảo trangThai là Integer
+        updatedInvoice.trangThai = parseInt(updatedInvoice.trangThai);
+        
+        // Validate dữ liệu trước khi gửi
         console.log('🔄 Đang cập nhật hóa đơn:', updatedInvoice);
         console.log('🔍 Trạng thái cuối cùng:', updatedInvoice.trangThai, 'type:', typeof updatedInvoice.trangThai);
+        console.log('🔍 Ngày cập nhật:', updatedInvoice.ngayCapNhat);
+        console.log('🔍 Ngày xác nhận:', updatedInvoice.ngayXacNhan);
         
-        const response = await axios.put(`http://localhost:8080/don-hang/update/${updatedInvoice.id}`, updatedInvoice);
+        // Kiểm tra các field bắt buộc
+        if (!updatedInvoice.trangThai || updatedInvoice.trangThai < 1 || updatedInvoice.trangThai > 6) {
+          throw new Error('Trạng thái không hợp lệ');
+        }
+        
+        const response = await axios.put(`http://localhost:8080/don-hang/update/${updatedInvoice.id}`, updatedInvoice, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
         console.log('✅ Cập nhật thành công:', response.data);
         
         // Refresh danh sách sau khi update
@@ -666,11 +955,20 @@ export default {
         if (err.response?.status === 400) {
           if (err.response?.data?.message) {
             errorMessage = err.response.data.message;
+          } else if (err.response?.data && typeof err.response.data === 'object') {
+            // Xử lý lỗi validation từ backend
+            errorMessage = "Dữ liệu không hợp lệ: " + JSON.stringify(err.response.data);
           } else {
             errorMessage = "Không thể chuyển đổi trạng thái này. Vui lòng kiểm tra quy tắc chuyển đổi trạng thái.";
           }
+        } else if (err.response?.status === 404) {
+          errorMessage = "Không tìm thấy đơn hàng để cập nhật.";
+        } else if (err.response?.status === 500) {
+          errorMessage = "Lỗi server. Vui lòng thử lại sau.";
         } else if (err.response?.data?.message) {
           errorMessage = err.response.data.message;
+        } else if (err.message) {
+          errorMessage = "Lỗi: " + err.message;
         }
         
         toast.error(errorMessage);
@@ -680,10 +978,14 @@ export default {
     },
 
     editInvoice(index) {
-      this.editIndex = index;
-      
-      // Sử dụng tabInvoices thay vì filteredInvoices để đảm bảo đúng index
+      // Validate: Không cho phép chỉnh sửa đơn hàng tại quầy
       const invoice = { ...this.tabInvoices[index] };
+      if (invoice.loaiDon === 0) {
+        toast.error("Không thể chỉnh sửa đơn hàng tại quầy!");
+        return;
+      }
+      
+      this.editIndex = index;
       
       console.log('✏️ Editing invoice:', invoice);
       console.log('📊 Index được truyền:', index);
@@ -828,11 +1130,100 @@ export default {
       });
       
       this.showModal = true;
+    },
+
+    async viewInvoiceDetail(invoice) {
+      console.log('🔍 Xem chi tiết hóa đơn:', invoice);
+      this.selectedInvoice = { ...invoice };
+      this.isLoadingDetail = true;
+      
+      try {
+        console.log('📞 Gọi API chi tiết đơn hàng cho ID:', invoice.id);
+        
+        // Sử dụng API mới để lấy chi tiết sản phẩm với đầy đủ thông tin
+        const response = await axios.get(`http://localhost:8080/chi-tiet-don-hang/don-hang/${invoice.id}`, {
+          timeout: 10000,
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        console.log('📦 API Response:', response.data);
+        
+        if (response.data && response.data.success) {
+          this.selectedInvoiceProducts = response.data.data || [];
+          console.log('✅ Đã tải được', this.selectedInvoiceProducts.length, 'sản phẩm');
+          
+          if (this.selectedInvoiceProducts.length === 0) {
+            console.log('⚠️ Không có sản phẩm nào trong đơn hàng này');
+          }
+        } else {
+          console.log('❌ API trả về lỗi:', response.data);
+          this.selectedInvoiceProducts = [];
+          toast.error(response.data.message || 'Không thể tải chi tiết sản phẩm');
+        }
+        
+        console.log('📋 Chi tiết sản phẩm cuối cùng:', this.selectedInvoiceProducts);
+      } catch (error) {
+        console.error('❌ Lỗi khi gọi API chi tiết sản phẩm:', error);
+        console.error('❌ Error details:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status
+        });
+        
+        this.selectedInvoiceProducts = [];
+        
+        let errorMessage = 'Không thể tải chi tiết sản phẩm';
+        if (error.response?.status === 404) {
+          errorMessage = 'Không tìm thấy chi tiết đơn hàng';
+        } else if (error.response?.status === 500) {
+          errorMessage = 'Lỗi server khi tải chi tiết sản phẩm';
+        } else if (error.code === 'NETWORK_ERROR') {
+          errorMessage = 'Không thể kết nối đến server';
+        } else if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        }
+        
+        toast.error(errorMessage);
+      } finally {
+        this.isLoadingDetail = false;
+      }
+      
+      this.showDetailModal = true;
+    },
+
+    getTotalQuantity() {
+      return this.selectedInvoiceProducts.reduce((total, product) => {
+        return total + (product.soLuong || 0);
+      }, 0);
+    },
+
+    handleImageError(event) {
+      event.target.style.display = 'none';
+      event.target.nextElementSibling.style.display = 'flex';
     }
   },
   
   mounted() {
     this.fetchInvoices();
+    // Auto-refresh để cập nhật đơn hàng mới từ trangchu - giảm tần suất để tránh jumping
+    this.refreshInterval = setInterval(() => {
+      // Chỉ auto-refresh khi không có modal đang mở và không có thao tác đang thực hiện
+      if (!this.showModal && !this.isSubmitting) {
+        console.log('🔄 Auto-refresh admin: Kiểm tra đơn hàng mới...')
+        this.fetchInvoices(true) // Truyền flag isAutoRefresh = true
+      } else {
+        console.log('⏸️ Bỏ qua auto-refresh vì đang có modal mở hoặc đang submit')
+      }
+    }, 45000) // Tăng lên 45 giây để giảm tần suất hơn nữa
+  },
+  
+  beforeUnmount() {
+    // Clear interval khi component unmount
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval)
+    }
   }
 };
 </script>
@@ -909,6 +1300,16 @@ export default {
 .filter-controls button:hover {
   background: #4f46e5;
   transform: translateY(-1px);
+}
+
+.refresh-btn {
+  background: #10b981 !important;
+  border-color: #10b981 !important;
+}
+
+.refresh-btn:hover {
+  background: #059669 !important;
+  border-color: #059669 !important;
 }
 
 .tab-section {
@@ -1090,6 +1491,15 @@ tbody tr:hover {
 
 .delete-btn:hover {
   background: #fee2e2;
+}
+
+.detail-btn {
+  background: #f0f9ff;
+  color: #0369a1;
+}
+
+.detail-btn:hover {
+  background: #e0f2fe;
 }
 
 .modal-overlay {
@@ -1329,4 +1739,460 @@ button {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+/* Product info styles */
+.product-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.product-count,
+.product-types {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #6b7280;
+}
+
+.product-count i {
+  color: #3b82f6;
+  font-size: 11px;
+}
+
+.product-types i {
+  color: #10b981;
+  font-size: 11px;
+}
+
+/* ✅ STYLE MỚI: Thông báo cho đơn hàng tại quầy */
+.counter-order-notice {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: #f3f4f6;
+  color: #6b7280;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid #e5e7eb;
+  cursor: not-allowed;
+}
+
+.counter-order-notice i {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+/* Detail Modal Styles */
+.detail-modal {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  max-width: 900px;
+  width: 100%;
+  margin: auto;
+  max-height: 90vh;
+  overflow-y: auto;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 32px;
+  border-bottom: 1px solid #e5e7eb;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px 12px 0 0;
+}
+
+.detail-header h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.close-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.2s;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.detail-content {
+  padding: 32px;
+}
+
+.detail-section {
+  margin-bottom: 32px;
+}
+
+.detail-section h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.detail-section h3 i {
+  color: #6366f1;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border-left: 4px solid #e5e7eb;
+}
+
+.detail-item.total {
+  border-left-color: #10b981;
+  background: #f0fdf4;
+}
+
+.detail-item label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.detail-item .value {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.detail-item .value.price {
+  font-weight: 600;
+  color: #059669;
+}
+
+.detail-item .value.price.discount {
+  color: #dc2626;
+}
+
+.detail-item .value.price.total-price {
+  font-size: 16px;
+  color: #10b981;
+}
+
+.detail-item .value.type-badge.offline {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.detail-item .value.type-badge.online {
+  background: #dbeafe;
+  color: #1d4ed8;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.note-content {
+  background: #f8fafc;
+  padding: 16px;
+  border-radius: 8px;
+  border-left: 4px solid #6366f1;
+  font-style: italic;
+  color: #4b5563;
+  line-height: 1.6;
+}
+
+.detail-actions {
+  padding: 24px 32px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  background: #f9fafb;
+  border-radius: 0 0 12px 12px;
+}
+
+@media (max-width: 768px) {
+  .detail-modal {
+    max-width: 95%;
+    margin: 20px auto;
+  }
+  
+  .detail-header {
+    padding: 20px;
+  }
+  
+  .detail-content {
+    padding: 24px 20px;
+  }
+  
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .detail-actions {
+    padding: 20px;
+  }
+}
+
+/* Product Display Styles */
+.loading-products, .no-products {
+  text-align: center;
+  padding: 32px;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.loading-products i {
+  margin-right: 8px;
+  color: #6366f1;
+}
+
+.no-products i {
+  font-size: 24px;
+  margin-bottom: 8px;
+  display: block;
+  color: #9ca3af;
+}
+
+.products-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: #f0f9ff;
+  border-radius: 8px;
+  border-left: 4px solid #0369a1;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.summary-item label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.summary-item .value {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0369a1;
+}
+
+.product-items {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.product-item {
+  display: grid;
+  grid-template-columns: 80px 1fr auto;
+  gap: 16px;
+  padding: 16px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.product-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #d1d5db;
+}
+
+.product-image {
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+
+.product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.no-image {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  color: #9ca3af;
+}
+
+.no-image i {
+  font-size: 24px;
+}
+
+.product-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.product-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  line-height: 1.3;
+}
+
+.product-code {
+  font-size: 13px;
+  color: #6b7280;
+  font-family: 'Courier New', monospace;
+  background: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-block;
+  width: fit-content;
+}
+
+.product-details {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.detail-tag {
+  background: #dbeafe;
+  color: #1e40af;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.product-brand, .product-material {
+  font-size: 12px;
+  color: #4b5563;
+}
+
+.product-brand {
+  font-weight: 500;
+}
+
+.product-pricing {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+  min-width: 140px;
+}
+
+.product-pricing > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.product-pricing label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+.product-pricing .value {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.product-pricing .value.price {
+  color: #059669;
+}
+
+.product-pricing .value.price.total {
+  color: #dc2626;
+  font-size: 15px;
+}
+
+.quantity .value {
+  color: #374151;
+  background: #f3f4f6;
+  padding: 4px 8px;
+  border-radius: 4px;
+  min-width: 30px;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .product-item {
+    grid-template-columns: 60px 1fr;
+    gap: 12px;
+  }
+  
+  .product-pricing {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #e5e7eb;
+  }
+  
+  .product-pricing > div {
+    align-items: center;
+  }
+  
+  .product-image {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .products-summary {
+    grid-template-columns: 1fr;
+  }
+}
+
 </style>

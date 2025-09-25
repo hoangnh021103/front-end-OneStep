@@ -216,11 +216,17 @@
           <div class="mb-4">
             <v-label class="text-subtitle-2 font-weight-medium mb-2">Mã giảm giá</v-label>
             <v-row>
-              <v-col cols="8">
+              <v-col cols="6">
                 <v-text-field v-model="discountCode" placeholder="Nhập mã giảm giá" variant="outlined" density="compact" hide-details :disabled="!orderStarted"></v-text-field>
               </v-col>
-              <v-col cols="4">
-                <v-btn color="primary" variant="elevated" block @click="applyDiscount" class="action-btn" :disabled="!orderStarted">Áp dụng</v-btn>
+              <v-col cols="3">
+                <v-btn color="primary" variant="elevated" block @click="applyDiscount" class="apply-discount-btn" :disabled="!orderStarted">Áp dụng</v-btn>
+              </v-col>
+              <v-col cols="3">
+                <v-btn color="success" variant="elevated" block @click="openVoucherModal" class="voucher-select-btn" :disabled="!orderStarted">
+                  <v-icon class="mr-1" size="18">mdi-ticket-percent</v-icon>
+                  Chọn
+                </v-btn>
               </v-col>
             </v-row>
             <div v-if="discountInfo" class="mt-2">
@@ -405,6 +411,104 @@
       </v-card>
     </v-dialog>
 
+    <!-- Dialog chọn voucher -->
+    <v-dialog v-model="showVoucherModal" max-width="800px">
+      <v-card>
+        <v-card-title class="text-h6 font-weight-bold d-flex align-center">
+          <v-icon class="mr-2" color="success">mdi-ticket-percent</v-icon>
+          Chọn phiếu giảm giá
+        </v-card-title>
+        <v-card-text>
+          <v-progress-linear v-if="isLoadingVouchers" indeterminate color="success" class="mb-4"></v-progress-linear>
+          
+          <div v-if="!isLoadingVouchers && availableVouchers.length === 0" class="text-center py-8">
+            <v-icon size="64" color="grey-lighten-2">mdi-ticket-outline</v-icon>
+            <div class="text-h6 text-grey mt-2">Không có phiếu giảm giá nào đang hoạt động</div>
+            <div class="text-body-2 text-grey-darken-1 mt-1">Vui lòng thử lại sau</div>
+          </div>
+
+          <v-row v-else>
+            <v-col v-for="voucher in availableVouchers" :key="voucher.id" cols="12" md="6">
+              <v-card 
+                elevation="2" 
+                class="voucher-card pa-3 h-100" 
+                :class="{ 'voucher-selected': selectedVoucher?.id === voucher.id }"
+                @click="selectVoucher(voucher)"
+                style="cursor: pointer; transition: all 0.2s ease;"
+              >
+                <div class="d-flex justify-space-between align-start mb-2">
+                  <div class="voucher-code">
+                    <v-chip color="primary" size="small" class="font-weight-bold">
+                      {{ voucher.ma }}
+                    </v-chip>
+                  </div>
+                  <div class="voucher-type">
+                    <v-chip 
+                      :color="voucher.loai === 0 ? 'orange' : 'green'" 
+                      size="small" 
+                      variant="tonal"
+                    >
+                      {{ voucher.loai === 0 ? 'Phần trăm' : 'Tiền mặt' }}
+                    </v-chip>
+                  </div>
+                </div>
+                
+                <h4 class="text-subtitle-1 font-weight-bold mb-2">{{ voucher.ten }}</h4>
+                
+                <div class="voucher-value mb-2">
+                  <span class="text-h6 font-weight-bold text-primary">
+                    {{ voucher.loai === 0 ? `${voucher.giaTri}%` : formatCurrency(voucher.giaTri) }}
+                  </span>
+                  <span class="text-caption text-grey-darken-1 ml-1">giảm</span>
+                </div>
+
+                <div class="voucher-condition mb-2" v-if="voucher.dieuKien">
+                  <div class="text-caption text-grey-darken-1">
+                    <v-icon size="small" class="mr-1">mdi-information-outline</v-icon>
+                    Đơn tối thiểu: {{ formatCurrency(voucher.dieuKien) }}
+                  </div>
+                </div>
+
+                <div class="voucher-quantity mb-2">
+                  <div class="text-caption text-grey-darken-1">
+                    <v-icon size="small" class="mr-1">mdi-package-variant</v-icon>
+                    Còn lại: {{ voucher.soLuong }} phiếu
+                  </div>
+                </div>
+
+                <div class="voucher-dates">
+                  <div class="text-caption text-grey-darken-1">
+                    <v-icon size="small" class="mr-1">mdi-calendar</v-icon>
+                    {{ formatDate(voucher.ngayBatDau) }} - {{ formatDate(voucher.ngayKetThuc) }}
+                  </div>
+                </div>
+
+                <div v-if="selectedVoucher?.id === voucher.id" class="selected-indicator mt-2">
+                  <v-chip color="success" size="small" variant="flat">
+                    <v-icon size="small" class="mr-1">mdi-check</v-icon>
+                    Đã chọn
+                  </v-chip>
+                </div>
+              </v-card>
+            </v-col>
+          </v-row>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="grey" variant="elevated" class="action-btn" @click="showVoucherModal = false">Đóng</v-btn>
+          <v-btn 
+            color="success" 
+            variant="elevated" 
+            class="action-btn" 
+            @click="applySelectedVoucher"
+            :disabled="!selectedVoucher"
+          >
+            Áp dụng voucher
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <!-- Dialog xác nhận thanh toán -->
     <v-dialog v-model="showPaymentConfirmDialog" max-width="500px" persistent>
       <v-card>
@@ -548,6 +652,11 @@ const selectedCustomer = ref<any | null>(null)
 // Quick add customer
 const showQuickAddModal = ref(false)
 const quickCustomer = ref<{ hoTen: string; soDienThoai: string; email?: string }>({ hoTen: '', soDienThoai: '', email: '' })
+
+// Voucher modal
+const showVoucherModal = ref(false)
+const availableVouchers = ref<any[]>([])
+const isLoadingVouchers = ref(false)
 
 // Confirm dialogs
 const showPaymentConfirmDialog = ref(false)
@@ -1210,6 +1319,7 @@ const processPayment = async () => {
       maGiamGia: discountCode.value || null,
       phuongThucThanhToan: paymentMethod.value,
       tongTien: parseFloat(String(totalAmount.value)),
+      tienGiam: parseFloat(String(discountAmount.value)) || 0.0, // Thêm tiền giảm thực tế
       trangThai: 1,
       ghiChu: `Bán hàng tại quầy - ${new Date().toLocaleDateString('vi-VN')}`,
       nguoiTao: 'Admin',
@@ -1243,6 +1353,15 @@ const processPayment = async () => {
       })
     }
 
+    // Debug thông tin tính toán
+    console.log('=== DEBUG: Thông tin tính toán ===')
+    console.log('Subtotal (tổng tiền hàng):', subtotal.value)
+    console.log('DeliveryFee (phí ship):', deliveryFee.value)
+    console.log('DiscountAmount (tiền giảm):', discountAmount.value)
+    console.log('TotalAmount (tổng cuối):', totalAmount.value)
+    console.log('Voucher info:', selectedVoucher.value)
+    console.log('Discount code:', discountCode.value)
+    
     console.log('Dữ liệu gửi lên server:', orderData)
     
     // Gửi lên server
@@ -1467,6 +1586,86 @@ const cancelOrder = () => {
   sessionStorage.removeItem(ORDER_STATE_KEY)
   showToast('Đã hủy hóa đơn', 'warning')
 }
+
+// ========== VOUCHER FUNCTIONS ==========
+
+// Hàm mở modal chọn voucher
+const openVoucherModal = async () => {
+  showVoucherModal.value = true
+  await fetchActiveVouchers()
+}
+
+// Hàm lấy danh sách voucher đang hoạt động
+const fetchActiveVouchers = async () => {
+  try {
+    isLoadingVouchers.value = true
+    const vouchers = await voucherApi.getActiveVouchers()
+    availableVouchers.value = vouchers
+    console.log('✅ Đã tải danh sách voucher hoạt động:', vouchers)
+  } catch (error) {
+    console.error('❌ Lỗi khi tải voucher:', error)
+    availableVouchers.value = []
+    showToast('Lỗi khi tải danh sách voucher', 'error')
+  } finally {
+    isLoadingVouchers.value = false
+  }
+}
+
+// Hàm chọn voucher trong modal
+const selectVoucher = (voucher: any) => {
+  // Kiểm tra điều kiện đơn hàng tối thiểu
+  const totalOrderAmount = cartItems.value.reduce((sum, item) => sum + item.tongTien, 0)
+  if (voucher.dieuKien && voucher.dieuKien > totalOrderAmount) {
+    showToast(`❌ Đơn hàng chưa đạt điều kiện tối thiểu ${formatCurrency(voucher.dieuKien)}!`, 'warning')
+    return
+  }
+  
+  selectedVoucher.value = voucher
+  showToast(`✅ Đã chọn voucher: ${voucher.ten}`, 'success')
+}
+
+// Hàm áp dụng voucher đã chọn
+const applySelectedVoucher = () => {
+  if (!selectedVoucher.value) {
+    showToast('❌ Vui lòng chọn voucher!', 'warning')
+    return
+  }
+  
+  // Cập nhật mã giảm giá
+  discountCode.value = selectedVoucher.value.ma
+  
+  // Hiển thị thông tin voucher
+  let discountText = ''
+  if (selectedVoucher.value.loai === 0) {
+    discountText = `Giảm ${selectedVoucher.value.giaTri}% (tối đa ${formatCurrency(discountAmount.value)})`
+  } else {
+    discountText = `Giảm ${formatCurrency(selectedVoucher.value.giaTri)}`
+  }
+  
+  discountInfo.value = discountText
+  discountType.value = 'success'
+  
+  // Đóng modal
+  showVoucherModal.value = false
+  
+  // Lưu trạng thái
+  saveOrderState()
+  
+  showToast(`✅ Đã áp dụng voucher: ${selectedVoucher.value.ten}`, 'success')
+}
+
+// Hàm format ngày tháng
+const formatDate = (dateString: string) => {
+  if (!dateString) return 'Không xác định'
+  try {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('vi-VN')
+  } catch {
+    return 'Không xác định'
+  }
+}
+
+// ========== END VOUCHER FUNCTIONS ==========
 
 // Hàm tải danh sách sản phẩm từ API
 const fetchProducts = async () => {
@@ -1698,6 +1897,146 @@ onMounted(async () => {
   display: inline-block;
 }
 
+/* Voucher modal styles */
+.voucher-card {
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.voucher-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  border-color: #4caf50;
+}
+
+.voucher-selected {
+  border-color: #4caf50 !important;
+  background-color: #f1f8e9;
+}
+
+.voucher-code .v-chip {
+  font-family: 'Courier New', monospace;
+}
+
+.voucher-value {
+  display: flex;
+  align-items: baseline;
+}
+
+.selected-indicator {
+  text-align: center;
+}
+
+/* Voucher select button styles */
+.voucher-select-btn {
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%) !important;
+  color: white !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  text-transform: none !important;
+  letter-spacing: 0.5px !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  border: 2px solid transparent !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.voucher-select-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.voucher-select-btn:hover {
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: 0 8px 20px rgba(76, 175, 80, 0.4) !important;
+  background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.voucher-select-btn:hover::before {
+  left: 100%;
+}
+
+.voucher-select-btn:active {
+  transform: translateY(0) scale(0.98) !important;
+  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3) !important;
+}
+
+.voucher-select-btn:disabled {
+  background: #e0e0e0 !important;
+  color: #9e9e9e !important;
+  box-shadow: none !important;
+  transform: none !important;
+  border-color: transparent !important;
+}
+
+.voucher-select-btn:disabled::before {
+  display: none;
+}
+
+.voucher-select-btn .v-icon {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+/* Animation for voucher button */
+@keyframes voucher-pulse {
+  0% {
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+  }
+  50% {
+    box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+  }
+  100% {
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+  }
+}
+
+.voucher-select-btn:not(:disabled):not(:hover) {
+  animation: voucher-pulse 2s ease-in-out infinite;
+}
+
+/* Apply discount button styles */
+.apply-discount-btn {
+  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%) !important;
+  color: white !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  text-transform: none !important;
+  letter-spacing: 0.5px !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  border: 2px solid transparent !important;
+}
+
+.apply-discount-btn:hover {
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: 0 8px 20px rgba(33, 150, 243, 0.4) !important;
+  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.apply-discount-btn:active {
+  transform: translateY(0) scale(0.98) !important;
+  box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3) !important;
+}
+
+.apply-discount-btn:disabled {
+  background: #e0e0e0 !important;
+  color: #9e9e9e !important;
+  box-shadow: none !important;
+  transform: none !important;
+  border-color: transparent !important;
+}
+
 @media (max-width: 1200px) {
   .ban-hang-container {
     padding: 16px;
@@ -1715,6 +2054,17 @@ onMounted(async () => {
   }
   .v-card {
     margin-bottom: 16px;
+  }
+  
+  .voucher-select-btn,
+  .apply-discount-btn {
+    font-size: 13px !important;
+    padding: 8px 12px !important;
+    border-radius: 10px !important;
+  }
+  
+  .voucher-select-btn .v-icon {
+    margin-right: 4px !important;
   }
 }
 </style>

@@ -27,9 +27,14 @@
               <i class="fa fa-arrow-left"></i> Quay lại danh sách
             </button>
           </div>
-          <button class="btn-add" @click="$router.push({ name: 'ThemChiTietSanPham', params: { sanPhamId: $route.params.id } })">
-            <i class="fa fa-plus"></i> Thêm chi tiết sản phẩm
-          </button>
+          <div class="header-actions">
+            <button class="btn-refresh" @click="refreshData" title="Refresh dữ liệu tồn kho">
+              <i class="fa fa-sync-alt"></i> Làm mới
+            </button>
+            <button class="btn-add" @click="$router.push({ name: 'ThemChiTietSanPham', params: { sanPhamId: $route.params.id } })">
+              <i class="fa fa-plus"></i> Thêm chi tiết sản phẩm
+            </button>
+          </div>
         </div>
         <div class="table-wrapper">
           <table v-if="filteredDetails.length > 0">
@@ -124,6 +129,7 @@ export default {
       mauSacList: [],
       sanPhamInfo: null,
       mode: '',
+      refreshInterval: null, // Để lưu interval ID cho auto-refresh
     };
   },
   computed: {
@@ -328,6 +334,18 @@ export default {
         params: { id: maChiTiet },
       });
     },
+    
+    // Method để refresh dữ liệu manual
+    async refreshData() {
+      try {
+        console.log('🔄 Manual refresh dữ liệu tồn kho...');
+        await this.fetchDetails();
+        toast.success('Đã cập nhật dữ liệu tồn kho mới nhất!');
+      } catch (error) {
+        console.error('Lỗi khi refresh:', error);
+        toast.error('Không thể làm mới dữ liệu. Vui lòng thử lại!');
+      }
+    },
   },
   async mounted() {
     this.mode = this.$route.name;
@@ -376,6 +394,27 @@ export default {
     } catch (err) {
       console.error('Lỗi khi khởi tạo trang:', err);
       toast.error('Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.');
+    }
+    
+    // Auto-refresh dữ liệu mỗi 15 giây để cập nhật tồn kho real-time
+    this.refreshInterval = setInterval(async () => {
+      // Chỉ refresh khi đang ở chế độ xem danh sách chi tiết sản phẩm
+      if (this.mode === 'SanPhamChiTiet' || !this.mode) {
+        try {
+          console.log('🔄 Auto-refreshing inventory data...');
+          await this.fetchDetails();
+          console.log('✅ Auto-refresh completed');
+        } catch (err) {
+          console.error('❌ Lỗi khi auto-refresh:', err);
+        }
+      }
+    }, 15000); // 15 giây để phản hồi nhanh hơn
+  },
+  
+  beforeUnmount() {
+    // Xóa interval khi component bị unmount
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
     }
   },
 };
@@ -431,8 +470,16 @@ select {
   align-items: center;
   margin-bottom: 20px;
 }
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
 .btn-add,
-.btn-back {
+.btn-back,
+.btn-refresh {
   background: #4caf50;
   color: white;
   border: none;
@@ -445,6 +492,12 @@ select {
 }
 .btn-back {
   background: #2196f3;
+}
+.btn-refresh {
+  background: #ff9800;
+}
+.btn-refresh:hover {
+  background: #e68900;
 }
 .table-wrapper {
   overflow-x: auto;

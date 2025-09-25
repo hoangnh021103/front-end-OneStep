@@ -145,6 +145,20 @@ export const voucherApi = {
       console.error('Lỗi khi lấy chi tiết voucher:', error);
       throw error;
     }
+  },
+
+  /**
+   * Lấy danh sách voucher đang hoạt động
+   * @returns {Promise} - Promise chứa danh sách voucher hoạt động
+   */
+  getActiveVouchers: async () => {
+    try {
+      const response = await axios.get(`${API_URL}/voucher/active`);
+      return response.data;
+    } catch (error) {
+      console.error('Lỗi khi lấy danh sách voucher hoạt động:', error);
+      throw error;
+    }
   }
 };
 

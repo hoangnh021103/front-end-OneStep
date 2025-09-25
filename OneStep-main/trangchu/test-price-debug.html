@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Price Debug - Sửa lỗi hiển thị giá 0</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-title {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .test-step {
+            margin: 15px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+        }
+        .success {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .error {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .warning {
+            color: #ffc107;
+            font-weight: bold;
+        }
+        .info {
+            color: #17a2b8;
+        }
+        .code-block {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 10px 0;
+            border: 1px solid #e9ecef;
+        }
+        .debug-example {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .price-example {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Test Price Debug - Sửa lỗi hiển thị giá 0</h1>
+    
+    <div class="test-section">
+        <h2 class="test-title">🐛 Vấn đề đã phát hiện</h2>
+        
+        <div class="test-step">
+            <h3 class="error">❌ Lỗi: Giá hiển thị 0 ₫</h3>
+            <p>• Sản phẩm trong giỏ hàng hiển thị giá 0 ₫</p>
+            <p>• Tạm tính: 0 ₫</p>
+            <p>• Chỉ có phí vận chuyển: 50.000 ₫</p>
+            <p>• Tổng cộng: 50.000 ₫</p>
+        </div>
+        
+        <div class="test-step">
+            <h3 class="info">🔍 Nguyên nhân có thể:</h3>
+            <p>• API không trả về giá đúng</p>
+            <p>• Lỗi trong việc mapping dữ liệu từ API</p>
+            <p>• Fallback logic không hoạt động</p>
+            <p>• Cart items không có giá ban đầu</p>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2 class="test-title">🔧 Các sửa đổi đã thực hiện</h2>
+        
+        <div class="test-step">
+            <h3>✅ 1. Cập nhật ProductService.js</h3>
+            <div class="code-block">
+// Thêm fallback cho giá
+price: firstDetail.giaTien || item.price || 0
+            </div>
+        </div>
+        
+        <div class="test-step">
+            <h3>✅ 2. Cập nhật Checkout.vue - displayCartItems</h3>
+            <div class="code-block">
+displayCartItems() {
+  if (this.updatedCartItems.length > 0) {
+    // Kiểm tra và đảm bảo giá không bị 0
+    return this.updatedCartItems.map(item => ({
+      ...item,
+      price: item.price || item.giaTien || 0
+    }))
+  }
+  return this.cartItems
+}
+            </div>
+        </div>
+        
+        <div class="test-step">
+            <h3>✅ 3. Thêm debug logging</h3>
+            <div class="code-block">
+updatedCartTotal() {
+  const total = this.displayCartItems.reduce((total, item) => {
+    const itemPrice = item.price || item.giaTien || 0
+    console.log(`💰 Item ${item.name}: price=${item.price}, giaTien=${item.giaTien}, quantity=${item.quantity}`)
+    return total + (itemPrice * item.quantity)
+  }, 0)
+  console.log(`💰 Total cart: ${total}`)
+  return total
+}
+            </div>
+        </div>
+        
+        <div class="test-step">
+            <h3>✅ 4. Thêm phương thức debugAndFixPrices</h3>
+            <div class="code-block">
+debugAndFixPrices() {
+  // Nếu tất cả giá đều là 0, sử dụng giá gốc từ cart
+  const hasZeroPrices = this.displayCartItems.every(item => (item.price || item.giaTien || 0) === 0)
+  if (hasZeroPrices && this.cartItems.length > 0) {
+    this.updatedCartItems = this.cartItems.map(item => ({
+      ...item,
+      price: item.price || 0
+    }))
+  }
+}
+            </div>
+        </div>
+        
+        <div class="test-step">
+            <h3>✅ 5. Thêm UI debug button</h3>
+            <div class="debug-example">
+                <p><strong>Hiển thị khi:</strong> updatedCartTotal === 0 && cartItems.length > 0</p>
+                <p><strong>Nội dung:</strong> "Giá sản phẩm không hiển thị đúng" + Button "Sửa giá"</p>
+                <p><strong>Màu:</strong> Vàng (#fff3cd)</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2 class="test-title">🧪 Cách test và debug</h2>
+        
+        <div class="test-step">
+            <h3>Bước 1: Kiểm tra Console Logs</h3>
+            <div class="code-block">
+// Mở Developer Tools → Console
+// Tìm các log sau:
+🔄 Cập nhật giá sản phẩm trong giỏ hàng...
+📡 Lấy chi tiết sản phẩm cho sanPhamId: [ID]
+✅ Tìm thấy [X] chi tiết sản phẩm
+💰 Item [Name]: price=[price], giaTien=[giaTien], quantity=[qty]
+💰 Total cart: [total]
+🔍 Debug cart items:
+            </div>
+        </div>
+        
+        <div class="test-step">
+            <h3>Bước 2: Kiểm tra Network Requests</h3>
+            <p>• Mở Developer Tools → Network</p>
+            <p>• Reload trang checkout</p>
+            <p>• Kiểm tra request đến API chi-tiet-san-pham</p>
+            <p>• Xem response có chứa giaTien không</p>
+        </div>
+        
+        <div class="test-step">
+            <h3>Bước 3: Kiểm tra Vuex Store</h3>
+            <p>• Mở Vuex DevTools</p>
+            <p>• Kiểm tra cart store state</p>
+            <p>• Xem cartItems có giá ban đầu không</p>
+        </div>
+        
+        <div class="test-step">
+            <h3>Bước 4: Sử dụng Debug Button</h3>
+            <p>• Nếu thấy thông báo "Giá sản phẩm không hiển thị đúng"</p>
+            <p>• Click button "Sửa giá"</p>
+            <p>• Kiểm tra console logs</p>
+            <p>• Xem giá có được sửa không</p>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2 class="test-title">📊 Các trường hợp test</h2>
+        
+        <div class="test-step">
+            <h3>Test Case 1: API trả về giá đúng</h3>
+            <div class="price-example">
+                <p><strong>Kết quả mong đợi:</strong> Giá hiển thị đúng từ API</p>
+                <p><strong>Console:</strong> ✅ Tìm thấy chi tiết sản phẩm</p>
+                <p><strong>UI:</strong> Không có debug message</p>
+            </div>
+        </div>
+        
+        <div class="test-step">
+            <h3>Test Case 2: API trả về giá 0</h3>
+            <div class="debug-example">
+                <p><strong>Kết quả mong đợi:</strong> Sử dụng giá từ cart gốc</p>
+                <p><strong>Console:</strong> ⚠️ Tất cả giá đều là 0, sử dụng giá gốc từ cart</p>
+                <p><strong>UI:</strong> Hiển thị debug message</p>
+            </div>
+        </div>
+        
+        <div class="test-step">
+            <h3>Test Case 3: API lỗi</h3>
+            <div class="debug-example">
+                <p><strong>Kết quả mong đợi:</strong> Sử dụng giá từ cart gốc</p>
+                <p><strong>Console:</strong> ❌ Lỗi cập nhật giá sản phẩm</p>
+                <p><strong>UI:</strong> Hiển thị error message + button "Thử lại"</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2 class="test-title">🎯 Kết quả mong đợi</h2>
+        
+        <div class="test-step">
+            <h3 class="success">✅ Thành công</h3>
+            <p>• Giá sản phẩm hiển thị đúng (không phải 0 ₫)</p>
+            <p>• Tạm tính hiển thị tổng giá sản phẩm</p>
+            <p>• Tổng cộng = Tạm tính + Phí vận chuyển</p>
+            <p>• Console logs hiển thị thông tin debug</p>
+        </div>
+        
+        <div class="test-step">
+            <h3 class="warning">⚠️ Nếu vẫn có lỗi</h3>
+            <p>• Kiểm tra cart items có giá ban đầu không</p>
+            <p>• Kiểm tra API response có đúng format không</p>
+            <p>• Kiểm tra network connection</p>
+            <p>• Sử dụng debug button để sửa giá</p>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2 class="test-title">🔍 Debug Commands</h2>
+        
+        <div class="test-step">
+            <h3>Console Commands để debug:</h3>
+            <div class="code-block">
+// Kiểm tra cart items
+console.log('Cart Items:', this.$store.state.cart.items)
+
+// Kiểm tra updated cart items
+console.log('Updated Cart Items:', this.updatedCartItems)
+
+// Kiểm tra display cart items
+console.log('Display Cart Items:', this.displayCartItems)
+
+// Kiểm tra cart total
+console.log('Cart Total:', this.$store.getters['cart/cartTotal'])
+
+// Kiểm tra updated cart total
+console.log('Updated Cart Total:', this.updatedCartTotal)
+
+// Gọi debug function
+this.debugAndFixPrices()
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Test functions
+        function testPriceDebug() {
+            console.log('🔧 Testing Price Debug...')
+            
+            // Mock cart items
+            const mockCartItems = [
+                {
+                    id: 1,
+                    name: 'Giày Nike Court Vision Mid',
+                    price: 1800000,
+                    quantity: 1,
+                    image: '/images/shoe-1.jpg'
+                }
+            ]
+            
+            // Mock API response
+            const mockApiResponse = {
+                giaTien: 1800000,
+                tienGiamGia: 0,
+                soLuongTon: 10
+            }
+            
+            // Test price calculation
+            const total = mockCartItems.reduce((sum, item) => {
+                const itemPrice = item.price || 0
+                console.log(`💰 Item ${item.name}: price=${item.price}, quantity=${item.quantity}, total=${itemPrice * item.quantity}`)
+                return sum + (itemPrice * item.quantity)
+            }, 0)
+            
+            console.log(`💰 Total cart: ${total}`)
+            console.log('✅ Price debug test completed!')
+        }
+        
+        // Run test on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Price Debug Test Page Loaded')
+            testPriceDebug()
+        })
+    </script>
+</body>
+</html>
