@@ -24,8 +24,8 @@
             <p>Khám phá bộ sưu tập giày đa dạng với chất lượng cao và giá cả hợp lý</p>
             <div class="product-stats">
               <div class="stat-item">
-                <span class="stat-number">{{ allProducts.length }}</span>
-                <span class="stat-label">Sản phẩm</span>
+                <span class="stat-number">{{ filteredProducts.length }}</span>
+                <span class="stat-label">Sản phẩm khả dụng</span>
               </div>
               <div class="stat-item">
                 <span class="stat-number">{{ uniqueBrands.length }}</span>

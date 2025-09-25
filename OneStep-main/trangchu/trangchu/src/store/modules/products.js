@@ -177,7 +177,11 @@ const actions = {
   },
   filterProducts({ commit, state }, filters = {}) {
     let filtered = [...state.products]
-    
+
+    // Lọc sản phẩm có stock > 0 trước tiên
+    filtered = filtered.filter(product => product.stock > 0)
+    console.log(`📦 Stock filter: ${filtered.length} products available`)
+
     console.log('🔍 Filtering products with:', filters)
     
     // Filter by price range

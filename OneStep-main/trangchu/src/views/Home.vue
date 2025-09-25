@@ -62,9 +62,9 @@
         
         <!-- Products Grid -->
         <div class="row row-pb-md">
-          <ProductCard 
-            v-for="product in bestSellingProducts" 
-            :key="product.id" 
+          <ProductCard
+            v-for="product in availableBestSellingProducts"
+            :key="product.id"
             :product="product"
             @product-added="handleProductAdded"
           />
@@ -90,9 +90,9 @@
         
         <!-- Products Grid -->
         <div class="row row-pb-md">
-          <ProductCard 
-            v-for="product in allProducts" 
-            :key="product.id" 
+          <ProductCard
+            v-for="product in availableProducts"
+            :key="product.id"
             :product="product"
             @product-added="handleProductAdded"
           />
@@ -152,6 +152,16 @@ export default {
     return {
       allProducts: [],
       bestSellingProducts: []
+    }
+  },
+  computed: {
+    availableProducts() {
+      // Lọc sản phẩm có stock > 0 và stock không phải null/undefined
+      return this.allProducts.filter(product => product.stock && product.stock > 0)
+    },
+    availableBestSellingProducts() {
+      // Trả về sản phẩm bán chạy đã được filter
+      return this.bestSellingProducts
     }
   },
   mounted() {
@@ -287,9 +297,25 @@ export default {
         }
       }
       
-      // Lấy 8 sản phẩm đầu tiên làm sản phẩm bán chạy
-      this.bestSellingProducts = this.allProducts.slice(0, 8);
-      console.log('🎉 Home - Hoàn thành fetch products. Tổng số sản phẩm:', this.allProducts.length);
+      // Lấy 8 sản phẩm có stock > 0 đầu tiên làm sản phẩm bán chạy
+      this.bestSellingProducts = this.allProducts.filter(product => product.stock && product.stock > 0).slice(0, 8);
+      console.log('🎉 Home - Hoàn thành fetch products. Tổng số sản phẩm:', this.allProducts.length, 'Sản phẩm khả dụng:', this.availableProducts.length);
+
+      // Debug: In ra stock của các sản phẩm
+      console.log('🔍 Debug stock của tất cả sản phẩm:');
+      this.allProducts.forEach((product, index) => {
+        console.log(`  ${index + 1}. ${product.name} - Stock: ${product.stock} - Available: ${product.stock && product.stock > 0}`);
+      });
+
+      console.log('🔍 Debug stock của sản phẩm khả dụng:');
+      this.availableProducts.forEach((product, index) => {
+        console.log(`  ${index + 1}. ${product.name} - Stock: ${product.stock}`);
+      });
+
+      console.log('🔍 Debug stock của sản phẩm bán chạy:');
+      this.bestSellingProducts.forEach((product, index) => {
+        console.log(`  ${index + 1}. ${product.name} - Stock: ${product.stock}`);
+      });
     },
     
     async loadProductDetails() {
@@ -405,7 +431,8 @@ export default {
       ];
       
       this.allProducts = fallbackProducts;
-      this.bestSellingProducts = fallbackProducts.slice(0, 4);
+      // Lấy sản phẩm có stock > 0 đầu tiên làm sản phẩm bán chạy
+      this.bestSellingProducts = fallbackProducts.filter(p => p.stock && p.stock > 0).slice(0, 4);
     },
     
     handleProductAdded(product) {

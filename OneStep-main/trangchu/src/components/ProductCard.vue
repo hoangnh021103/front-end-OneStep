@@ -15,12 +15,12 @@
         </div>
         <!-- Đã xóa phần stock-info -->
         <div class="product-actions mt-3">
-          <button 
-            class="btn btn-primary btn-sm me-2" 
+          <button
+            class="btn btn-primary btn-sm me-2"
             @click.stop="addToCart"
-            :disabled="product.stock === 0"
+            :disabled="!product.stock || product.stock <= 0"
           >
-            {{ product.stock === 0 ? 'Hết hàng' : 'Thêm vào giỏ hàng' }}
+            {{ (!product.stock || product.stock <= 0) ? 'Hết hàng' : 'Thêm vào giỏ hàng' }}
           </button>
         </div>
       </div>
@@ -73,6 +73,12 @@ export default {
     },
     
     addToCart() {
+      // Kiểm tra xem sản phẩm có còn hàng không
+      if (!this.product.stock || this.product.stock <= 0) {
+        this.$toast?.error('Sản phẩm này đã hết hàng và không thể thêm vào giỏ hàng!')
+        return
+      }
+
       // Gọi action addToCart từ store với tham số là sản phẩm hiện tại
       this.$store.dispatch('cart/addToCart', this.product)
       // Hiển thị thông báo thành công ngay tại component

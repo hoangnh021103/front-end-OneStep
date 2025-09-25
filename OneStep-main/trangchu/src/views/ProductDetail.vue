@@ -395,7 +395,16 @@ export default {
     },
     addProductToCart() {
       if (!this.selectedVariant) return this.$toast?.error('Chọn màu và size!')
-      if (this.currentStock <= 0) return this.$toast?.error('Hết hàng!')
+      if (this.currentStock <= 0) {
+        this.$toast?.error('Sản phẩm này đã hết hàng và không thể thêm vào giỏ hàng!')
+        return
+      }
+
+      // Kiểm tra stock nhỏ hơn 0 (trường hợp dữ liệu không hợp lệ)
+      if (this.currentStock < 0) {
+        this.$toast?.error('Sản phẩm này hiện không khả dụng!')
+        return
+      }
 
       const item = {
         ...this.product,

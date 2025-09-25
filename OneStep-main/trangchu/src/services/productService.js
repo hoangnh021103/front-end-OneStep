@@ -204,11 +204,15 @@ class ProductService {
       const originalPrice = product.giaBan || 0
       const discountPercent = 0
       const tags = []
-      
+
+      // Xử lý trạng thái hết hàng dựa trên trường trangThai từ API
+      // trangThai = 1: còn hàng, trangThai = 0: hết hàng
+      const actualStock = (product.trangThai === 1) ? (product.soLuongTon || 0) : 0
+
       // Tạo mảng màu sắc và kích thước từ dữ liệu API
       const colors = product.tenMauSac ? [product.tenMauSac] : []
       const sizes = product.tenKichThuoc ? [product.tenKichThuoc] : []
-      
+
       return {
         id: product.maSanPham || product.id || Math.random().toString(),
         code: product.maCode || '',
@@ -223,8 +227,8 @@ class ProductService {
         sizes: sizes,
         tags: tags,
         category: '', // Có thể lấy từ API khác nếu cần
-        status: 'active', // Mặc định status
-        stock: product.soLuongTon || 0,
+        status: product.trangThai === 1 ? 'active' : 'out-of-stock', // Cập nhật status dựa trên trạng thái
+        stock: actualStock,
         // Thông tin bổ sung từ API mới
         maSanPham: product.maSanPham,
         maCode: product.maCode,
@@ -235,7 +239,8 @@ class ProductService {
         giaBan: product.giaBan,
         soLuongTon: product.soLuongTon,
         tenKichThuoc: product.tenKichThuoc,
-        tenMauSac: product.tenMauSac
+        tenMauSac: product.tenMauSac,
+        trangThai: product.trangThai // Thêm trường trạng thái để sử dụng ở frontend
       }
     } else {
       // Xử lý dữ liệu từ API chi-tiet-san-pham (fallback)

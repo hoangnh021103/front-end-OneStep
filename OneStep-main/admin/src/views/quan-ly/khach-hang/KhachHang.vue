@@ -112,17 +112,26 @@
       </div>
 
       <div class="form-group">
-        <label>Ngày sinh</label>
-        <input v-model="newCustomer.ngaySinh" type="date" />
+        <label>Ngày sinh <span class="required">*</span></label>
+        <input
+          v-model="newCustomer.ngaySinh"
+          type="date"
+          :class="{ error: errors.ngaySinh }"
+        />
+        <span v-if="errors.ngaySinh" class="error-message">{{ errors.ngaySinh }}</span>
       </div>
 
       <div class="form-group">
         <label>Giới tính</label>
-        <select v-model="newCustomer.gioiTinh">
+        <select
+          v-model="newCustomer.gioiTinh"
+          :class="{ error: errors.gioiTinh }"
+        >
           <option value="">Chọn giới tính</option>
           <option value="Nam">Nam</option>
           <option value="Nữ">Nữ</option>
         </select>
+        <span v-if="errors.gioiTinh" class="error-message">{{ errors.gioiTinh }}</span>
       </div>
     </div>
 
@@ -165,7 +174,9 @@ export default {
       errors: {
         hoTen: "",
         email: "",
-        soDienThoai: ""
+        soDienThoai: "",
+        ngaySinh: "",
+        gioiTinh: ""
       },
       currentPage: 1,
       pageSize: 5
@@ -211,25 +222,101 @@ export default {
       if (!date) return "";
       return new Date(date).toLocaleDateString("vi-VN");
     },
-    validateForm() {
-      this.errors = { hoTen: "", email: "", soDienThoai: "" };
+    async validateForm() {
+      this.errors = { hoTen: "", email: "", soDienThoai: "", ngaySinh: "", gioiTinh: "" };
       let valid = true;
+
+      // Validate full name
       if (!this.newCustomer.hoTen.trim()) {
-        this.errors.hoTen = "Tên khách hàng là bắt buộc.";
+        this.errors.hoTen = "Họ và tên là bắt buộc.";
+        valid = false;
+      } else if (this.newCustomer.hoTen.trim().length < 2) {
+        this.errors.hoTen = "Họ và tên phải có ít nhất 2 ký tự.";
+        valid = false;
+      } else if (this.newCustomer.hoTen.trim().length > 100) {
+        this.errors.hoTen = "Họ và tên không được vượt quá 100 ký tự.";
+        valid = false;
+      } else if (!/^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂưăạảấầẩẫậắằẳẵặẹẻẽềềểỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪễệỉịọỏốồổỗộớờởỡợụủứừỬỮỰỲỴÝỶỸửữựỳỵỷỹ\s]+$/.test(this.newCustomer.hoTen.trim())) {
+        this.errors.hoTen = "Họ và tên chỉ được chứa chữ cái và khoảng trắng.";
         valid = false;
       }
-      if (!this.newCustomer.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.newCustomer.email)) {
-        this.errors.email = "Email không hợp lệ.";
+
+      // Validate email
+      if (!this.newCustomer.email.trim()) {
+        this.errors.email = "Email là bắt buộc.";
         valid = false;
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.newCustomer.email.trim())) {
+        this.errors.email = "Email không đúng định dạng.";
+        valid = false;
+      } else if (this.newCustomer.email.trim().length > 100) {
+        this.errors.email = "Email không được vượt quá 100 ký tự.";
+        valid = false;
+      } else if (this.editIndex === null) {
+        // Check if email already exists (only for new customers)
+        try {
+          const existingCustomers = await axios.get("http://localhost:8080/khach-hang/hien-thi");
+          const emailExists = existingCustomers.data.some(customer =>
+            customer.email && customer.email.toLowerCase() === this.newCustomer.email.trim().toLowerCase()
+          );
+          if (emailExists) {
+            this.errors.email = "Email đã được sử dụng.";
+            valid = false;
+          }
+        } catch (error) {
+          console.error("Error checking email uniqueness:", error);
+        }
       }
+
+      // Validate phone number
       if (!this.newCustomer.soDienThoai.trim()) {
         this.errors.soDienThoai = "Số điện thoại là bắt buộc.";
         valid = false;
+      } else if (!/^(0[3|5|7|8|9])[0-9]{8}$/.test(this.newCustomer.soDienThoai.trim())) {
+        this.errors.soDienThoai = "Số điện thoại không đúng định dạng (VD: 09xxxxxxxx, 03xxxxxxxx).";
+        valid = false;
+      } else if (this.editIndex === null) {
+        // Check if phone number already exists (only for new customers)
+        try {
+          const existingCustomers = await axios.get("http://localhost:8080/khach-hang/hien-thi");
+          const phoneExists = existingCustomers.data.some(customer =>
+            customer.soDienThoai === this.newCustomer.soDienThoai.trim()
+          );
+          if (phoneExists) {
+            this.errors.soDienThoai = "Số điện thoại đã được sử dụng.";
+            valid = false;
+          }
+        } catch (error) {
+          console.error("Error checking phone uniqueness:", error);
+        }
       }
+
+      // Validate birth date
+      if (!this.newCustomer.ngaySinh) {
+        this.errors.ngaySinh = "Ngày sinh là bắt buộc.";
+        valid = false;
+      } else {
+        const birthDate = new Date(this.newCustomer.ngaySinh);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+          age--;
+        }
+
+        if (birthDate > today) {
+          this.errors.ngaySinh = "Ngày sinh phải là ngày trong quá khứ.";
+          valid = false;
+        } else if (age > 150) {
+          this.errors.ngaySinh = "Ngày sinh không hợp lệ.";
+          valid = false;
+        }
+      }
+
       return valid;
     },
     async saveCustomer() {
-      if (!this.validateForm()) return;
+      if (!(await this.validateForm())) return;
       try {
         this.isSubmitting = true;
         if (this.editIndex !== null) {
@@ -273,7 +360,7 @@ export default {
     },
     closeModal() {
       this.showModal = false;
-      this.errors = { hoTen: "", email: "", soDienThoai: "" };
+      this.errors = { hoTen: "", email: "", soDienThoai: "", ngaySinh: "", gioiTinh: "" };
     },
     changePage(p) {
       if (p >= 1 && p <= this.totalPages) this.currentPage = p;
