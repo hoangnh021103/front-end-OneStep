@@ -1,12 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-
-const select = ref({ state: 'Hôm Nay', abbr: 'FL' });
-const items = [
-  { state: 'Hôm Nay', abbr: 'FL' },
-  { state: 'Tháng Này', abbr: 'GA' },
-  { state: 'Năm Này', abbr: 'NE' }
-];
+import { computed } from 'vue';
 
 // chart 1
 const chartOptions1 = computed(() => {
@@ -102,25 +95,9 @@ const lineChart1 = {
     <v-card variant="outlined">
       <v-card-text>
         <v-row>
-          <v-col cols="12" sm="9">
+          <v-col cols="12">
             <span class="text-subtitle-2 text-disabled font-weight-bold">Thống Kê Bán Giày Thể Thao</span>
             <h3 class="text-h3 mt-1">45,250.00 vnđ</h3>
-          </v-col>
-          <v-col cols="12" sm="3">
-            <v-select
-              color="primary"
-              variant="outlined"
-              hide-details
-              v-model="select"
-              :items="items"
-              item-title="state"
-              item-value="abbr"
-              label="Chọn"
-              persistent-hint
-              return-object
-              single-line
-            >
-            </v-select>
           </v-col>
         </v-row>
         <div class="mt-4">
