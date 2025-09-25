@@ -160,10 +160,51 @@ export default {
       this.showModal = false;
     },
 
+    // 🟢 Validate material
+    async validateMaterial() {
+      // Validate material name
+      if (!this.newMaterial.ten || !this.newMaterial.ten.trim()) {
+        toast.error("Tên chất liệu là bắt buộc.");
+        return false;
+      }
+
+      if (this.newMaterial.ten.trim().length < 2) {
+        toast.error("Tên chất liệu phải có ít nhất 2 ký tự.");
+        return false;
+      }
+
+      if (this.newMaterial.ten.trim().length > 100) {
+        toast.error("Tên chất liệu không được vượt quá 100 ký tự.");
+        return false;
+      }
+
+      if (!/^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂưăạảấầẩẫậắằẳẵặẹẻẽềềểỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪễệỉịọỏốồổỗộớờởỡợụủứừỬỮỰỲỴÝỶỸửữựỳỵỷỹ\s\-\.&]+$/.test(this.newMaterial.ten.trim())) {
+        toast.error("Tên chất liệu chỉ được chứa chữ cái, khoảng trắng, dấu gạch ngang, dấu chấm và dấu &.");
+        return false;
+      }
+
+      // Check for duplicate material name (only for new materials)
+      if (this.editIndex === null) {
+        try {
+          const existingMaterials = await axios.get("http://localhost:8080/chat-lieu/hien-thi");
+          const materialExists = existingMaterials.data.some(material =>
+            material.ten && material.ten.toLowerCase() === this.newMaterial.ten.trim().toLowerCase()
+          );
+          if (materialExists) {
+            toast.error("Tên chất liệu đã được sử dụng.");
+            return false;
+          }
+        } catch (error) {
+          console.error("Error checking material uniqueness:", error);
+        }
+      }
+
+      return true;
+    },
+
     // 🟢 Lưu (thêm/sửa) chất liệu
     async saveMaterial() {
-      if (!this.newMaterial.ten) {
-        toast.error("Vui lòng nhập tên chất liệu.");
+      if (!(await this.validateMaterial())) {
         return;
       }
 

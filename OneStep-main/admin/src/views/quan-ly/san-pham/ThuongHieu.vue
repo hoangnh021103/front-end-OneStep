@@ -136,9 +136,49 @@ export default {
         trangThai: 1
       };
     },
+    async validateBrand() {
+      // Validate brand name
+      if (!this.newBrand.ten || !this.newBrand.ten.trim()) {
+        toast.error("Tên thương hiệu là bắt buộc.");
+        return false;
+      }
+
+      if (this.newBrand.ten.trim().length < 2) {
+        toast.error("Tên thương hiệu phải có ít nhất 2 ký tự.");
+        return false;
+      }
+
+      if (this.newBrand.ten.trim().length > 100) {
+        toast.error("Tên thương hiệu không được vượt quá 100 ký tự.");
+        return false;
+      }
+
+      if (!/^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂưăạảấầẩẫậắằẳẵặẹẻẽềềểỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪễệỉịọỏốồổỗộớờởỡợụủứừỬỮỰỲỴÝỶỸửữựỳỵỷỹ\s\-\.&]+$/.test(this.newBrand.ten.trim())) {
+        toast.error("Tên thương hiệu chỉ được chứa chữ cái, khoảng trắng, dấu gạch ngang, dấu chấm và dấu &.");
+        return false;
+      }
+
+      // Check for duplicate brand name (only for new brands)
+      if (this.editIndex === null) {
+        try {
+          const existingBrands = await axios.get("http://localhost:8080/thuong-hieu/hien-thi");
+          const brandExists = existingBrands.data.some(brand =>
+            brand.ten && brand.ten.toLowerCase() === this.newBrand.ten.trim().toLowerCase()
+          );
+          if (brandExists) {
+            toast.error("Tên thương hiệu đã được sử dụng.");
+            return false;
+          }
+        } catch (error) {
+          console.error("Error checking brand uniqueness:", error);
+        }
+      }
+
+      return true;
+    },
+
     async saveBrand() {
-      if (!this.newBrand.ten) {
-        toast.error("Vui lòng nhập tên thương hiệu.");
+      if (!(await this.validateBrand())) {
         return;
       }
 

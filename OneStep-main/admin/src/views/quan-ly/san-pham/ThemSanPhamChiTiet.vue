@@ -228,7 +228,7 @@ export default {
       console.log('Đã chọn sanPhamId:', this.form.sanPhamId);
       this.errors.sanPhamId = '';
     },
-    validateForm() {
+    async validateForm() {
       this.errors = {
         sanPhamId: '',
         kichCoId: '',
@@ -239,37 +239,83 @@ export default {
       };
       let isValid = true;
 
+      // Validate product selection
       if (!this.form.sanPhamId || this.form.sanPhamId === 0) {
         this.errors.sanPhamId = 'Sản phẩm là bắt buộc.';
         isValid = false;
       }
+
+      // Validate size selection
       if (!this.form.kichCoId || this.form.kichCoId === 0) {
         this.errors.kichCoId = 'Kích cỡ là bắt buộc.';
         isValid = false;
       }
+
+      // Validate color selection
       if (!this.form.mauSacId || this.form.mauSacId === 0) {
         this.errors.mauSacId = 'Màu sắc là bắt buộc.';
         isValid = false;
       }
-      if (this.form.giaTien <= 0) {
+
+      // Validate price
+      if (!this.form.giaTien || this.form.giaTien <= 0) {
         this.errors.giaTien = 'Giá tiền phải lớn hơn 0.';
         isValid = false;
+      } else if (this.form.giaTien > 100000000) {
+        this.errors.giaTien = 'Giá tiền không được vượt quá 100,000,000 VNĐ.';
+        isValid = false;
+      } else if (!Number.isInteger(this.form.giaTien)) {
+        this.errors.giaTien = 'Giá tiền phải là số nguyên.';
+        isValid = false;
       }
+
+      // Validate quantity
       if (this.form.soLuongTon < 0) {
         this.errors.soLuongTon = 'Số lượng tồn không được âm.';
         isValid = false;
+      } else if (this.form.soLuongTon > 10000) {
+        this.errors.soLuongTon = 'Số lượng tồn không được vượt quá 10,000.';
+        isValid = false;
+      } else if (!Number.isInteger(this.form.soLuongTon)) {
+        this.errors.soLuongTon = 'Số lượng tồn phải là số nguyên.';
+        isValid = false;
       }
+
+      // Validate status
       if (this.form.trangThai !== 0 && this.form.trangThai !== 1) {
         this.errors.trangThai = 'Vui lòng chọn trạng thái hợp lệ.';
         isValid = false;
       }
+
+      // Check for duplicate product detail combination (only for new entries)
+      if (isValid && !this.isEditing && this.form.sanPhamId && this.form.kichCoId && this.form.mauSacId) {
+        try {
+          const response = await axios.get("http://localhost:8080/chi-tiet-san-pham/hien-thi");
+          const existingDetails = Array.isArray(response.data) ? response.data : response.data.data || [];
+          const duplicateExists = existingDetails.some(detail =>
+            detail.sanPhamId === Number(this.form.sanPhamId) &&
+            detail.kichCoId === Number(this.form.kichCoId) &&
+            detail.mauSacId === Number(this.form.mauSacId) &&
+            detail.daXoa === 0
+          );
+          if (duplicateExists) {
+            this.errors.sanPhamId = 'Sản phẩm với kích cỡ và màu sắc này đã tồn tại.';
+            this.errors.kichCoId = 'Sản phẩm với kích cỡ và màu sắc này đã tồn tại.';
+            this.errors.mauSacId = 'Sản phẩm với kích cỡ và màu sắc này đã tồn tại.';
+            isValid = false;
+          }
+        } catch (error) {
+          console.error("Error checking duplicate product detail:", error);
+        }
+      }
+
       console.log('Kết quả xác thực:', { isValid, errors: this.errors });
       return isValid;
     },
     async handleSubmit() {
       console.log('Biểu mẫu trước khi gửi:', this.form);
       console.log('Trạng thái isEditing:', this.isEditing);
-      if (!this.validateForm()) {
+      if (!(await this.validateForm())) {
         toast.error('Vui lòng điền đầy đủ thông tin.');
         return;
       }

@@ -144,10 +144,51 @@ export default {
       this.showModal = false;
     },
 
+    // 🟢 Validate sole type
+    async validateSole() {
+      // Validate sole type name
+      if (!this.newSole.ten || !this.newSole.ten.trim()) {
+        toast.error("Tên loại đế là bắt buộc.");
+        return false;
+      }
+
+      if (this.newSole.ten.trim().length < 2) {
+        toast.error("Tên loại đế phải có ít nhất 2 ký tự.");
+        return false;
+      }
+
+      if (this.newSole.ten.trim().length > 100) {
+        toast.error("Tên loại đế không được vượt quá 100 ký tự.");
+        return false;
+      }
+
+      if (!/^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂưăạảấầẩẫậắằẳẵặẹẻẽềềểỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪễệỉịọỏốồổỗộớờởỡợụủứừỬỮỰỲỴÝỶỸửữựỳỵỷỹ\s\-\.&]+$/.test(this.newSole.ten.trim())) {
+        toast.error("Tên loại đế chỉ được chứa chữ cái, khoảng trắng, dấu gạch ngang, dấu chấm và dấu &.");
+        return false;
+      }
+
+      // Check for duplicate sole type name (only for new sole types)
+      if (this.editIndex === null) {
+        try {
+          const existingSoles = await axios.get("http://localhost:8080/de-giay/hien-thi");
+          const soleExists = existingSoles.data.some(sole =>
+            sole.ten && sole.ten.toLowerCase() === this.newSole.ten.trim().toLowerCase()
+          );
+          if (soleExists) {
+            toast.error("Tên loại đế đã được sử dụng.");
+            return false;
+          }
+        } catch (error) {
+          console.error("Error checking sole uniqueness:", error);
+        }
+      }
+
+      return true;
+    },
+
     // 🟢 thêm mới hoặc cập nhật
     async saveSole() {
-      if (!this.newSole.ten) {
-        toast.error("Vui lòng nhập tên loại đế.");
+      if (!(await this.validateSole())) {
         return;
       }
 

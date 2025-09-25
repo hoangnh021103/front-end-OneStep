@@ -125,11 +125,52 @@ export default {
     closeModal() {
       this.showModal = false;
     },
+    async validateColor() {
+      // Validate color name
+      if (!this.newColor.ten || !this.newColor.ten.trim()) {
+        toast.error("Tên màu sắc là bắt buộc.");
+        return false;
+      }
+
+      if (this.newColor.ten.trim().length < 2) {
+        toast.error("Tên màu sắc phải có ít nhất 2 ký tự.");
+        return false;
+      }
+
+      if (this.newColor.ten.trim().length > 50) {
+        toast.error("Tên màu sắc không được vượt quá 50 ký tự.");
+        return false;
+      }
+
+      if (!/^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂưăạảấầẩẫậắằẳẵặẹẻẽềềểỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪễệỉịọỏốồổỗộớờởỡợụủứừỬỮỰỲỴÝỶỸửữựỳỵỷỹ\s\-\.&]+$/.test(this.newColor.ten.trim())) {
+        toast.error("Tên màu sắc chỉ được chứa chữ cái, khoảng trắng, dấu gạch ngang, dấu chấm và dấu &.");
+        return false;
+      }
+
+      // Check for duplicate color name (only for new colors)
+      if (this.editIndex === null) {
+        try {
+          const existingColors = await axios.get("http://localhost:8080/mau-sac/hien-thi");
+          const colorExists = existingColors.data.some(color =>
+            color.ten && color.ten.toLowerCase() === this.newColor.ten.trim().toLowerCase()
+          );
+          if (colorExists) {
+            toast.error("Tên màu sắc đã được sử dụng.");
+            return false;
+          }
+        } catch (error) {
+          console.error("Error checking color uniqueness:", error);
+        }
+      }
+
+      return true;
+    },
+
     async saveColor() {
-      if (!this.newColor.ten) {
-        toast.error("Vui lòng nhập tên màu sắc.");
+      if (!(await this.validateColor())) {
         return;
       }
+
       try {
         const payload = {
           ten: this.newColor.ten,

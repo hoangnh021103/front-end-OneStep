@@ -307,8 +307,11 @@ export default {
         if (birthDate > today) {
           this.errors.ngaySinh = "Ngày sinh phải là ngày trong quá khứ.";
           valid = false;
+        } else if (age < 13) {
+          this.errors.ngaySinh = "Khách hàng phải từ 13 tuổi trở lên.";
+          valid = false;
         } else if (age > 150) {
-          this.errors.ngaySinh = "Ngày sinh không hợp lệ.";
+          this.errors.ngaySinh = "Khách hàng không được vượt quá 150 tuổi.";
           valid = false;
         }
       }

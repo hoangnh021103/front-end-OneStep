@@ -9,7 +9,7 @@
     <div class="filter-section">
       <h3 class="section-title">Bộ lọc tìm kiếm</h3>
       <div class="filter-fields">
-        <input type="text" v-model="search" placeholder="Nhập tên kích thước" />
+        <input type="text" v-model="search" placeholder="Nhập kích thước để tìm kiếm" />
         <select v-model="status">
           <option value="">Tất cả trạng thái</option>
           <option value="1">Còn hàng</option>
@@ -82,12 +82,12 @@
         <h3>
           {{ editIndex !== null ? "Chỉnh Sửa Kích Thước" : "Thêm Kích Thước" }}
         </h3>
-        <label for="sizeNameInput">Tên kích thước</label>
+        <label for="sizeNameInput">Kích thước (số) *</label>
         <input
           id="sizeNameInput"
           type="text"
           v-model="newSize.ten"
-          placeholder="Nhập tên kích thước"
+          placeholder="Nhập kích thước (VD: 42, 43.5)"
         />
         <label for="sizeStatusSelect">Trạng thái</label>
         <select id="sizeStatusSelect" v-model="newSize.trangThai">
@@ -172,9 +172,57 @@ export default {
     closeModal() {
       this.showModal = false;
     },
+    async validateSize() {
+      // Validate size name
+      if (!this.newSize.ten || !this.newSize.ten.trim()) {
+        toast.error("Tên kích thước là bắt buộc.");
+        return false;
+      }
+
+      if (this.newSize.ten.trim().length < 1) {
+        toast.error("Tên kích thước phải có ít nhất 1 ký tự.");
+        return false;
+      }
+
+      if (this.newSize.ten.trim().length > 20) {
+        toast.error("Tên kích thước không được vượt quá 20 ký tự.");
+        return false;
+      }
+
+      // Validate size format (should be numeric only like "42", "43.5", "36")
+      if (!/^[0-9]+(\.[0-9]+)?$/.test(this.newSize.ten.trim())) {
+        toast.error("Kích thước chỉ được chứa số và dấu chấm thập phân (VD: 42, 43.5).");
+        return false;
+      }
+
+      // Validate size range (reasonable shoe sizes: 20-50)
+      const sizeValue = parseFloat(this.newSize.ten.trim());
+      if (sizeValue < 20 || sizeValue > 50) {
+        toast.error("Kích thước phải nằm trong khoảng từ 20 đến 50.");
+        return false;
+      }
+
+      // Check for duplicate size name (only for new sizes)
+      if (this.editIndex === null) {
+        try {
+          const existingSizes = await axios.get("http://localhost:8080/kich-co/hien-thi");
+          const sizeExists = existingSizes.data.some(size =>
+            size.ten && size.ten.toLowerCase() === this.newSize.ten.trim().toLowerCase()
+          );
+          if (sizeExists) {
+            toast.error("Tên kích thước đã được sử dụng.");
+            return false;
+          }
+        } catch (error) {
+          console.error("Error checking size uniqueness:", error);
+        }
+      }
+
+      return true;
+    },
+
     async saveSize() {
-      if (!this.newSize.ten) {
-        toast.error("Vui lòng nhập tên kích thước.");
+      if (!(await this.validateSize())) {
         return;
       }
       
