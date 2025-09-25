@@ -277,9 +277,19 @@
 
           <div v-if="paymentMethod === 'bank'" class="mb-4 text-center">
             <v-card variant="outlined" class="pa-3">
-              <div class="text-caption mb-2">Quét mã QR để chuyển khoản</div>
+              <div class="d-flex align-center justify-space-between mb-2">
+                <div class="text-caption">Quét mã QR để chuyển khoản</div>
+                <v-btn size="x-small" variant="outlined" color="primary" @click="generateVietQR" :loading="isGeneratingQR">
+                  <v-icon size="16" class="mr-1">mdi-refresh</v-icon>
+                  Làm mới
+                </v-btn>
+              </div>
+              <v-alert v-if="vietQRError" type="error" variant="tonal" density="compact" class="mb-2">
+                {{ vietQRError }}
+              </v-alert>
+              <v-progress-linear v-if="isGeneratingQR" indeterminate color="primary" class="mb-2"></v-progress-linear>
               <div class="qr-code-container">
-                <img :src="fixedBankQrUrl" alt="Bank QR" style="max-width:100%;height:auto;" />
+                <img :src="vietQRData.qrUrl || fixedBankQrUrl" alt="Bank QR" style="max-width:100%;height:auto;" />
               </div>
               <div class="text-caption mt-2">{{ formatCurrency(totalAmount) }}</div>
             </v-card>
@@ -594,12 +604,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { khachHangApi } from '@/api/khachHangApi'
 import thanhToanApi from '@/api/thanhToanApi'
 import { voucherApi } from '@/api/voucherApi'
 import { toast } from 'vue3-toastify'
+import axios from 'axios'
 
 const generateOrderId = () => {
   return 'ORD' + Date.now().toString().slice(-6)
@@ -619,6 +630,16 @@ const selectedVoucher = ref<any | null>(null)
 
 // Đặt đường dẫn ảnh QR cố định trong thư mục public
 const fixedBankQrUrl = ref<string>('/qr-vcb.png')
+
+// VietQR state
+const isGeneratingQR = ref(false)
+const vietQRError = ref<string | null>(null)
+const vietQRData = ref<{ qrUrl: string | null; bankBin: string; accountNo: string; accountName: string }>({
+  qrUrl: null,
+  bankBin: '970422',
+  accountNo: '1234567890',
+  accountName: 'OneStep Store'
+})
 
 const isLoadingProvinces = ref(false)
 const isLoadingDistricts = ref(false)
@@ -860,7 +881,7 @@ const calculateDistanceFromWarehouse = (provinceCode: string) => {
     '70': 1800,   // Bình Phước
     '72': 1850,   // Tây Ninh
     '80': 1900,   // Long An
-    '93': 1550    // Hậu Giang
+
   }
   
   // Debug: Log để kiểm tra
@@ -1777,6 +1798,39 @@ onMounted(async () => {
   // Bất kỳ thay đổi nào ở giỏ hoặc trạng thái chính sẽ được lưu định kỳ
   saveOrderState()
   await fetchProvinces()
+})
+
+// Generate VietQR code via backend
+const generateVietQR = async () => {
+  if (paymentMethod.value !== 'bank') return
+  try {
+    isGeneratingQR.value = true
+    vietQRError.value = null
+    const payload = {
+      bankBin: vietQRData.value.bankBin,
+      accountNo: vietQRData.value.accountNo,
+      accountName: vietQRData.value.accountName,
+      amount: parseFloat(String(totalAmount.value)),
+      addInfo: `Thanh toan don hang ${orderId.value} - ${new Date().toLocaleDateString('vi-VN')}`
+    }
+    const res = await axios.post('http://localhost:8080/api/vietqr/generate', payload)
+    if (res.data && res.data.qrUrl) {
+      vietQRData.value.qrUrl = res.data.qrUrl
+    } else {
+      throw new Error('Không thể tạo mã QR')
+    }
+  } catch (e: any) {
+    vietQRError.value = e?.response?.data?.message || e?.message || 'Lỗi tạo VietQR'
+  } finally {
+    isGeneratingQR.value = false
+  }
+}
+
+// Auto-regenerate QR when switching to bank or total changes
+watch([paymentMethod, totalAmount], async () => {
+  if (paymentMethod.value === 'bank' && orderStarted.value) {
+    await generateVietQR()
+  }
 })
 </script>
 
