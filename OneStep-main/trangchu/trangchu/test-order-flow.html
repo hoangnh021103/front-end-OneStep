@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Order Flow - Cập nhật giá tiền</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-title {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .test-step {
+            margin: 15px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+        }
+        .success {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .error {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .info {
+            color: #17a2b8;
+        }
+        .code-block {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 10px 0;
+            border: 1px solid #e9ecef;
+        }
+        .button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Order Flow - Cập nhật giá tiền theo hóa đơn thanh toán</h1>
+    
+    <div class="test-section">
+        <h2 class="test-title">📋 Tóm tắt các thay đổi đã thực hiện</h2>
+        
+        <div class="test-step">
+            <h3>✅ 1. Cập nhật OrderComplete.vue</h3>
+            <p>• Thay thế giá tiền hardcode (2,500,000 VND) bằng logic động</p>
+            <p>• Thêm mapGetters cho payment, cart, và order stores</p>
+            <p>• Ưu tiên sử dụng thông tin từ order store trước</p>
+            <p>• Fallback về payment store hoặc cart total nếu cần</p>
+        </div>
+        
+        <div class="test-step">
+            <h3>✅ 2. Tạo Order Store Module</h3>
+            <p>• Tạo src/store/modules/order.js</p>
+            <p>• Quản lý thông tin đơn hàng hiện tại và lịch sử</p>
+            <p>• Actions: setCurrentOrder, clearCurrentOrder, completeOrder</p>
+            <p>• Getters: currentOrder, orderHistory, recentOrders</p>
+        </div>
+        
+        <div class="test-step">
+            <h3>✅ 3. Cập nhật Store Index</h3>
+            <p>• Thêm order module vào src/store/index.js</p>
+            <p>• Import và đăng ký order store</p>
+        </div>
+        
+        <div class="test-step">
+            <h3>✅ 4. Cập nhật Checkout.vue</h3>
+            <p>• Thêm mapActions cho order store</p>
+            <p>• Tạo phương thức saveOrderInfo() để lưu thông tin đơn hàng</p>
+            <p>• Gọi saveOrderInfo() trước khi chuyển sang OrderComplete</p>
+            <p>• Lưu đầy đủ thông tin: tổng tiền, phí ship, phương thức thanh toán</p>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2 class="test-title">🔄 Luồng hoạt động mới</h2>
+        
+        <div class="test-step">
+            <h3>1. Trong Checkout.vue</h3>
+            <div class="code-block">
+// Khi thanh toán thành công:
+this.saveOrderInfo() // Lưu thông tin đơn hàng vào store
+this.clearCart()     // Xóa giỏ hàng
+this.$router.push('/order-complete') // Chuyển trang
+            </div>
+        </div>
+        
+        <div class="test-step">
+            <h3>2. Trong OrderComplete.vue</h3>
+            <div class="code-block">
+// Ưu tiên sử dụng thông tin từ order store:
+if (this.currentOrder && this.currentOrder.orderNumber) {
+  this.orderTotal = this.currentOrder.finalTotal
+  this.paymentMethod = this.currentOrder.paymentMethod
+  // Sử dụng thông tin đã lưu
+}
+            </div>
+        </div>
+        
+        <div class="test-step">
+            <h3>3. Fallback Logic</h3>
+            <div class="code-block">
+// Nếu không có order store, fallback về:
+1. Payment store (currentPayment.tongTien)
+2. Cart total + shipping fee
+3. Giá trị mặc định (0)
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2 class="test-title">🧪 Cách test</h2>
+        
+        <div class="test-step">
+            <h3>Bước 1: Thêm sản phẩm vào giỏ hàng</h3>
+            <p>• Vào trang sản phẩm</p>
+            <p>• Thêm sản phẩm vào giỏ hàng</p>
+            <p>• Kiểm tra tổng tiền trong giỏ hàng</p>
+        </div>
+        
+        <div class="test-step">
+            <h3>Bước 2: Thanh toán</h3>
+            <p>• Vào trang checkout</p>
+            <p>• Điền thông tin khách hàng</p>
+            <p>• Chọn phương thức thanh toán</p>
+            <p>• Hoàn tất thanh toán</p>
+        </div>
+        
+        <div class="test-step">
+            <h3>Bước 3: Kiểm tra OrderComplete</h3>
+            <p>• Kiểm tra tổng tiền hiển thị có đúng không</p>
+            <p>• Kiểm tra phương thức thanh toán</p>
+            <p>• Kiểm tra mã đơn hàng</p>
+            <p>• Mở Developer Tools để xem console logs</p>
+        </div>
+        
+        <div class="test-step">
+            <h3>Bước 4: Kiểm tra Console Logs</h3>
+            <div class="code-block">
+// Trong Checkout.vue:
+💾 Lưu thông tin đơn hàng: {orderData}
+
+// Trong OrderComplete.vue:
+✅ Sử dụng thông tin từ order store: {currentOrder}
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2 class="test-title">🎯 Kết quả mong đợi</h2>
+        
+        <div class="test-step">
+            <h3 class="success">✅ Thành công</h3>
+            <p>• Tổng tiền trong OrderComplete khớp với tổng tiền trong Checkout</p>
+            <p>• Phương thức thanh toán hiển thị đúng</p>
+            <p>• Console logs hiển thị thông tin đúng</p>
+            <p>• Không còn giá tiền hardcode 2,500,000 VND</p>
+        </div>
+        
+        <div class="test-step">
+            <h3 class="error">❌ Nếu có lỗi</h3>
+            <p>• Kiểm tra console để xem lỗi</p>
+            <p>• Kiểm tra Vuex DevTools để xem state</p>
+            <p>• Kiểm tra network requests</p>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2 class="test-title">🔧 Debug Tips</h2>
+        
+        <div class="test-step">
+            <h3>Vuex DevTools</h3>
+            <p>• Cài đặt Vuex DevTools extension</p>
+            <p>• Kiểm tra state của order, payment, cart modules</p>
+            <p>• Xem mutations và actions được gọi</p>
+        </div>
+        
+        <div class="test-step">
+            <h3>Console Logs</h3>
+            <div class="code-block">
+// Thêm vào OrderComplete.vue để debug:
+console.log('Current Order:', this.currentOrder)
+console.log('Current Payment:', this.currentPayment)
+console.log('Cart Total:', this.cartTotal)
+console.log('Final Order Total:', this.orderTotal)
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2 class="test-title">📝 Ghi chú</h2>
+        
+        <div class="test-step">
+            <p class="info">• Luồng mới đảm bảo giá tiền được truyền chính xác từ Checkout sang OrderComplete</p>
+            <p class="info">• Có fallback logic để xử lý các trường hợp edge case</p>
+            <p class="info">• Thông tin đơn hàng được lưu trong store để có thể sử dụng lại</p>
+            <p class="info">• Console logs giúp debug và theo dõi luồng dữ liệu</p>
+        </div>
+    </div>
+    
+    <script>
+        // Simple test functions
+        function testOrderFlow() {
+            console.log('🧪 Testing Order Flow...')
+            
+            // Simulate order data
+            const mockOrderData = {
+                orderNumber: 'GD' + Date.now().toString().slice(-8),
+                orderTotal: 1500000,
+                shippingFee: 50000,
+                finalTotal: 1550000,
+                paymentMethod: 'Thanh toán khi nhận hàng (COD)',
+                customerInfo: {
+                    firstName: 'Nguyễn',
+                    lastName: 'Văn A',
+                    email: 'test@example.com'
+                }
+            }
+            
+            console.log('📦 Mock Order Data:', mockOrderData)
+            console.log('✅ Order flow test completed!')
+        }
+        
+        // Run test on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Order Flow Test Page Loaded')
+            console.log('📋 Ready to test the updated order flow')
+        })
+    </script>
+</body>
+</html>

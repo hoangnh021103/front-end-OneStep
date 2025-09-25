@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Toast Đơn Giản</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 50px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .test-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+        
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background: #2980b9;
+        }
+        
+        .success-btn {
+            background: #27ae60;
+        }
+        
+        .success-btn:hover {
+            background: #229954;
+        }
+        
+        .error-btn {
+            background: #e74c3c;
+        }
+        
+        .error-btn:hover {
+            background: #c0392b;
+        }
+        
+        .instructions {
+            background: #e8f4fd;
+            border: 1px solid #3498db;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .instructions h3 {
+            color: #2980b9;
+            margin-top: 0;
+        }
+        
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        
+        .log-item {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        
+        .log-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .log-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .log-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛒 Test Toast Notification</h1>
+        
+        <div class="instructions">
+            <h3>📋 Hướng dẫn:</h3>
+            <p>Click vào các nút bên dưới để test thông báo toast. Thông báo sẽ xuất hiện ở góc phải màn hình.</p>
+        </div>
+        
+        <div class="test-buttons">
+            <button class="success-btn" onclick="showSuccessToast('Giày Nike Air Max')">
+                ✅ Test Thành Công
+            </button>
+            <button class="error-btn" onclick="showErrorToast('Vui lòng chọn màu và kích thước!')">
+                ⚠️ Test Lỗi
+            </button>
+            <button onclick="showInfoToast('Thông tin test')">
+                ℹ️ Test Thông Tin
+            </button>
+        </div>
+        
+        <div class="log" id="log">
+            <div class="log-item log-info">Sẵn sàng test toast notification...</div>
+        </div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const logItem = document.createElement('div');
+            logItem.className = `log-item log-${type}`;
+            logItem.textContent = `[${new Date().toLocaleTimeString('vi-VN')}] ${message}`;
+            logDiv.appendChild(logItem);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        function showSuccessToast(productName) {
+            log(`Tạo toast thành công cho: ${productName}`, 'success');
+            
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #4CAF50;
+                color: white;
+                padding: 16px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 99999;
+                max-width: 350px;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                font-size: 14px;
+                font-weight: 500;
+                line-height: 1.4;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                transform: translateX(100%);
+                opacity: 0;
+                transition: all 0.3s ease-out;
+                cursor: pointer;
+            `;
+            
+            toast.innerHTML = `
+                <span style="font-size: 20px;">✅</span>
+                <span>Đã thêm "${productName}" vào giỏ hàng!</span>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.transform = 'translateX(0)';
+                toast.style.opacity = '1';
+                log('Toast hiển thị thành công', 'success');
+            }, 10);
+            
+            setTimeout(() => {
+                toast.style.transform = 'translateX(100%)';
+                toast.style.opacity = '0';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                        log('Toast đã biến mất', 'info');
+                    }
+                }, 300);
+            }, 3000);
+            
+            toast.addEventListener('click', () => {
+                toast.style.transform = 'translateX(100%)';
+                toast.style.opacity = '0';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                        log('Toast được đóng bằng click', 'info');
+                    }
+                }, 300);
+            });
+        }
+        
+        function showErrorToast(message) {
+            log(`Tạo toast lỗi: ${message}`, 'error');
+            
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #f44336;
+                color: white;
+                padding: 20px 24px;
+                border-radius: 12px;
+                box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+                z-index: 99999;
+                max-width: 400px;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                cursor: pointer;
+                transform: translateX(100%);
+                opacity: 0;
+                transition: all 0.4s ease-out;
+            `;
+            
+            toast.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <span style="font-size: 24px;">⚠️</span>
+                    <div style="flex: 1;">
+                        <div style="font-size: 16px; font-weight: 600; margin-bottom: 4px;">Có lỗi xảy ra!</div>
+                        <div style="font-size: 14px; opacity: 0.9;">${message}</div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.transform = 'translateX(0)';
+                toast.style.opacity = '1';
+                log('Toast lỗi hiển thị thành công', 'error');
+            }, 10);
+            
+            setTimeout(() => {
+                toast.style.transform = 'translateX(100%)';
+                toast.style.opacity = '0';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                        log('Toast lỗi đã biến mất', 'info');
+                    }
+                }, 400);
+            }, 4000);
+            
+            toast.addEventListener('click', () => {
+                toast.style.transform = 'translateX(100%)';
+                toast.style.opacity = '0';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                        log('Toast lỗi được đóng bằng click', 'info');
+                    }
+                }, 400);
+            });
+        }
+        
+        function showInfoToast(message) {
+            log(`Tạo toast thông tin: ${message}`, 'info');
+            
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #17a2b8;
+                color: white;
+                padding: 16px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 99999;
+                max-width: 350px;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                font-size: 14px;
+                font-weight: 500;
+                line-height: 1.4;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                transform: translateX(100%);
+                opacity: 0;
+                transition: all 0.3s ease-out;
+                cursor: pointer;
+            `;
+            
+            toast.innerHTML = `
+                <span style="font-size: 20px;">ℹ️</span>
+                <span>${message}</span>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.transform = 'translateX(0)';
+                toast.style.opacity = '1';
+                log('Toast thông tin hiển thị thành công', 'info');
+            }, 10);
+            
+            setTimeout(() => {
+                toast.style.transform = 'translateX(100%)';
+                toast.style.opacity = '0';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                        log('Toast thông tin đã biến mất', 'info');
+                    }
+                }, 300);
+            }, 3000);
+            
+            toast.addEventListener('click', () => {
+                toast.style.transform = 'translateX(100%)';
+                toast.style.opacity = '0';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                        log('Toast thông tin được đóng bằng click', 'info');
+                    }
+                }, 300);
+            });
+        }
+        
+        // Test tự động khi trang load
+        window.onload = function() {
+            log('Trang test toast đã load thành công', 'success');
+            log('Sẵn sàng test các loại toast notification', 'info');
+        };
+    </script>
+</body>
+</html>
