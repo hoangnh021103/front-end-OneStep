@@ -25,6 +25,12 @@
               Tìm kiếm
             </button>
           </div>
+          <div class="refresh-section">
+            <button @click="refreshOrders" class="refresh-btn" :disabled="loading">
+              <i class="icon-refresh" :class="{ 'spinning': loading }"></i>
+              {{ loading ? 'Đang tải...' : 'Làm mới' }}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -66,7 +72,7 @@
         <div v-else class="orders-list">
           <div 
             v-for="order in filteredOrders" 
-            :key="order.id"
+            :key="order.databaseId || order.id"
             class="order-card"
             @click="toggleOrderDetail(order.databaseId || order.id)"
           >
@@ -101,7 +107,7 @@
             </div>
 
             <!-- Order Details (Collapsible) -->
-            <div v-if="expandedOrders.includes(order.databaseId || order.id)" class="order-details">
+            <div v-if="expandedOrders.includes(String(order.databaseId || order.id))" class="order-details">
               <div class="details-section">
                 <h4>Chi tiết sản phẩm</h4>
                 <div class="items-list">
@@ -176,7 +182,7 @@
 
             <!-- Expand/Collapse Button -->
             <div class="expand-button">
-              <i :class="['icon', expandedOrders.includes(order.id) ? 'icon-chevron-up' : 'icon-chevron-down']"></i>
+              <i :class="['icon', expandedOrders.includes(String(order.databaseId || order.id)) ? 'icon-chevron-up' : 'icon-chevron-down']"></i>
             </div>
           </div>
         </div>
@@ -267,7 +273,49 @@ export default {
       }
 
       console.log(`📊 Hiển thị ${filtered.length} đơn hàng ONLINE sau khi lọc`)
-      return filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      
+      // Sắp xếp theo thời gian tạo, đơn hàng mới nhất lên đầu
+      // Đảm bảo không có đơn hàng nào trùng thời gian bằng cách thêm milliseconds
+      const sortedOrders = filtered.sort((a, b) => {
+        const timeA = new Date(a.createdAt).getTime()
+        const timeB = new Date(b.createdAt).getTime()
+        
+        // Nếu thời gian giống nhau, sắp xếp theo ID để đảm bảo thứ tự ổn định
+        if (timeA === timeB) {
+          return (b.databaseId || b.id) - (a.databaseId || a.id)
+        }
+        
+        return timeB - timeA // Đơn hàng mới nhất lên đầu
+      })
+      
+      return sortedOrders
+    }
+  },
+  watch: {
+    // Theo dõi thay đổi trong orders để đảm bảo đơn hàng mới luôn ở đầu
+    orders: {
+      handler(newOrders, oldOrders) {
+        if (newOrders && newOrders.length > 0) {
+          // Đảm bảo đơn hàng mới nhất luôn ở đầu
+          const sortedOrders = [...newOrders].sort((a, b) => {
+            const timeA = new Date(a.createdAt).getTime()
+            const timeB = new Date(b.createdAt).getTime()
+            
+            if (timeA === timeB) {
+              return (b.databaseId || b.id) - (a.databaseId || a.id)
+            }
+            
+            return timeB - timeA
+          })
+          
+          // Cập nhật store nếu cần
+          if (JSON.stringify(sortedOrders) !== JSON.stringify(newOrders)) {
+            this.$store.commit('orders/SET_ORDERS', sortedOrders)
+          }
+        }
+      },
+      deep: true,
+      immediate: true
     }
   },
   async mounted() {
@@ -277,17 +325,7 @@ export default {
     console.log('📌 LƯU Ý: Chỉ hiển thị đơn hàng từ TRANGCHU (loaiDon = 1)')
     
     await this.loadOrders()
-    // Auto-refresh orders every 12s, silent to avoid flicker
-    this._ordersInterval = setInterval(async () => {
-      try {
-        await this.$store.dispatch('orders/refreshOrdersSilent')
-      } catch (e) {
-        console.warn('Silent refresh error:', e?.message || e)
-      }
-    }, 12000)
-  },
-  unmounted() {
-    if (this._ordersInterval) clearInterval(this._ordersInterval)
+    // Đã bỏ auto-refresh theo yêu cầu
   },
   methods: {
     ...mapActions('orders', ['loadOrders', 'searchOrderById', 'cancelOrderAction']),
@@ -297,6 +335,11 @@ export default {
       const userId = localStorage.getItem('userId') || this.$store.getters['auth/userId'] || 1
       console.log('🔄 Refreshing orders for userId:', userId)
       await this.loadOrders()
+      
+      // Đảm bảo đơn hàng mới nhất luôn ở đầu danh sách
+      this.$nextTick(() => {
+        console.log('📋 Đã refresh danh sách đơn hàng, đơn hàng mới nhất ở đầu')
+      })
     },
 
     async searchOrder() {
@@ -312,11 +355,13 @@ export default {
     },
 
     toggleOrderDetail(orderId) {
-      const index = this.expandedOrders.indexOf(orderId)
+      // Đảm bảo orderId là string hoặc number để so sánh chính xác
+      const normalizedOrderId = String(orderId)
+      const index = this.expandedOrders.findIndex(id => String(id) === normalizedOrderId)
       if (index > -1) {
         this.expandedOrders.splice(index, 1)
       } else {
-        this.expandedOrders.push(orderId)
+        this.expandedOrders.push(normalizedOrderId)
       }
     },
 
@@ -403,6 +448,23 @@ export default {
       }
     },
 
+    // Method để thêm đơn hàng mới vào đầu danh sách
+    addNewOrderToTop(newOrder) {
+      console.log('🆕 Thêm đơn hàng mới vào đầu danh sách:', newOrder.id)
+      
+      // Thêm đơn hàng mới vào đầu danh sách trong store
+      const currentOrders = this.$store.getters['orders/orders']
+      const updatedOrders = [newOrder, ...currentOrders]
+      
+      // Cập nhật store
+      this.$store.commit('orders/SET_ORDERS', updatedOrders)
+      
+      // Tự động mở chi tiết đơn hàng mới
+      this.$nextTick(() => {
+        this.toggleOrderDetail(newOrder.databaseId || newOrder.id)
+      })
+    },
+
   }
 }
 </script>
@@ -463,6 +525,12 @@ export default {
 .search-input-group {
   display: flex;
   gap: 10px;
+  margin-bottom: 15px;
+}
+
+.refresh-section {
+  display: flex;
+  justify-content: center;
 }
 
 .search-input {
@@ -496,6 +564,40 @@ export default {
 
 .search-btn:hover {
   background: #0056b3;
+}
+
+.refresh-btn {
+  padding: 12px 24px;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.refresh-btn:hover:not(:disabled) {
+  background: #218838;
+  transform: translateY(-1px);
+}
+
+.refresh-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.refresh-btn .icon-refresh {
+  font-size: 18px;
+}
+
+.refresh-btn .icon-refresh.spinning {
+  animation: spin 1s linear infinite;
 }
 
 .filter-section {
