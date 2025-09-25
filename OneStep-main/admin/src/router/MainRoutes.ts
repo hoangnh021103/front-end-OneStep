@@ -111,11 +111,6 @@ const MainRoutes = {
       path: '/quan-ly/phieu-giam-gia/sua/:id',
       component: () => import('@/views/quan-ly/phieu-giam-gia/ThemPhieuGiamGia.vue'),
     },
-    {
-      name: 'QuanLyDotGiamGia',
-      path: '/quan-ly/dot-giam-gia',
-      component: () => import('@/views/quan-ly/dot-giam-gia/DotGiamGia.vue'),
-    }
   ],
 };
 

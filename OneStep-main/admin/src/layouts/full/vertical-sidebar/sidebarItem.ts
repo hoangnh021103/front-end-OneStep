@@ -94,11 +94,6 @@ const sidebarItem: menu[] = [
     to: '/quan-ly/nhan-vien'
   },
   {
-    title: 'Quản lý đợt giảm giá',
-    icon: CircleIcon,
-    to: '/quan-ly/dot-giam-gia'
-  },
-  {
     title: 'Quản lý phiếu giảm giá',
     icon: CircleIcon,
     to: '/quan-ly/phieu-giam-gia'
