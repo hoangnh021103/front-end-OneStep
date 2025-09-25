@@ -14,14 +14,13 @@
           <div class="form-group">
             <label>Tên sản phẩm *</label>
             <input v-model="form.tenSanPham" type="text" placeholder="Nhập tên sản phẩm"
-              :class="{ 'error': errors.tenSanPham }" @input="generateProductCode" />
+              :class="{ 'error': errors.tenSanPham }" />
             <span class="error-message" v-if="errors.tenSanPham">{{ errors.tenSanPham }}</span>
           </div>
           <div class="form-group">
-            <label>Mã code <small>(Tự động tạo)</small></label>
-            <input v-model="form.maCode" type="text" placeholder="Mã code sẽ được tự động tạo" :class="{ 'error': errors.maCode }" readonly />
+            <label>Mã code *</label>
+            <input v-model="form.maCode" type="text" placeholder="Nhập mã code" :class="{ 'error': errors.maCode }" />
             <span class="error-message" v-if="errors.maCode">{{ errors.maCode }}</span>
-            <small class="help-text">Mã code được tạo tự động dựa trên tên sản phẩm và thời gian</small>
           </div>
           <div class="form-group">
             <label>Mô tả</label>
@@ -141,13 +140,6 @@ export default {
     };
   },
   methods: {
-    generateProductCode() {
-      if (this.form.tenSanPham && this.form.tenSanPham.trim() && !this.isEditing) {
-        const timestamp = Date.now().toString().slice(-6);
-        const productName = this.form.tenSanPham.trim().replace(/\s+/g, '').toUpperCase().slice(0, 6);
-        this.form.maCode = `${productName}${timestamp}`;
-      }
-    },
     async fetchThuongHieu() {
       try {
         const response = await fetch('http://localhost:8080/thuong-hieu/hien-thi');
@@ -252,6 +244,7 @@ export default {
       reader.readAsDataURL(file);
     },
     async validateForm() {
+      // Reset all errors
       this.errors = {
         tenSanPham: '',
         maCode: '',
@@ -264,7 +257,7 @@ export default {
       };
       let isValid = true;
 
-      // Validate product name
+      // 1. Validate Tên sản phẩm (Bắt buộc)
       if (!this.form.tenSanPham || !this.form.tenSanPham.trim()) {
         this.errors.tenSanPham = 'Tên sản phẩm là bắt buộc.';
         isValid = false;
@@ -279,45 +272,13 @@ export default {
         isValid = false;
       }
 
-      // Auto-generate product code if not provided
+      // 2. Validate Mã code (Bắt buộc)
       if (!this.form.maCode || !this.form.maCode.trim()) {
-        // Generate code based on product name and timestamp
-        const timestamp = Date.now().toString().slice(-6); // Last 6 digits of timestamp
-        const productName = this.form.tenSanPham.trim().replace(/\s+/g, '').toUpperCase().slice(0, 6);
-        this.form.maCode = `${productName}${timestamp}`;
+        this.errors.maCode = 'Mã code là bắt buộc.';
+        isValid = false;
       }
 
-      // Validate generated code format
-      if (this.form.maCode && this.form.maCode.trim()) {
-        if (this.form.maCode.trim().length < 6) {
-          this.errors.maCode = 'Mã code phải có ít nhất 6 ký tự.';
-          isValid = false;
-        } else if (this.form.maCode.trim().length > 20) {
-          this.errors.maCode = 'Mã code không được vượt quá 20 ký tự.';
-          isValid = false;
-        } else if (!/^[A-Z0-9]+$/.test(this.form.maCode.trim())) {
-          this.errors.maCode = 'Mã code chỉ được chứa chữ cái in hoa và số.';
-          isValid = false;
-        } else if (!this.isEditing) {
-          // Check if generated code already exists (only for new products)
-          try {
-            const existingProducts = await axios.get("http://localhost:8080/san-pham/hien-thi");
-            const codeExists = existingProducts.data.some(product =>
-              product.maCode && product.maCode.toLowerCase() === this.form.maCode.trim().toLowerCase()
-            );
-            if (codeExists) {
-              // Regenerate code if exists
-              const timestamp = Date.now().toString().slice(-6);
-              const productName = this.form.tenSanPham.trim().replace(/\s+/g, '').toUpperCase().slice(0, 6);
-              this.form.maCode = `${productName}${timestamp}`;
-            }
-          } catch (error) {
-            console.error("Error checking code uniqueness:", error);
-          }
-        }
-      }
-
-      // Validate description (if provided)
+      // 3. Validate Mô tả (Không bắt buộc, chỉ check độ dài nếu có)
       if (this.form.moTa && this.form.moTa.trim()) {
         if (this.form.moTa.trim().length > 1000) {
           this.errors.moTa = 'Mô tả không được vượt quá 1000 ký tự.';
@@ -325,43 +286,42 @@ export default {
         }
       }
 
-      // Validate brand
+      // 4. Validate Thương hiệu (Bắt buộc)
       if (!this.form.thuongHieuId || this.form.thuongHieuId === 0 || this.form.thuongHieuId === '0') {
-        this.errors.thuongHieuId = 'Thương hiệu là bắt buộc.';
+        this.errors.thuongHieuId = 'Vui lòng chọn thương hiệu.';
         isValid = false;
       }
 
-      // Validate material
+      // 5. Validate Chất liệu (Bắt buộc)
       if (!this.form.chatLieuId || this.form.chatLieuId === 0 || this.form.chatLieuId === '0') {
-        this.errors.chatLieuId = 'Chất liệu là bắt buộc.';
+        this.errors.chatLieuId = 'Vui lòng chọn chất liệu.';
         isValid = false;
       }
 
-      // Validate sole type
+      // 6. Validate Đế giày (Bắt buộc)
       if (!this.form.deGiayId || this.form.deGiayId === 0 || this.form.deGiayId === '0') {
-        this.errors.deGiayId = 'Đế giày là bắt buộc.';
+        this.errors.deGiayId = 'Vui lòng chọn đế giày.';
         isValid = false;
       }
 
-      // Validate image
+      // 7. Validate Ảnh đại diện (Bắt buộc)
       if (!this.isEditing) {
         // Thêm mới: bắt buộc phải có ảnh
         if (!this.form.duongDanAnh) {
-          this.errors.duongDanAnh = 'Ảnh đại diện là bắt buộc.';
+          this.errors.duongDanAnh = 'Vui lòng chọn ảnh đại diện.';
           isValid = false;
         }
       } else {
         // Chỉnh sửa: phải có ảnh cũ hoặc ảnh mới
         if (!this.originalImageUrl && !this.form.duongDanAnh) {
-          this.errors.duongDanAnh = 'Ảnh đại diện là bắt buộc.';
+          this.errors.duongDanAnh = 'Vui lòng chọn ảnh đại diện.';
           isValid = false;
         }
       }
 
-      // Validate status
-      const trangThai = Number(this.form.trangThai);
-      if (trangThai !== 0 && trangThai !== 1) {
-        this.errors.trangThai = 'Vui lòng chọn trạng thái hợp lệ.';
+      // 8. Validate Trạng thái (Bắt buộc)
+      if (!this.form.trangThai || (this.form.trangThai !== 0 && this.form.trangThai !== 1)) {
+        this.errors.trangThai = 'Vui lòng chọn trạng thái.';
         isValid = false;
       }
 
