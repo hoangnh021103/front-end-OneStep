@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Payment API Integration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+        }
+        .test-section h2 {
+            color: #007bff;
+            margin-top: 0;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+        }
+        .error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .success {
+            border-left-color: #28a745;
+            background: #d4edda;
+            color: #155724;
+        }
+        .loading {
+            border-left-color: #ffc107;
+            background: #fff3cd;
+            color: #856404;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Payment API Integration</h1>
+        <p style="text-align: center; color: #666; margin-bottom: 30px;">
+            Test API endpoint: <code>/thanh-toan/{hoaDonId}/chon-khach-hang/{khachHangId}</code>
+        </p>
+
+        <!-- Test Payment Creation -->
+        <div class="test-section">
+            <h2>1. Tạo Thanh Toán Mới</h2>
+            <div class="form-group">
+                <label for="hoaDonId">Hóa Đơn ID:</label>
+                <input type="number" id="hoaDonId" value="12345" placeholder="Nhập ID hóa đơn">
+            </div>
+            <div class="form-group">
+                <label for="khachHangId">Khách Hàng ID:</label>
+                <input type="number" id="khachHangId" value="67890" placeholder="Nhập ID khách hàng">
+            </div>
+            <div class="form-group">
+                <label for="phuongThucId">Phương Thức Thanh Toán:</label>
+                <select id="phuongThucId">
+                    <option value="1">COD - Thanh toán khi nhận hàng</option>
+                    <option value="2">VNPay</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="tongTien">Tổng Tiền:</label>
+                <input type="number" id="tongTien" value="1500000" placeholder="Nhập tổng tiền">
+            </div>
+            <div class="form-group">
+                <label for="moTa">Mô Tả:</label>
+                <textarea id="moTa" rows="3" placeholder="Mô tả thanh toán">Thanh toán đơn hàng OneStep Store</textarea>
+            </div>
+            <button onclick="createPayment()">Tạo Thanh Toán</button>
+            <button onclick="generateRandomData()">Dữ Liệu Ngẫu Nhiên</button>
+            <div id="createResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Test Payment Methods -->
+        <div class="test-section">
+            <h2>2. Lấy Danh Sách Phương Thức Thanh Toán</h2>
+            <button onclick="getPaymentMethods()">Lấy Phương Thức Thanh Toán</button>
+            <div id="methodsResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Test Payment Status -->
+        <div class="test-section">
+            <h2>3. Kiểm Tra Trạng Thái Thanh Toán</h2>
+            <div class="form-group">
+                <label for="paymentId">Payment ID:</label>
+                <input type="number" id="paymentId" placeholder="Nhập ID thanh toán">
+            </div>
+            <button onclick="getPaymentStatus()">Kiểm Tra Trạng Thái</button>
+            <div id="statusResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- API Information -->
+        <div class="test-section">
+            <h2>📋 Thông Tin API</h2>
+            <div class="result">
+                <h4>Endpoint:</h4>
+                <code>POST /thanh-toan/{hoaDonId}/chon-khach-hang/{khachHangId}</code>
+                
+                <h4>Request Body:</h4>
+                <pre>{
+  "id": 0,
+  "donHangId": 0,
+  "phuongThucId": 0,
+  "maGiaoDich": "string",
+  "tongTien": 0,
+  "moTa": "string",
+  "trangThai": 0,
+  "ngayCapNhat": "2025-09-23",
+  "nguoiTao": "string",
+  "nguoiCapNhat": "string",
+  "daXoa": 0
+}</pre>
+                
+                <h4>Server:</h4>
+                <p>Port: <strong>8080</strong></p>
+                <p>Base URL: <code>http://localhost:8080</code></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080';
+        
+        function showResult(elementId, content, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = `result ${type}`;
+            element.innerHTML = content;
+        }
+        
+        function generateRandomData() {
+            document.getElementById('hoaDonId').value = Math.floor(Math.random() * 100000) + 10000;
+            document.getElementById('khachHangId').value = Math.floor(Math.random() * 10000) + 1000;
+            document.getElementById('tongTien').value = Math.floor(Math.random() * 5000000) + 500000;
+            document.getElementById('moTa').value = `Thanh toán đơn hàng ngẫu nhiên - ${new Date().toLocaleString('vi-VN')}`;
+        }
+        
+        function generateTransactionCode() {
+            const timestamp = Date.now();
+            const random = Math.random().toString(36).substr(2, 9);
+            return `TXN_${timestamp}_${random}`.toUpperCase();
+        }
+        
+        async function createPayment() {
+            const hoaDonId = document.getElementById('hoaDonId').value;
+            const khachHangId = document.getElementById('khachHangId').value;
+            const phuongThucId = parseInt(document.getElementById('phuongThucId').value);
+            const tongTien = parseInt(document.getElementById('tongTien').value);
+            const moTa = document.getElementById('moTa').value;
+            
+            if (!hoaDonId || !khachHangId || !tongTien) {
+                showResult('createResult', 'Vui lòng điền đầy đủ thông tin bắt buộc!', 'error');
+                return;
+            }
+            
+            const paymentData = {
+                id: 0,
+                donHangId: parseInt(hoaDonId),
+                phuongThucId: phuongThucId,
+                maGiaoDich: generateTransactionCode(),
+                tongTien: tongTien,
+                moTa: moTa,
+                trangThai: 0,
+                ngayCapNhat: new Date().toISOString().split('T')[0],
+                nguoiTao: 'test-user',
+                nguoiCapNhat: 'test-user',
+                daXoa: 0
+            };
+            
+            showResult('createResult', '🔄 Đang tạo thanh toán...', 'loading');
+            
+            try {
+                const response = await fetch(`${API_BASE}/thanh-toan/${hoaDonId}/chon-khach-hang/${khachHangId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(paymentData)
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    showResult('createResult', `
+                        <h4>✅ Tạo thanh toán thành công!</h4>
+                        <p><strong>Payment ID:</strong> ${result.id || 'N/A'}</p>
+                        <p><strong>Mã giao dịch:</strong> ${result.maGiaoDich}</p>
+                        <p><strong>Phương thức:</strong> ${getPaymentMethodText(result.phuongThucId)}</p>
+                        <p><strong>Tổng tiền:</strong> ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(result.tongTien)}</p>
+                        <p><strong>Trạng thái:</strong> ${getStatusText(result.trangThai)}</p>
+                        <pre>${JSON.stringify(result, null, 2)}</pre>
+                    `, 'success');
+                } else {
+                    const error = await response.text();
+                    showResult('createResult', `
+                        <h4>❌ Lỗi tạo thanh toán</h4>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <p><strong>Error:</strong> ${error}</p>
+                    `, 'error');
+                }
+            } catch (error) {
+                showResult('createResult', `
+                    <h4>❌ Lỗi kết nối</h4>
+                    <p>Không thể kết nối đến server. Vui lòng kiểm tra:</p>
+                    <ul>
+                        <li>Server có đang chạy trên port 8080 không?</li>
+                        <li>API endpoint có đúng không?</li>
+                        <li>CORS có được cấu hình đúng không?</li>
+                    </ul>
+                    <p><strong>Chi tiết lỗi:</strong> ${error.message}</p>
+                `, 'error');
+            }
+        }
+        
+        async function getPaymentMethods() {
+            showResult('methodsResult', '🔄 Đang tải phương thức thanh toán...', 'loading');
+            
+            try {
+                const response = await fetch(`${API_BASE}/phuong-thuc-thanh-toan/hien-thi`);
+                
+                if (response.ok) {
+                    const methods = await response.json();
+                    let html = '<h4>✅ Danh sách phương thức thanh toán:</h4>';
+                    
+                    if (Array.isArray(methods) && methods.length > 0) {
+                        html += '<ul>';
+                        methods.forEach(method => {
+                            html += `
+                                <li>
+                                    <strong>${method.ten || method.name || 'N/A'}</strong> 
+                                    (ID: ${method.id}) - 
+                                    ${method.moTa || method.description || 'Không có mô tả'}
+                                </li>
+                            `;
+                        });
+                        html += '</ul>';
+                    } else {
+                        html += '<p>Không có phương thức thanh toán nào.</p>';
+                    }
+                    
+                    html += `<pre>${JSON.stringify(methods, null, 2)}</pre>`;
+                    showResult('methodsResult', html, 'success');
+                } else {
+                    const error = await response.text();
+                    showResult('methodsResult', `
+                        <h4>❌ Lỗi tải phương thức thanh toán</h4>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <p><strong>Error:</strong> ${error}</p>
+                    `, 'error');
+                }
+            } catch (error) {
+                showResult('methodsResult', `
+                    <h4>❌ Lỗi kết nối</h4>
+                    <p>Không thể kết nối đến server.</p>
+                    <p><strong>Chi tiết lỗi:</strong> ${error.message}</p>
+                `, 'error');
+            }
+        }
+        
+        async function getPaymentStatus() {
+            const paymentId = document.getElementById('paymentId').value;
+            
+            if (!paymentId) {
+                showResult('statusResult', 'Vui lòng nhập Payment ID!', 'error');
+                return;
+            }
+            
+            showResult('statusResult', '🔄 Đang kiểm tra trạng thái thanh toán...', 'loading');
+            
+            try {
+                const response = await fetch(`${API_BASE}/thanh-toan/${paymentId}`);
+                
+                if (response.ok) {
+                    const payment = await response.json();
+                    showResult('statusResult', `
+                        <h4>✅ Thông tin thanh toán:</h4>
+                        <p><strong>Payment ID:</strong> ${payment.id}</p>
+                        <p><strong>Mã giao dịch:</strong> ${payment.maGiaoDich}</p>
+                        <p><strong>Phương thức:</strong> ${getPaymentMethodText(payment.phuongThucId)}</p>
+                        <p><strong>Tổng tiền:</strong> ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(payment.tongTien)}</p>
+                        <p><strong>Trạng thái:</strong> ${getStatusText(payment.trangThai)}</p>
+                        <p><strong>Ngày cập nhật:</strong> ${payment.ngayCapNhat}</p>
+                        <pre>${JSON.stringify(payment, null, 2)}</pre>
+                    `, 'success');
+                } else {
+                    const error = await response.text();
+                    showResult('statusResult', `
+                        <h4>❌ Lỗi tải thông tin thanh toán</h4>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <p><strong>Error:</strong> ${error}</p>
+                    `, 'error');
+                }
+            } catch (error) {
+                showResult('statusResult', `
+                    <h4>❌ Lỗi kết nối</h4>
+                    <p>Không thể kết nối đến server.</p>
+                    <p><strong>Chi tiết lỗi:</strong> ${error.message}</p>
+                `, 'error');
+            }
+        }
+        
+        function getStatusText(status) {
+            const statusMap = {
+                0: 'Chờ thanh toán',
+                1: 'Đã thanh toán',
+                2: 'Thanh toán thất bại',
+                3: 'Đã hủy',
+                4: 'Hoàn tiền'
+            };
+            return statusMap[status] || 'Không xác định';
+        }
+        
+        function getPaymentMethodText(methodId) {
+            const methodMap = {
+                1: 'COD - Thanh toán khi nhận hàng',
+                2: 'VNPay'
+            };
+            return methodMap[methodId] || 'Không xác định';
+        }
+        
+        // Auto-generate random data on page load
+        window.onload = function() {
+            generateRandomData();
+        };
+    </script>
+</body>
+</html>

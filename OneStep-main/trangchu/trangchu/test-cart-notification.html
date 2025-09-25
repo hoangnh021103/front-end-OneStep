@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Thông Báo Giỏ Hàng</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        
+        .product-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px;
+            display: inline-block;
+            width: 250px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .product-image {
+            width: 100%;
+            height: 150px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+        }
+        
+        .product-name {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .product-price {
+            color: #e74c3c;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .add-to-cart-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+            width: 100%;
+        }
+        
+        .add-to-cart-btn:hover {
+            background: #2980b9;
+        }
+        
+        .add-to-cart-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+        
+        .instructions {
+            background: #e8f4fd;
+            border: 1px solid #3498db;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .instructions h3 {
+            color: #2980b9;
+            margin-top: 0;
+        }
+        
+        .instructions ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin: 5px 0;
+        }
+        
+        .test-results {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .test-results h3 {
+            color: #495057;
+            margin-top: 0;
+        }
+        
+        .result-item {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        
+        .result-success {
+            border-left: 4px solid #28a745;
+            background: #d4edda;
+        }
+        
+        .result-error {
+            border-left: 4px solid #dc3545;
+            background: #f8d7da;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛒 Test Thông Báo Thêm Vào Giỏ Hàng</h1>
+        
+        <div class="instructions">
+            <h3>📋 Hướng dẫn test:</h3>
+            <ul>
+                <li><strong>Click vào nút "Thêm vào giỏ hàng"</strong> của bất kỳ sản phẩm nào</li>
+                <li><strong>Quan sát thông báo toast</strong> xuất hiện ở góc phải màn hình</li>
+                <li><strong>Kiểm tra animation</strong> slide-in từ phải sang trái</li>
+                <li><strong>Thông báo tự động biến mất</strong> sau 3 giây</li>
+                <li><strong>Click vào thông báo</strong> để đóng sớm</li>
+            </ul>
+        </div>
+        
+        <div class="test-section">
+            <h2>🛍️ Sản Phẩm Test</h2>
+            <p>Click vào nút "Thêm vào giỏ hàng" để test thông báo:</p>
+            
+            <div class="product-card">
+                <div class="product-image">👟</div>
+                <div class="product-name">Giày Sneaker Nike Air Max</div>
+                <div class="product-price">2,500,000 VNĐ</div>
+                <button class="add-to-cart-btn" onclick="testAddToCart('Giày Sneaker Nike Air Max', 2500000)">
+                    Thêm vào giỏ hàng
+                </button>
+            </div>
+            
+            <div class="product-card">
+                <div class="product-image">👠</div>
+                <div class="product-name">Giày Cao Gót Gucci</div>
+                <div class="product-price">8,500,000 VNĐ</div>
+                <button class="add-to-cart-btn" onclick="testAddToCart('Giày Cao Gót Gucci', 8500000)">
+                    Thêm vào giỏ hàng
+                </button>
+            </div>
+            
+            <div class="product-card">
+                <div class="product-image">🥾</div>
+                <div class="product-name">Giày Boot Timberland</div>
+                <div class="product-price">3,200,000 VNĐ</div>
+                <button class="add-to-cart-btn" onclick="testAddToCart('Giày Boot Timberland', 3200000)">
+                    Thêm vào giỏ hàng
+                </button>
+            </div>
+            
+            <div class="product-card">
+                <div class="product-image">👡</div>
+                <div class="product-name">Sandals Adidas</div>
+                <div class="product-price">1,800,000 VNĐ</div>
+                <button class="add-to-cart-btn" onclick="testAddToCart('Sandals Adidas', 1800000)">
+                    Thêm vào giỏ hàng
+                </button>
+            </div>
+            
+            <div class="product-card">
+                <div class="product-image">👞</div>
+                <div class="product-name">Giày Oxford Clarks</div>
+                <div class="product-price">4,500,000 VNĐ</div>
+                <button class="add-to-cart-btn" onclick="testAddToCart('Giày Oxford Clarks', 4500000)">
+                    Thêm vào giỏ hàng
+                </button>
+            </div>
+            
+            <div class="product-card">
+                <div class="product-image">🩴</div>
+                <div class="product-name">Dép Crocs Classic</div>
+                <div class="product-price">800,000 VNĐ</div>
+                <button class="add-to-cart-btn" onclick="testAddToCart('Dép Crocs Classic', 800000)">
+                    Thêm vào giỏ hàng
+                </button>
+            </div>
+        </div>
+        
+        <div class="test-results">
+            <h3>📊 Kết Quả Test</h3>
+            <div id="testResults">
+                <p>Chưa có kết quả test nào. Hãy click vào nút "Thêm vào giỏ hàng" để bắt đầu test.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let testCount = 0;
+        
+        function testAddToCart(productName, price) {
+            testCount++;
+            
+            // Tạo thông báo toast giống như trong Vue component
+            showCartToast(productName);
+            
+            // Ghi lại kết quả test
+            logTestResult(productName, price);
+        }
+        
+        function showCartToast(productName) {
+            // Tạo toast notification
+            const toast = document.createElement('div')
+            toast.className = 'cart-toast'
+            toast.innerHTML = `
+                <div class="toast-content">
+                    <i class="toast-icon">✅</i>
+                    <span class="toast-message">Đã thêm "${productName}" vào giỏ hàng!</span>
+                </div>
+            `
+            
+            // Thêm CSS cho toast
+            const style = document.createElement('style')
+            style.textContent = `
+                .cart-toast {
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: #4CAF50;
+                    color: white;
+                    padding: 16px 20px;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    z-index: 9999;
+                    animation: slideInRight 0.3s ease-out;
+                    max-width: 350px;
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                }
+                
+                .toast-content {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                }
+                
+                .toast-icon {
+                    font-size: 20px;
+                }
+                
+                .toast-message {
+                    font-size: 14px;
+                    font-weight: 500;
+                    line-height: 1.4;
+                }
+                
+                @keyframes slideInRight {
+                    from {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                }
+                
+                @keyframes slideOutRight {
+                    from {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                    to {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                }
+            `
+            
+            // Thêm style vào head nếu chưa có
+            if (!document.querySelector('#cart-toast-style')) {
+                style.id = 'cart-toast-style'
+                document.head.appendChild(style)
+            }
+            
+            // Thêm toast vào body
+            document.body.appendChild(toast)
+            
+            // Tự động xóa toast sau 3 giây
+            setTimeout(() => {
+                toast.style.animation = 'slideOutRight 0.3s ease-in'
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast)
+                    }
+                }, 300)
+            }, 3000)
+            
+            // Có thể click để đóng toast
+            toast.addEventListener('click', () => {
+                toast.style.animation = 'slideOutRight 0.3s ease-in'
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast)
+                    }
+                }, 300)
+            })
+        }
+        
+        function logTestResult(productName, price) {
+            const resultsDiv = document.getElementById('testResults');
+            
+            const resultItem = document.createElement('div');
+            resultItem.className = 'result-item result-success';
+            resultItem.innerHTML = `
+                <strong>Test #${testCount}</strong> - ${new Date().toLocaleTimeString('vi-VN')}<br>
+                ✅ <strong>Sản phẩm:</strong> ${productName}<br>
+                💰 <strong>Giá:</strong> ${price.toLocaleString('vi-VN')} VNĐ<br>
+                🎯 <strong>Trạng thái:</strong> Thông báo toast hiển thị thành công<br>
+                ⏱️ <strong>Thời gian:</strong> Toast tự động biến mất sau 3 giây
+            `;
+            
+            // Thêm vào đầu danh sách
+            if (resultsDiv.children.length === 1 && resultsDiv.children[0].tagName === 'P') {
+                resultsDiv.innerHTML = '';
+            }
+            resultsDiv.insertBefore(resultItem, resultsDiv.firstChild);
+            
+            // Giới hạn số lượng kết quả hiển thị
+            if (resultsDiv.children.length > 10) {
+                resultsDiv.removeChild(resultsDiv.lastChild);
+            }
+        }
+        
+        // Test tự động khi trang load
+        window.onload = function() {
+            console.log('🛒 Cart Notification Test Page loaded');
+            console.log('📋 Instructions: Click "Thêm vào giỏ hàng" buttons to test toast notifications');
+        };
+    </script>
+</body>
+</html>

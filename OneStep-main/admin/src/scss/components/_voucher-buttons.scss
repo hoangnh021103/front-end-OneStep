@@ -1,0 +1,181 @@
+/* ===== VOUCHER BUTTON STYLES ===== */
+
+/* Voucher select button - Nút chọn phiếu giảm giá */
+.voucher-select-btn {
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%) !important;
+  color: white !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  text-transform: none !important;
+  letter-spacing: 0.5px !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  border: 2px solid transparent !important;
+  position: relative !important;
+  overflow: hidden !important;
+
+  /* Shimmer effect */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+  }
+
+  /* Hover effects */
+  &:hover {
+    transform: translateY(-2px) scale(1.02) !important;
+    box-shadow: 0 8px 20px rgba(76, 175, 80, 0.4) !important;
+    background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+
+    &::before {
+      left: 100%;
+    }
+  }
+
+  /* Active state */
+  &:active {
+    transform: translateY(0) scale(0.98) !important;
+    box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3) !important;
+  }
+
+  /* Disabled state */
+  &:disabled {
+    background: #e0e0e0 !important;
+    color: #9e9e9e !important;
+    box-shadow: none !important;
+    transform: none !important;
+    border-color: transparent !important;
+
+    &::before {
+      display: none;
+    }
+  }
+
+  /* Icon styling */
+  .v-icon {
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+  }
+
+  /* Pulse animation when not hovered or disabled */
+  &:not(:disabled):not(:hover) {
+    animation: voucher-pulse 2s ease-in-out infinite;
+  }
+}
+
+/* Apply discount button - Nút áp dụng */
+.apply-discount-btn {
+  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%) !important;
+  color: white !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  text-transform: none !important;
+  letter-spacing: 0.5px !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  border: 2px solid transparent !important;
+
+  /* Hover effects */
+  &:hover {
+    transform: translateY(-2px) scale(1.02) !important;
+    box-shadow: 0 8px 20px rgba(33, 150, 243, 0.4) !important;
+    background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+  }
+
+  /* Active state */
+  &:active {
+    transform: translateY(0) scale(0.98) !important;
+    box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3) !important;
+  }
+
+  /* Disabled state */
+  &:disabled {
+    background: #e0e0e0 !important;
+    color: #9e9e9e !important;
+    box-shadow: none !important;
+    transform: none !important;
+    border-color: transparent !important;
+  }
+}
+
+/* ===== ANIMATIONS ===== */
+
+/* Pulse animation for voucher button */
+@keyframes voucher-pulse {
+  0% {
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+  }
+  50% {
+    box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+  }
+  100% {
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+  }
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+/* Tablet */
+@media (max-width: 1200px) {
+  .voucher-select-btn,
+  .apply-discount-btn {
+    font-size: 13px !important;
+    border-radius: 10px !important;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .voucher-select-btn,
+  .apply-discount-btn {
+    font-size: 13px !important;
+    padding: 8px 12px !important;
+    border-radius: 10px !important;
+  }
+  
+  .voucher-select-btn .v-icon {
+    margin-right: 4px !important;
+  }
+}
+
+/* ===== UTILITY CLASSES ===== */
+
+/* Success gradient */
+.btn-gradient-success {
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%) !important;
+}
+
+/* Primary gradient */
+.btn-gradient-primary {
+  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%) !important;
+}
+
+/* Shimmer effect utility */
+.btn-shimmer {
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+  }
+
+  &:hover::before {
+    left: 100%;
+  }
+}
+

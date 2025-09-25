@@ -1,0 +1,422 @@
+<template>
+  <div class="container">
+    <!-- Bộ lọc -->
+    <div class="filter-section">
+      <h2>Bộ lọc tìm kiếm</h2>
+      <div class="filter-grid">
+        <input v-model="search" type="text" placeholder="Tên sản phẩm" />
+        <select v-model="status" class="status-select">
+          <option value="">Tất cả trạng thái</option>
+          <option value="1">Còn hàng</option>
+          <option value="0">Hết hàng</option>
+        </select>
+        <button class="btn-reset" @click="resetFilter"><i class="fa fa-undo"></i> Đặt lại</button>
+      </div>
+    </div>
+    <!-- Danh sách sản phẩm -->
+    <div class="product-section">
+      <div class="header">
+        <h2>Danh sách sản phẩm</h2>
+        <div class="header-buttons">
+          <button class="btn-add" @click="$router.push({ name: 'ThemSanPham' })"><i class="fa fa-plus"></i> Thêm sản phẩm</button>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>STT</th>
+              <th>Tên SP</th>
+              <th>Mã Code</th>
+              <th>Mô tả</th>
+              <th>Thương hiệu</th>
+              <th>Chất liệu</th>
+              <th>Đế giày</th>
+              <th>Ảnh</th>
+              <th>Trạng thái</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(product, index) in filteredProducts" :key="product.maSanPham">
+              <td>{{ index + 1 }}</td>
+              <td>{{ product.tenSanPham }}</td>
+              <td>{{ product.maCode }}</td>
+              <td>{{ product.moTa }}</td>
+              <td>{{ getThuongHieuName(product.thuongHieuId) }}</td>
+              <td>{{ getChatLieuName(product.chatLieuId) }}</td>
+              <td>{{ getDeGiayName(product.deGiayId) }}</td>
+              <td>
+                <img :src="product.duongDanAnh" alt="Ảnh SP" class="product-thumb" v-if="product.duongDanAnh" />
+              </td>
+              <td>
+                <span :class="['status', product.trangThai === 1 ? 'active' : 'inactive']">
+                  {{ product.trangThai === 1 ? 'Còn hàng' : 'Hết hàng' }}
+                </span>
+              </td>
+              <td class="action-cell">
+                <button class="action-btn edit" title="Sửa" @click="editProduct(product.maSanPham)"><i class="fa fa-edit"></i></button>
+                <button class="action-btn delete" title="Xóa" @click="deleteProduct(index)"><i class="fa fa-trash"></i></button>
+                <button class="action-btn view" title="Xem" @click="viewProduct(product.maSanPham)"><i class="fa fa-eye"></i></button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import { toast } from 'vue3-toastify';
+import { sanPhamApi } from '@/api/sanPhamApi.js';
+
+export default {
+  name: 'SanPham',
+  data() {
+    return {
+      products: [],
+      search: '',
+      status: '',
+      thuongHieuList: [],
+      chatLieuList: [],
+      deGiayList: [],
+      kieuDangList: [],
+      hangSanXuatList: [],
+    };
+  },
+  computed: {
+    filteredProducts() {
+      const keyword = this.search.toLowerCase();
+      return this.products.filter(
+        p =>
+          p.daXoa === 0 &&
+          (p.tenSanPham && p.tenSanPham.toLowerCase().includes(keyword)) &&
+          (this.status === '' || p.trangThai == this.status)
+      );
+    },
+  },
+  methods: {
+    async testBackendConnection() {
+      try {
+        console.log('=== Test kết nối backend...');
+        const response = await fetch('http://localhost:8080/san-pham/test');
+        if (response.ok) {
+          const message = await response.text();
+          console.log('=== Backend response:', message);
+          toast.success('Kết nối backend thành công!');
+          return true;
+        } else {
+          throw new Error('Backend không phản hồi');
+        }
+      } catch (err) {
+        console.error('=== Backend không hoạt động:', err);
+        toast.error('Backend không hoạt động. Vui lòng kiểm tra server!');
+        return false;
+      }
+    },
+
+    async fetchProducts() {
+      try {
+        console.log('=== Đang gọi API lấy sản phẩm...');
+
+        const data = await sanPhamApi.layDanhSachSanPham();
+        console.log('=== Dữ liệu nhận được:', data);
+        console.log('=== Kiểu dữ liệu:', typeof data, Array.isArray(data));
+        
+        this.products = Array.isArray(data) ? data : data.data || [];
+        console.log('=== Số sản phẩm sau khi xử lý:', this.products.length);
+        
+        if (this.products.length === 0) {
+          console.log('=== Không có sản phẩm nào trong database');
+          toast.info('Chưa có sản phẩm nào. Vui lòng thêm sản phẩm mới hoặc tạo dữ liệu test.');
+        } else {
+          console.log(`=== Đã tải ${this.products.length} sản phẩm thành công!`);
+        }
+      } catch (err) {
+        console.error('Lỗi khi lấy danh sách sản phẩm:', err);
+        toast.error('Không thể tải danh sách sản phẩm. Backend có thể chưa chạy!');
+        
+        // Thử test backend connection khi có lỗi
+        this.testBackendConnection();
+      }
+    },
+    async fetchThuongHieu() {
+      try {
+        const response = await fetch('http://localhost:8080/thuong-hieu/hien-thi');
+        const data = await response.json();
+        this.thuongHieuList = Array.isArray(data) ? data : data.data || [];
+      } catch (err) {
+        console.error('Lỗi khi lấy danh sách thương hiệu:', err);
+        toast.error('Không thể tải danh sách thương hiệu.');
+      }
+    },
+    async fetchChatLieu() {
+      try {
+        const response = await fetch('http://localhost:8080/chat-lieu/hien-thi');
+        const data = await response.json();
+        this.chatLieuList = Array.isArray(data) ? data : data.data || [];
+      } catch (err) {
+        console.error('Lỗi khi lấy danh sách chất liệu:', err);
+        toast.error('Không thể tải danh sách chất liệu.');
+      }
+    },
+    async fetchDeGiay() {
+      try {
+        const response = await fetch('http://localhost:8080/de-giay/hien-thi');
+        const data = await response.json();
+        this.deGiayList = Array.isArray(data) ? data : data.data || [];
+      } catch (err) {
+        console.error('Lỗi khi lấy danh sách đế giày:', err);
+        toast.error('Không thể tải danh sách đế giày.');
+      }
+    },
+    async fetchKieuDang() {
+      try {
+        const response = await fetch('http://localhost:8080/kieu-dang/hien-thi');
+        const data = await response.json();
+        this.kieuDangList = Array.isArray(data) ? data : data.data || [];
+      } catch (err) {
+        console.error('Lỗi khi lấy danh sách kiểu dáng:', err);
+        toast.error('Không thể tải danh sách kiểu dáng.');
+      }
+    },
+    async fetchHangSanXuat() {
+      try {
+        const response = await fetch('http://localhost:8080/hang-san-xuat/hien-thi');
+        const data = await response.json();
+        this.hangSanXuatList = Array.isArray(data) ? data : data.data || [];
+      } catch (err) {
+        console.error('Lỗi khi lấy danh sách hãng sản xuất:', err);
+        toast.error('Không thể tải danh sách hãng sản xuất.');
+      }
+    },
+    getThuongHieuName(id) {
+      const thuongHieu = this.thuongHieuList.find(item => item.id === id);
+      return thuongHieu ? thuongHieu.ten : '';
+    },
+    getChatLieuName(id) {
+      const chatLieu = this.chatLieuList.find(item => item.id === id);
+      return chatLieu ? chatLieu.ten : '';
+    },
+    getDeGiayName(id) {
+      const deGiay = this.deGiayList.find(item => item.id === id);
+      return deGiay ? deGiay.ten : '';
+    },
+    getKieuDangName(id) {
+      const kieuDang = this.kieuDangList.find(item => item.id === id);
+      return kieuDang ? kieuDang.ten : 'N/A';
+    },
+    getHangSanXuatName(id) {
+      const hangSanXuat = this.hangSanXuatList.find(item => item.id === id);
+      return hangSanXuat ? hangSanXuat.ten : 'N/A';
+    },
+    resetFilter() {
+      this.search = '';
+      this.status = '';
+      this.fetchProducts();
+    },
+    editProduct(maSanPham) {
+      if (maSanPham) {
+        this.$router.push({ name: 'SuaSanPham', params: { id: maSanPham } });
+      } else {
+        toast.error('Không tìm thấy mã sản phẩm.');
+      }
+    },
+    async deleteProduct(index) {
+      if (confirm('Xác nhận xóa sản phẩm này?')) {
+        try {
+          const product = this.products[index];
+          await sanPhamApi.xoaSanPham(product.maSanPham);
+          toast.success('Xóa sản phẩm thành công!');
+          this.fetchProducts(); // Tải lại danh sách
+        } catch (err) {
+          console.error('Lỗi khi xóa sản phẩm:', err);
+          toast.error('Không thể xóa sản phẩm.');
+        }
+      }
+    },
+    viewProduct(maSanPham) {
+      this.$router.push({ name: 'SanPhamChiTiet', params: { id: maSanPham } });
+    },
+
+  },
+  mounted() {
+    this.fetchProducts();
+    this.fetchThuongHieu();
+    this.fetchChatLieu();
+    this.fetchDeGiay();
+    this.fetchKieuDang();
+    this.fetchHangSanXuat();
+  },
+};
+</script>
+
+<style>
+.container {
+  max-width: 1200px;
+  margin: 30px auto;
+  padding: 20px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+}
+
+.filter-section {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.filter-section h2 {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+
+.filter-grid input,
+.filter-grid select {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.btn-reset {
+  background: #f3f4f6;
+  color: #333;
+  border: 1px solid #ddd;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-reset:hover {
+  background: #e5e7eb;
+}
+
+.product-section {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.header-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.header h2 {
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.btn-add {
+  background: #4f46e5;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-add:hover {
+  background: #4338ca;
+}
+
+
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+th {
+  background: #f9fafb;
+  font-weight: 600;
+}
+
+.product-thumb {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.status {
+  padding: 5px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+.status.active {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status.inactive {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.action-cell {
+  display: flex;
+  gap: 10px;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.action-btn.edit {
+  color: #4f46e5;
+}
+
+.action-btn.delete {
+  color: #e63946;
+}
+
+.action-btn.view {
+  color: #10b981;
+}
+
+@media (max-width: 768px) {
+  .filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 15px;
+  }
+}
+</style>

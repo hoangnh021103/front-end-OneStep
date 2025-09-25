@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API Chi Tiết Sản Phẩm</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .product { border: 1px solid #ddd; margin: 10px; padding: 15px; border-radius: 8px; }
+        .product img { width: 100px; height: 100px; object-fit: cover; }
+        .price { color: #e74c3c; font-weight: bold; font-size: 18px; }
+        .original-price { text-decoration: line-through; color: #7f8c8d; }
+        .discount { background: #e74c3c; color: white; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+        .error { color: #e74c3c; background: #fdf2f2; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .success { color: #27ae60; background: #f0f9f0; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .loading { color: #3498db; }
+        button { background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 5px; }
+        button:hover { background: #2980b9; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test API Chi Tiết Sản Phẩm</h1>
+        
+        <div>
+            <button onclick="testChiTietSanPhamAPI()">Test Chi Tiết Sản Phẩm API</button>
+            <button onclick="testSanPhamAPI()">Test Sản Phẩm API (Fallback)</button>
+            <button onclick="clearResults()">Xóa kết quả</button>
+        </div>
+        
+        <div id="status"></div>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080';
+        
+        function showStatus(message, type = 'loading') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<div class="${type}">${message}</div>`;
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+            document.getElementById('status').innerHTML = '';
+        }
+        
+        async function testChiTietSanPhamAPI() {
+            showStatus('Đang gọi API chi-tiet-san-pham/hien-thi...', 'loading');
+            
+            try {
+                const response = await fetch(`${API_BASE}/chi-tiet-san-pham/hien-thi`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showStatus(`✅ Thành công! Lấy được ${data.length} sản phẩm từ chi-tiet-san-pham API`, 'success');
+                    displayProducts(data, 'Chi Tiết Sản Phẩm');
+                } else {
+                    showStatus(`❌ Lỗi API: ${response.status} - ${response.statusText}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`❌ Lỗi kết nối: ${error.message}`, 'error');
+                console.error('Error:', error);
+            }
+        }
+        
+        async function testSanPhamAPI() {
+            showStatus('Đang gọi API san-pham/hien-thi...', 'loading');
+            
+            try {
+                const response = await fetch(`${API_BASE}/san-pham/hien-thi`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showStatus(`✅ Thành công! Lấy được ${data.length} sản phẩm từ san-pham API`, 'success');
+                    displayProducts(data, 'Sản Phẩm');
+                } else {
+                    showStatus(`❌ Lỗi API: ${response.status} - ${response.statusText}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`❌ Lỗi kết nối: ${error.message}`, 'error');
+                console.error('Error:', error);
+            }
+        }
+        
+        function displayProducts(products, apiType) {
+            const resultsDiv = document.getElementById('results');
+            
+            if (!Array.isArray(products) || products.length === 0) {
+                resultsDiv.innerHTML = `<div class="error">Không có dữ liệu sản phẩm từ ${apiType} API</div>`;
+                return;
+            }
+            
+            let html = `<h2>Kết quả từ ${apiType} API (${products.length} sản phẩm)</h2>`;
+            
+            products.slice(0, 10).forEach((product, index) => {
+                const basePrice = product.giaTien || product.giaBan || product.gia || 0;
+                const discountAmount = product.tienGiamGia || 0;
+                const originalPrice = basePrice + discountAmount;
+                const discountPercent = discountAmount > 0 ? Math.floor((discountAmount / originalPrice) * 100) : 0;
+                
+                html += `
+                    <div class="product">
+                        <h3>${product.tenSanPham || product.tenChiTiet || 'Unknown Product'}</h3>
+                        <img src="${product.duongDanAnh || 'https://via.placeholder.com/100x100'}" alt="Product Image">
+                        <div>
+                            <div class="price">${formatPrice(basePrice)}</div>
+                            ${originalPrice > basePrice ? `<div class="original-price">${formatPrice(originalPrice)}</div>` : ''}
+                            ${discountPercent > 0 ? `<span class="discount">-${discountPercent}%</span>` : ''}
+                        </div>
+                        <p><strong>Thương hiệu:</strong> ${product.thuongHieuTen || (product.thuongHieu && product.thuongHieu.ten) || 'Unknown'}</p>
+                        <p><strong>Tồn kho:</strong> ${product.soLuongTon || product.tonKho || 0}</p>
+                        <p><strong>ID:</strong> ${product.id || product.chiTietSanPhamId || 'N/A'}</p>
+                        <p><strong>Mã sản phẩm:</strong> ${product.maCode || 'N/A'}</p>
+                        <details>
+                            <summary>Chi tiết JSON</summary>
+                            <pre>${JSON.stringify(product, null, 2)}</pre>
+                        </details>
+                    </div>
+                `;
+            });
+            
+            if (products.length > 10) {
+                html += `<p>... và ${products.length - 10} sản phẩm khác</p>`;
+            }
+            
+            resultsDiv.innerHTML = html;
+        }
+        
+        function formatPrice(price) {
+            return new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND'
+            }).format(price);
+        }
+        
+        // Auto test khi load trang
+        window.onload = function() {
+            showStatus('Trang đã tải xong. Nhấn nút để test API.', 'loading');
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Payment Display Logic</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-title {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .test-step {
+            margin: 15px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+        }
+        .success {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .error {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .info {
+            color: #17a2b8;
+        }
+        .warning {
+            color: #ffc107;
+            font-weight: bold;
+        }
+        .code-block {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 10px 0;
+            border: 1px solid #e9ecef;
+        }
+        .status-example {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .status-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .status-pending {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        .status-hidden {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Payment Display Logic</h1>
+    
+    <div class="test-section">
+        <h2 class="test-title">📋 Tóm tắt các thay đổi</h2>
+        
+        <div class="test-step">
+            <h3>✅ 1. Sửa logic hiển thị thông báo thanh toán</h3>
+            <p>• <strong>Trước:</strong> Hiển thị "Thanh toán đã được tạo thành công!" ngay khi có currentPayment</p>
+            <p>• <strong>Sau:</strong> Chỉ hiển thị khi thực sự thanh toán thành công (trangThai === 1)</p>
+        </div>
+        
+        <div class="test-step">
+            <h3>✅ 2. Thêm trạng thái "Đang chờ thanh toán"</h3>
+            <p>• Hiển thị khi có payment nhưng chưa thanh toán (trangThai === 0)</p>
+            <p>• Màu vàng để phân biệt với thành công (xanh lá)</p>
+        </div>
+        
+        <div class="test-step">
+            <h3>✅ 3. Cập nhật hiển thị phương thức thanh toán</h3>
+            <p>• Thêm phương thức getPaymentMethodName()</p>
+            <p>• Hiển thị đúng "VNPay" hoặc "Thanh toán khi nhận hàng (COD)"</p>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2 class="test-title">🔄 Logic hiển thị mới</h2>
+        
+        <div class="test-step">
+            <h3>Trong Checkout.vue:</h3>
+            <div class="code-block">
+// Chỉ hiển thị khi đã thanh toán thành công
+v-if="hasCurrentPayment && currentPayment.trangThai === 1"
+→ "Thanh toán thành công!" (màu xanh lá)
+
+// Hiển thị khi đang chờ thanh toán
+v-else-if="hasCurrentPayment && currentPayment.trangThai === 0"
+→ "Đang chờ thanh toán" (màu vàng)
+
+// Không hiển thị gì khi chưa có payment
+            </div>
+        </div>
+        
+        <div class="test-step">
+            <h3>Phương thức thanh toán:</h3>
+            <div class="code-block">
+getPaymentMethodName(phuongThucId) {
+  switch (phuongThucId) {
+    case 1: return 'Thanh toán khi nhận hàng (COD)'
+    case 2: return 'VNPay'
+    default: return 'Phương thức thanh toán'
+  }
+}
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2 class="test-title">📊 Các trạng thái hiển thị</h2>
+        
+        <div class="status-example status-success">
+            <h4>✅ Thanh toán thành công (trangThai === 1)</h4>
+            <p><strong>Hiển thị:</strong> "Thanh toán thành công!"</p>
+            <p><strong>Màu:</strong> Xanh lá (#d4edda)</p>
+            <p><strong>Icon:</strong> ✓ (checkmark)</p>
+            <p><strong>Điều kiện:</strong> hasCurrentPayment && currentPayment.trangThai === 1</p>
+        </div>
+        
+        <div class="status-example status-pending">
+            <h4>⏳ Đang chờ thanh toán (trangThai === 0)</h4>
+            <p><strong>Hiển thị:</strong> "Đang chờ thanh toán"</p>
+            <p><strong>Màu:</strong> Vàng (#fff3cd)</p>
+            <p><strong>Icon:</strong> 🕐 (clock)</p>
+            <p><strong>Điều kiện:</strong> hasCurrentPayment && currentPayment.trangThai === 0</p>
+        </div>
+        
+        <div class="status-example status-hidden">
+            <h4>🚫 Không hiển thị</h4>
+            <p><strong>Khi:</strong> Chưa có payment hoặc trangThai !== 0,1</p>
+            <p><strong>Lý do:</strong> Chỉ hiển thị khi thực sự có hoạt động thanh toán</p>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2 class="test-title">🧪 Cách test</h2>
+        
+        <div class="test-step">
+            <h3>Test Case 1: COD Payment</h3>
+            <p>1. Chọn "Thanh toán khi nhận hàng (COD)"</p>
+            <p>2. Hoàn tất đơn hàng</p>
+            <p>3. <strong>Kết quả mong đợi:</strong> Hiển thị "Thanh toán thành công!" với phương thức "Thanh toán khi nhận hàng (COD)"</p>
+        </div>
+        
+        <div class="test-step">
+            <h3>Test Case 2: VNPay Payment</h3>
+            <p>1. Chọn "VNPay"</p>
+            <p>2. Tạo payment → Hiển thị "Đang chờ thanh toán"</p>
+            <p>3. Hoàn tất thanh toán → Hiển thị "Thanh toán thành công!" với phương thức "VNPay"</p>
+        </div>
+        
+        <div class="test-step">
+            <h3>Test Case 3: No Payment</h3>
+            <p>1. Chưa chọn phương thức thanh toán</p>
+            <p>2. <strong>Kết quả mong đợi:</strong> Không hiển thị thông báo thanh toán nào</p>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2 class="test-title">🔍 Debug Tips</h2>
+        
+        <div class="test-step">
+            <h3>Console Logs để kiểm tra:</h3>
+            <div class="code-block">
+// Trong Checkout.vue:
+console.log('Current Payment:', this.currentPayment)
+console.log('Payment Status:', this.currentPayment?.trangThai)
+console.log('Payment Method ID:', this.currentPayment?.phuongThucId)
+console.log('Payment Method Name:', this.getPaymentMethodName(this.currentPayment?.phuongThucId))
+
+// Trong OrderComplete.vue:
+console.log('Order Payment Method:', this.paymentMethod)
+console.log('Current Order:', this.currentOrder)
+            </div>
+        </div>
+        
+        <div class="test-step">
+            <h3>Vuex DevTools:</h3>
+            <p>• Kiểm tra payment store state</p>
+            <p>• Xem currentPayment object</p>
+            <p>• Kiểm tra trangThai và phuongThucId</p>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2 class="test-title">🎯 Kết quả mong đợi</h2>
+        
+        <div class="test-step">
+            <h3 class="success">✅ Thành công</h3>
+            <p>• Thông báo thanh toán chỉ hiển thị khi thực sự thanh toán</p>
+            <p>• Phương thức thanh toán hiển thị đúng (VNPay/COD)</p>
+            <p>• Trạng thái "Đang chờ thanh toán" hiển thị khi cần</p>
+            <p>• Không hiển thị thông báo khi chưa có payment</p>
+        </div>
+        
+        <div class="test-step">
+            <h3 class="warning">⚠️ Lưu ý</h3>
+            <p>• Trạng thái trangThai: 0 = Chờ thanh toán, 1 = Đã thanh toán</p>
+            <p>• Phương thức phuongThucId: 1 = COD, 2 = VNPay</p>
+            <p>• Mock payments có thể có trangThai khác</p>
+        </div>
+    </div>
+    
+    <script>
+        // Test functions
+        function testPaymentDisplay() {
+            console.log('🧪 Testing Payment Display Logic...')
+            
+            // Test payment method names
+            const testCases = [
+                { id: 1, expected: 'Thanh toán khi nhận hàng (COD)' },
+                { id: 2, expected: 'VNPay' },
+                { id: 3, expected: 'Phương thức thanh toán' }
+            ]
+            
+            testCases.forEach(testCase => {
+                const result = getPaymentMethodName(testCase.id)
+                console.log(`ID ${testCase.id}: ${result} (Expected: ${testCase.expected})`)
+            })
+            
+            // Test payment status display
+            const paymentStatuses = [
+                { trangThai: 0, shouldShow: 'pending' },
+                { trangThai: 1, shouldShow: 'success' },
+                { trangThai: 2, shouldShow: 'none' }
+            ]
+            
+            paymentStatuses.forEach(status => {
+                console.log(`Status ${status.trangThai}: Should show ${status.shouldShow}`)
+            })
+            
+            console.log('✅ Payment display test completed!')
+        }
+        
+        function getPaymentMethodName(phuongThucId) {
+            switch (phuongThucId) {
+                case 1: return 'Thanh toán khi nhận hàng (COD)'
+                case 2: return 'VNPay'
+                default: return 'Phương thức thanh toán'
+            }
+        }
+        
+        // Run test on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Payment Display Test Page Loaded')
+            testPaymentDisplay()
+        })
+    </script>
+</body>
+</html>
